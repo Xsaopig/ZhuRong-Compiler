@@ -1,9 +1,8 @@
 #include <cstdio>
-#include <string.h>
+#include <cstring>
 #include <iostream>
 #include "sysy.tab.hh"
 #include "FlexLexer.h"
-#include "def.h"
 #include <fstream>
 using namespace std;
 char filename[50];

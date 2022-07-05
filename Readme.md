@@ -19,4 +19,12 @@
 ## makefile已经编写
 直接make即可输出源文件test.c的语法树
 
+## 大致改动
++ 在cpp版中，yylex()、yylineno、yyin等已经无法使用，在main.cpp中定义了yyFlexLexer类的实例，yylineno、yylex()都在该类中，可借助成员函数调用
++ 修改了程序入口为main.cpp
++ 定义了语法树类AST
++ 错误处理放在error.cpp中
+
+
+
 
