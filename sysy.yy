@@ -5,13 +5,8 @@
     #include "cstring"
     #include "ast.hpp"
     #include "FlexLexer.h"
-    #include "def.h"
     extern char *yytext;
-    //extern FILE *yyin;
-    //extern int yylineno;
-    //#define yylineno
-    // extern int yyFlexLexer::yylex();
-    //extern int yyFlexLexer::yylex();
+
     extern yyFlexLexer *yyflexlexer;
     #define yylineno yyflexlexer->lineno()
     #define yylex() yyflexlexer->yylex()
@@ -19,7 +14,6 @@
     void yyerror(const char* fmt, ...);
     using namespace std;
     AST ast;
-    //void printAST(struct node *, int, int);
 %}
 
 %union {
@@ -56,7 +50,6 @@ Root: CompUnit {
     $$=mknode(Root,$1,NULL,NULL,yylineno);
     struct node* root=ast.setroot($$);
     ast.printAST(root,0,0);
-    //printAST($$,0,0);
 
 }
     ;
