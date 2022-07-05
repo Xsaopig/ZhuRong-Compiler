@@ -72,16 +72,24 @@
     #include "cmath"
     #include "cstring"
     #include "ast.hpp"
+    #include "FlexLexer.h"
+    #include "def.h"
     extern char *yytext;
-    extern FILE *yyin;
-    extern int yylineno;
-    extern int yylex(void);
+    //extern FILE *yyin;
+    //extern int yylineno;
+    //#define yylineno
+    // extern int yyFlexLexer::yylex();
+    //extern int yyFlexLexer::yylex();
+    extern yyFlexLexer *yyflexlexer;
+    #define yylineno yyflexlexer->lineno()
+    #define yylex() yyflexlexer->yylex()
+    
     void yyerror(const char* fmt, ...);
     using namespace std;
     AST ast;
     //void printAST(struct node *, int, int);
 
-#line 85 "sysy.tab.cc"
+#line 93 "sysy.tab.cc"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -567,15 +575,15 @@ static const yytype_int8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,    47,    47,    57,    60,    63,    66,    72,    75,    81,
-      85,    92,    96,   103,   107,   114,   120,   124,   131,   134,
-     140,   143,   149,   152,   155,   161,   165,   169,   173,   180,
-     183,   189,   192,   197,   201,   208,   211,   214,   217,   223,
-     226,   232,   235,   238,   241,   244,   247,   250,   253,   256,
-     259,   262,   268,   274,   280,   284,   291,   294,   297,   303,
-     308,   316,   319,   323,   327,   331,   337,   341,   348,   351,
-     357,   360,   364,   368,   375,   378,   382,   389,   392,   396,
-     400,   404,   410,   413,   417,   424,   427,   434,   437
+       0,    55,    55,    65,    68,    71,    74,    80,    83,    89,
+      93,   100,   104,   111,   115,   122,   128,   132,   139,   142,
+     148,   151,   157,   160,   163,   169,   173,   177,   181,   188,
+     191,   197,   200,   205,   209,   216,   219,   222,   225,   231,
+     234,   240,   243,   246,   249,   252,   255,   258,   261,   264,
+     267,   270,   276,   282,   288,   292,   299,   302,   305,   311,
+     316,   324,   327,   331,   335,   339,   345,   349,   356,   359,
+     365,   368,   372,   376,   383,   386,   390,   397,   400,   404,
+     408,   412,   418,   421,   425,   432,   435,   442,   445
 };
 #endif
 
@@ -1636,7 +1644,7 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* Root: CompUnit  */
-#line 47 "sysy.yy"
+#line 55 "sysy.yy"
                {
     (yyval.ptr)=mknode(Root,(yyvsp[0].ptr),NULL,NULL,yylineno);
     struct node* root=ast.setroot((yyval.ptr));
@@ -1644,737 +1652,737 @@ yyreduce:
     //printAST($$,0,0);
 
 }
-#line 1648 "sysy.tab.cc"
-    break;
-
-  case 3: /* CompUnit: Decl  */
-#line 57 "sysy.yy"
-               {
-    (yyval.ptr)=mknode(CompUnit,(yyvsp[0].ptr),NULL,NULL,yylineno);
-}
 #line 1656 "sysy.tab.cc"
     break;
 
-  case 4: /* CompUnit: FuncDef  */
-#line 60 "sysy.yy"
-              {
-        (yyval.ptr)=mknode(CompUnit,(yyvsp[0].ptr),NULL,NULL,yylineno);
-    }
+  case 3: /* CompUnit: Decl  */
+#line 65 "sysy.yy"
+               {
+    (yyval.ptr)=mknode(CompUnit,(yyvsp[0].ptr),NULL,NULL,yylineno);
+}
 #line 1664 "sysy.tab.cc"
     break;
 
-  case 5: /* CompUnit: CompUnit Decl  */
-#line 63 "sysy.yy"
-                    {
-        (yyval.ptr)=mknode(CompUnit,(yyvsp[-1].ptr),(yyvsp[0].ptr),NULL,yylineno);
+  case 4: /* CompUnit: FuncDef  */
+#line 68 "sysy.yy"
+              {
+        (yyval.ptr)=mknode(CompUnit,(yyvsp[0].ptr),NULL,NULL,yylineno);
     }
 #line 1672 "sysy.tab.cc"
     break;
 
-  case 6: /* CompUnit: CompUnit FuncDef  */
-#line 66 "sysy.yy"
-                       {
+  case 5: /* CompUnit: CompUnit Decl  */
+#line 71 "sysy.yy"
+                    {
         (yyval.ptr)=mknode(CompUnit,(yyvsp[-1].ptr),(yyvsp[0].ptr),NULL,yylineno);
     }
 #line 1680 "sysy.tab.cc"
     break;
 
-  case 7: /* Decl: ConstDecl SEMI  */
-#line 72 "sysy.yy"
-                     {
-    (yyval.ptr)=mknode(Decl,(yyvsp[-1].ptr),NULL,NULL,yylineno);
-}
+  case 6: /* CompUnit: CompUnit FuncDef  */
+#line 74 "sysy.yy"
+                       {
+        (yyval.ptr)=mknode(CompUnit,(yyvsp[-1].ptr),(yyvsp[0].ptr),NULL,yylineno);
+    }
 #line 1688 "sysy.tab.cc"
     break;
 
-  case 8: /* Decl: VarDecl SEMI  */
-#line 75 "sysy.yy"
-                   {
-        (yyval.ptr)=mknode(Decl,(yyvsp[-1].ptr),NULL,NULL,yylineno);
-    }
+  case 7: /* Decl: ConstDecl SEMI  */
+#line 80 "sysy.yy"
+                     {
+    (yyval.ptr)=mknode(Decl,(yyvsp[-1].ptr),NULL,NULL,yylineno);
+}
 #line 1696 "sysy.tab.cc"
     break;
 
+  case 8: /* Decl: VarDecl SEMI  */
+#line 83 "sysy.yy"
+                   {
+        (yyval.ptr)=mknode(Decl,(yyvsp[-1].ptr),NULL,NULL,yylineno);
+    }
+#line 1704 "sysy.tab.cc"
+    break;
+
   case 9: /* ConstDecl: CONST BType ConstDef  */
-#line 81 "sysy.yy"
+#line 89 "sysy.yy"
                                 {
     (yyval.ptr)=mknode(ConstDecl,(yyvsp[-1].ptr),(yyvsp[0].ptr),NULL,yylineno);
     (yyval.ptr)->type=(yyvsp[-1].ptr)->type;
 }
-#line 1705 "sysy.tab.cc"
+#line 1713 "sysy.tab.cc"
     break;
 
   case 10: /* ConstDecl: ConstDecl COMMA ConstDef  */
-#line 85 "sysy.yy"
+#line 93 "sysy.yy"
                                {
         (yyval.ptr)=mknode(ConstDecl,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);
         (yyval.ptr)->type=(yyvsp[-2].ptr)->type;
     }
-#line 1714 "sysy.tab.cc"
+#line 1722 "sysy.tab.cc"
     break;
 
   case 11: /* BType: INT  */
-#line 92 "sysy.yy"
+#line 100 "sysy.yy"
            {
     (yyval.ptr)=mknode(BType,NULL,NULL,NULL,yylineno);
     (yyval.ptr)->type=INT;
 }
-#line 1723 "sysy.tab.cc"
+#line 1731 "sysy.tab.cc"
     break;
 
   case 12: /* BType: FLOAT  */
-#line 96 "sysy.yy"
+#line 104 "sysy.yy"
             {
         (yyval.ptr)=mknode(BType,NULL,NULL,NULL,yylineno);
         (yyval.ptr)->type=FLOAT;
     }
-#line 1732 "sysy.tab.cc"
+#line 1740 "sysy.tab.cc"
     break;
 
   case 13: /* Idents: IDENT  */
-#line 103 "sysy.yy"
+#line 111 "sysy.yy"
               {
     (yyval.ptr)=mknode(Idents,NULL,NULL,NULL,yylineno);
     strcpy((yyval.ptr)->type_id,(yyvsp[0].type_id));
 }
-#line 1741 "sysy.tab.cc"
+#line 1749 "sysy.tab.cc"
     break;
 
   case 14: /* Idents: Idents LB Exp RB  */
-#line 107 "sysy.yy"
+#line 115 "sysy.yy"
                        {
         (yyval.ptr)=mknode(Idents,(yyvsp[-3].ptr),(yyvsp[-1].ptr),NULL,yylineno);
         strcpy((yyval.ptr)->type_id,(yyvsp[-3].ptr)->type_id);
     }
-#line 1750 "sysy.tab.cc"
-    break;
-
-  case 15: /* ConstDef: Idents ASSIGN InitVal  */
-#line 114 "sysy.yy"
-                                {
-    (yyval.ptr)=mknode(ConstDef,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);
-}
 #line 1758 "sysy.tab.cc"
     break;
 
+  case 15: /* ConstDef: Idents ASSIGN InitVal  */
+#line 122 "sysy.yy"
+                                {
+    (yyval.ptr)=mknode(ConstDef,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);
+}
+#line 1766 "sysy.tab.cc"
+    break;
+
   case 16: /* VarDecl: BType VarDef  */
-#line 120 "sysy.yy"
+#line 128 "sysy.yy"
                       {
     (yyval.ptr)=mknode(VarDecl,(yyvsp[-1].ptr),(yyvsp[0].ptr),NULL,yylineno);
     (yyval.ptr)->type=(yyvsp[-1].ptr)->type;
 }
-#line 1767 "sysy.tab.cc"
+#line 1775 "sysy.tab.cc"
     break;
 
   case 17: /* VarDecl: VarDecl COMMA VarDef  */
-#line 124 "sysy.yy"
+#line 132 "sysy.yy"
                            {
         (yyval.ptr)=mknode(VarDecl,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);
         (yyval.ptr)->type=(yyvsp[-2].ptr)->type;
     }
-#line 1776 "sysy.tab.cc"
-    break;
-
-  case 18: /* VarDef: Idents  */
-#line 131 "sysy.yy"
-               {
-    (yyval.ptr)=mknode(VarDef,(yyvsp[0].ptr),NULL,NULL,yylineno);
-}
 #line 1784 "sysy.tab.cc"
     break;
 
-  case 19: /* VarDef: Idents ASSIGN InitVal  */
-#line 134 "sysy.yy"
-                            {
-        (yyval.ptr)=mknode(VarDef,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);
-    }
+  case 18: /* VarDef: Idents  */
+#line 139 "sysy.yy"
+               {
+    (yyval.ptr)=mknode(VarDef,(yyvsp[0].ptr),NULL,NULL,yylineno);
+}
 #line 1792 "sysy.tab.cc"
     break;
 
-  case 20: /* InitVals: InitVal  */
-#line 140 "sysy.yy"
-                  {
-    (yyval.ptr)=mknode(InitVals,(yyvsp[0].ptr),NULL,NULL,yylineno);
-}
+  case 19: /* VarDef: Idents ASSIGN InitVal  */
+#line 142 "sysy.yy"
+                            {
+        (yyval.ptr)=mknode(VarDef,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);
+    }
 #line 1800 "sysy.tab.cc"
     break;
 
-  case 21: /* InitVals: InitVals COMMA InitVal  */
-#line 143 "sysy.yy"
-                             {
-        (yyval.ptr)=mknode(InitVals,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);
-    }
+  case 20: /* InitVals: InitVal  */
+#line 148 "sysy.yy"
+                  {
+    (yyval.ptr)=mknode(InitVals,(yyvsp[0].ptr),NULL,NULL,yylineno);
+}
 #line 1808 "sysy.tab.cc"
     break;
 
-  case 22: /* InitVal: Exp  */
-#line 149 "sysy.yy"
-             {
-    (yyval.ptr)=mknode(InitVal,(yyvsp[0].ptr),NULL,NULL,yylineno);
-}
+  case 21: /* InitVals: InitVals COMMA InitVal  */
+#line 151 "sysy.yy"
+                             {
+        (yyval.ptr)=mknode(InitVals,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);
+    }
 #line 1816 "sysy.tab.cc"
     break;
 
-  case 23: /* InitVal: LC InitVals RC  */
-#line 152 "sysy.yy"
-                     {
-        (yyval.ptr)=mknode(Block,(yyvsp[-1].ptr),NULL,NULL,yylineno);
-    }
+  case 22: /* InitVal: Exp  */
+#line 157 "sysy.yy"
+             {
+    (yyval.ptr)=mknode(InitVal,(yyvsp[0].ptr),NULL,NULL,yylineno);
+}
 #line 1824 "sysy.tab.cc"
     break;
 
-  case 24: /* InitVal: LC RC  */
-#line 155 "sysy.yy"
-            {
-        (yyval.ptr)=mknode(Block,NULL,NULL,NULL,yylineno);
+  case 23: /* InitVal: LC InitVals RC  */
+#line 160 "sysy.yy"
+                     {
+        (yyval.ptr)=mknode(Block,(yyvsp[-1].ptr),NULL,NULL,yylineno);
     }
 #line 1832 "sysy.tab.cc"
     break;
 
+  case 24: /* InitVal: LC RC  */
+#line 163 "sysy.yy"
+            {
+        (yyval.ptr)=mknode(Block,NULL,NULL,NULL,yylineno);
+    }
+#line 1840 "sysy.tab.cc"
+    break;
+
   case 25: /* FuncDef: VOID IDENT LP RP Block  */
-#line 161 "sysy.yy"
+#line 169 "sysy.yy"
                                 {
     (yyval.ptr)=mknode(FuncDef,NULL,NULL,(yyvsp[0].ptr),yylineno);
     strcpy((yyval.ptr)->type_id,(yyvsp[-3].type_id));
 }
-#line 1841 "sysy.tab.cc"
+#line 1849 "sysy.tab.cc"
     break;
 
   case 26: /* FuncDef: BType IDENT LP FuncFParams RP Block  */
-#line 165 "sysy.yy"
+#line 173 "sysy.yy"
                                           {
         (yyval.ptr)=mknode(FuncDef,(yyvsp[-5].ptr),(yyvsp[-2].ptr),(yyvsp[0].ptr),yylineno);
         strcpy((yyval.ptr)->type_id,(yyvsp[-4].type_id));
     }
-#line 1850 "sysy.tab.cc"
+#line 1858 "sysy.tab.cc"
     break;
 
   case 27: /* FuncDef: BType IDENT LP RP Block  */
-#line 169 "sysy.yy"
+#line 177 "sysy.yy"
                               {
         (yyval.ptr)=mknode(FuncDef,(yyvsp[-4].ptr),NULL,(yyvsp[0].ptr),yylineno);
         strcpy((yyval.ptr)->type_id,(yyvsp[-3].type_id));
     }
-#line 1859 "sysy.tab.cc"
+#line 1867 "sysy.tab.cc"
     break;
 
   case 28: /* FuncDef: VOID IDENT LP FuncFParams RP Block  */
-#line 173 "sysy.yy"
+#line 181 "sysy.yy"
                                          {
         (yyval.ptr)=mknode(FuncDef,NULL,(yyvsp[-2].ptr),(yyvsp[0].ptr),yylineno);
         strcpy((yyval.ptr)->type_id,(yyvsp[-4].type_id));
     }
-#line 1868 "sysy.tab.cc"
-    break;
-
-  case 29: /* FuncFParams: FuncFParam  */
-#line 180 "sysy.yy"
-                        {
-    (yyval.ptr)=mknode(FuncFParams,(yyvsp[0].ptr),NULL,NULL,yylineno);
-}
 #line 1876 "sysy.tab.cc"
     break;
 
-  case 30: /* FuncFParams: FuncFParams COMMA FuncFParam  */
-#line 183 "sysy.yy"
-                                   {
-        (yyval.ptr)=mknode(FuncFParams,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);
-    }
+  case 29: /* FuncFParams: FuncFParam  */
+#line 188 "sysy.yy"
+                        {
+    (yyval.ptr)=mknode(FuncFParams,(yyvsp[0].ptr),NULL,NULL,yylineno);
+}
 #line 1884 "sysy.tab.cc"
     break;
 
-  case 31: /* FuncFParamArray: LB RB  */
-#line 189 "sysy.yy"
-                       {
-    (yyval.ptr)=mknode(FuncFParamArray,NULL,NULL,NULL,yylineno);
-}
+  case 30: /* FuncFParams: FuncFParams COMMA FuncFParam  */
+#line 191 "sysy.yy"
+                                   {
+        (yyval.ptr)=mknode(FuncFParams,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);
+    }
 #line 1892 "sysy.tab.cc"
     break;
 
-  case 32: /* FuncFParamArray: FuncFParamArray LB Exp RB  */
-#line 192 "sysy.yy"
-                                {
-        (yyval.ptr)=mknode(FuncFParamArray,(yyvsp[-3].ptr),(yyvsp[-1].ptr),NULL,yylineno);
-    }
+  case 31: /* FuncFParamArray: LB RB  */
+#line 197 "sysy.yy"
+                       {
+    (yyval.ptr)=mknode(FuncFParamArray,NULL,NULL,NULL,yylineno);
+}
 #line 1900 "sysy.tab.cc"
     break;
 
+  case 32: /* FuncFParamArray: FuncFParamArray LB Exp RB  */
+#line 200 "sysy.yy"
+                                {
+        (yyval.ptr)=mknode(FuncFParamArray,(yyvsp[-3].ptr),(yyvsp[-1].ptr),NULL,yylineno);
+    }
+#line 1908 "sysy.tab.cc"
+    break;
+
   case 33: /* FuncFParam: BType IDENT  */
-#line 197 "sysy.yy"
+#line 205 "sysy.yy"
                         {
     (yyval.ptr)=mknode(FuncFParam,(yyvsp[-1].ptr),NULL,NULL,yylineno);
     strcpy((yyval.ptr)->type_id,(yyvsp[0].type_id));
 }
-#line 1909 "sysy.tab.cc"
+#line 1917 "sysy.tab.cc"
     break;
 
   case 34: /* FuncFParam: BType IDENT FuncFParamArray  */
-#line 201 "sysy.yy"
+#line 209 "sysy.yy"
                                   {
         (yyval.ptr)=mknode(FuncFParam,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);
         strcpy((yyval.ptr)->type_id,(yyvsp[-1].type_id));
     }
-#line 1918 "sysy.tab.cc"
-    break;
-
-  case 35: /* BlockItems: Decl  */
-#line 208 "sysy.yy"
-                 {
-    (yyval.ptr)=mknode(BlockItems,(yyvsp[0].ptr),NULL,NULL,yylineno);
-}
 #line 1926 "sysy.tab.cc"
     break;
 
-  case 36: /* BlockItems: Stmt  */
-#line 211 "sysy.yy"
-           {
-        (yyval.ptr)=mknode(BlockItems,(yyvsp[0].ptr),NULL,NULL,yylineno);
-    }
+  case 35: /* BlockItems: Decl  */
+#line 216 "sysy.yy"
+                 {
+    (yyval.ptr)=mknode(BlockItems,(yyvsp[0].ptr),NULL,NULL,yylineno);
+}
 #line 1934 "sysy.tab.cc"
     break;
 
-  case 37: /* BlockItems: BlockItems Decl  */
-#line 214 "sysy.yy"
-                      {
-        (yyval.ptr)=mknode(BlockItems,(yyvsp[-1].ptr),(yyvsp[0].ptr),NULL,yylineno);
+  case 36: /* BlockItems: Stmt  */
+#line 219 "sysy.yy"
+           {
+        (yyval.ptr)=mknode(BlockItems,(yyvsp[0].ptr),NULL,NULL,yylineno);
     }
 #line 1942 "sysy.tab.cc"
     break;
 
-  case 38: /* BlockItems: BlockItems Stmt  */
-#line 217 "sysy.yy"
+  case 37: /* BlockItems: BlockItems Decl  */
+#line 222 "sysy.yy"
                       {
         (yyval.ptr)=mknode(BlockItems,(yyvsp[-1].ptr),(yyvsp[0].ptr),NULL,yylineno);
     }
 #line 1950 "sysy.tab.cc"
     break;
 
-  case 39: /* Block: LC BlockItems RC  */
-#line 223 "sysy.yy"
-                        {
-    (yyval.ptr)=mknode(Block,(yyvsp[-1].ptr),NULL,NULL,yylineno);
-}
+  case 38: /* BlockItems: BlockItems Stmt  */
+#line 225 "sysy.yy"
+                      {
+        (yyval.ptr)=mknode(BlockItems,(yyvsp[-1].ptr),(yyvsp[0].ptr),NULL,yylineno);
+    }
 #line 1958 "sysy.tab.cc"
     break;
 
-  case 40: /* Block: LC RC  */
-#line 226 "sysy.yy"
-            {
-        (yyval.ptr)=mknode(Block,NULL,NULL,NULL,yylineno);
-    }
+  case 39: /* Block: LC BlockItems RC  */
+#line 231 "sysy.yy"
+                        {
+    (yyval.ptr)=mknode(Block,(yyvsp[-1].ptr),NULL,NULL,yylineno);
+}
 #line 1966 "sysy.tab.cc"
     break;
 
-  case 41: /* Stmt: LVal ASSIGN Exp SEMI  */
-#line 232 "sysy.yy"
-                           {
-    (yyval.ptr)=mknode(ASSIGN,(yyvsp[-3].ptr),(yyvsp[-1].ptr),NULL,yylineno);
-}
+  case 40: /* Block: LC RC  */
+#line 234 "sysy.yy"
+            {
+        (yyval.ptr)=mknode(Block,NULL,NULL,NULL,yylineno);
+    }
 #line 1974 "sysy.tab.cc"
     break;
 
-  case 42: /* Stmt: SEMI  */
-#line 235 "sysy.yy"
-           {
-        (yyval.ptr)=NULL;
-    }
+  case 41: /* Stmt: LVal ASSIGN Exp SEMI  */
+#line 240 "sysy.yy"
+                           {
+    (yyval.ptr)=mknode(ASSIGN,(yyvsp[-3].ptr),(yyvsp[-1].ptr),NULL,yylineno);
+}
 #line 1982 "sysy.tab.cc"
     break;
 
-  case 43: /* Stmt: Exp SEMI  */
-#line 238 "sysy.yy"
-               {
-        (yyval.ptr)=(yyvsp[-1].ptr);
+  case 42: /* Stmt: SEMI  */
+#line 243 "sysy.yy"
+           {
+        (yyval.ptr)=NULL;
     }
 #line 1990 "sysy.tab.cc"
     break;
 
-  case 44: /* Stmt: Block  */
-#line 241 "sysy.yy"
-            {
-        (yyval.ptr)=(yyvsp[0].ptr);
+  case 43: /* Stmt: Exp SEMI  */
+#line 246 "sysy.yy"
+               {
+        (yyval.ptr)=(yyvsp[-1].ptr);
     }
 #line 1998 "sysy.tab.cc"
     break;
 
-  case 45: /* Stmt: IF LP Cond RP Stmt  */
-#line 244 "sysy.yy"
-                         {
-        (yyval.ptr)=mknode(IF,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);
+  case 44: /* Stmt: Block  */
+#line 249 "sysy.yy"
+            {
+        (yyval.ptr)=(yyvsp[0].ptr);
     }
 #line 2006 "sysy.tab.cc"
     break;
 
-  case 46: /* Stmt: IF LP Cond RP Stmt ELSE Stmt  */
-#line 247 "sysy.yy"
-                                   {
-        (yyval.ptr)=mknode(IF,(yyvsp[-4].ptr),(yyvsp[-2].ptr),(yyvsp[0].ptr),yylineno);
+  case 45: /* Stmt: IF LP Cond RP Stmt  */
+#line 252 "sysy.yy"
+                         {
+        (yyval.ptr)=mknode(IF,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);
     }
 #line 2014 "sysy.tab.cc"
     break;
 
-  case 47: /* Stmt: WHILE LP Cond RP Stmt  */
-#line 250 "sysy.yy"
-                            {
-        (yyval.ptr)=mknode(WHILE,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);
+  case 46: /* Stmt: IF LP Cond RP Stmt ELSE Stmt  */
+#line 255 "sysy.yy"
+                                   {
+        (yyval.ptr)=mknode(IF,(yyvsp[-4].ptr),(yyvsp[-2].ptr),(yyvsp[0].ptr),yylineno);
     }
 #line 2022 "sysy.tab.cc"
     break;
 
-  case 48: /* Stmt: BREAK SEMI  */
-#line 253 "sysy.yy"
-                 {
-        (yyval.ptr)=mknode(BREAK,NULL,NULL,NULL,yylineno);
+  case 47: /* Stmt: WHILE LP Cond RP Stmt  */
+#line 258 "sysy.yy"
+                            {
+        (yyval.ptr)=mknode(WHILE,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);
     }
 #line 2030 "sysy.tab.cc"
     break;
 
-  case 49: /* Stmt: CONTINUE SEMI  */
-#line 256 "sysy.yy"
-                    {
-        (yyval.ptr)=mknode(CONTINUE,NULL,NULL,NULL,yylineno);
+  case 48: /* Stmt: BREAK SEMI  */
+#line 261 "sysy.yy"
+                 {
+        (yyval.ptr)=mknode(BREAK,NULL,NULL,NULL,yylineno);
     }
 #line 2038 "sysy.tab.cc"
     break;
 
-  case 50: /* Stmt: RETURN SEMI  */
-#line 259 "sysy.yy"
-                  {
-        (yyval.ptr)=mknode(RETURN,NULL,NULL,NULL,yylineno);
+  case 49: /* Stmt: CONTINUE SEMI  */
+#line 264 "sysy.yy"
+                    {
+        (yyval.ptr)=mknode(CONTINUE,NULL,NULL,NULL,yylineno);
     }
 #line 2046 "sysy.tab.cc"
     break;
 
-  case 51: /* Stmt: RETURN Exp SEMI  */
-#line 262 "sysy.yy"
-                      {
-        (yyval.ptr)=mknode(RETURN,(yyvsp[-1].ptr),NULL,NULL,yylineno);
+  case 50: /* Stmt: RETURN SEMI  */
+#line 267 "sysy.yy"
+                  {
+        (yyval.ptr)=mknode(RETURN,NULL,NULL,NULL,yylineno);
     }
 #line 2054 "sysy.tab.cc"
     break;
 
-  case 52: /* Exp: AddExp  */
-#line 268 "sysy.yy"
-            {
-    (yyval.ptr)=(yyvsp[0].ptr);
-}
+  case 51: /* Stmt: RETURN Exp SEMI  */
+#line 270 "sysy.yy"
+                      {
+        (yyval.ptr)=mknode(RETURN,(yyvsp[-1].ptr),NULL,NULL,yylineno);
+    }
 #line 2062 "sysy.tab.cc"
     break;
 
-  case 53: /* Cond: LOrExp  */
-#line 274 "sysy.yy"
-             {
+  case 52: /* Exp: AddExp  */
+#line 276 "sysy.yy"
+            {
     (yyval.ptr)=(yyvsp[0].ptr);
 }
 #line 2070 "sysy.tab.cc"
     break;
 
+  case 53: /* Cond: LOrExp  */
+#line 282 "sysy.yy"
+             {
+    (yyval.ptr)=(yyvsp[0].ptr);
+}
+#line 2078 "sysy.tab.cc"
+    break;
+
   case 54: /* LVal: IDENT  */
-#line 280 "sysy.yy"
+#line 288 "sysy.yy"
             {
     (yyval.ptr)=mknode(LVal,NULL,NULL,NULL,yylineno);
     strcpy((yyval.ptr)->type_id,(yyvsp[0].type_id));
 }
-#line 2079 "sysy.tab.cc"
+#line 2087 "sysy.tab.cc"
     break;
 
   case 55: /* LVal: LVal LB Exp RB  */
-#line 284 "sysy.yy"
+#line 292 "sysy.yy"
                      {
         (yyval.ptr)=mknode(LVal,(yyvsp[-3].ptr),(yyvsp[-1].ptr),NULL,yylineno);
         strcpy((yyval.ptr)->type_id,(yyvsp[-3].ptr)->type_id);
     }
-#line 2088 "sysy.tab.cc"
-    break;
-
-  case 56: /* PrimaryExp: LP Exp RP  */
-#line 291 "sysy.yy"
-                      {
-    (yyval.ptr)=(yyvsp[-1].ptr);
-}
 #line 2096 "sysy.tab.cc"
     break;
 
-  case 57: /* PrimaryExp: LVal  */
-#line 294 "sysy.yy"
-           {
-        (yyval.ptr)=(yyvsp[0].ptr);
-    }
+  case 56: /* PrimaryExp: LP Exp RP  */
+#line 299 "sysy.yy"
+                      {
+    (yyval.ptr)=(yyvsp[-1].ptr);
+}
 #line 2104 "sysy.tab.cc"
     break;
 
-  case 58: /* PrimaryExp: Number  */
-#line 297 "sysy.yy"
-             {
+  case 57: /* PrimaryExp: LVal  */
+#line 302 "sysy.yy"
+           {
         (yyval.ptr)=(yyvsp[0].ptr);
     }
 #line 2112 "sysy.tab.cc"
     break;
 
+  case 58: /* PrimaryExp: Number  */
+#line 305 "sysy.yy"
+             {
+        (yyval.ptr)=(yyvsp[0].ptr);
+    }
+#line 2120 "sysy.tab.cc"
+    break;
+
   case 59: /* Number: INTCONST  */
-#line 303 "sysy.yy"
+#line 311 "sysy.yy"
                  {
     (yyval.ptr)=mknode(Number,NULL,NULL,NULL,yylineno);
     (yyval.ptr)->type_int=(yyvsp[0].type_int);
     (yyval.ptr)->type=INT;
 }
-#line 2122 "sysy.tab.cc"
+#line 2130 "sysy.tab.cc"
     break;
 
   case 60: /* Number: FLOATCONST  */
-#line 308 "sysy.yy"
+#line 316 "sysy.yy"
                  {
         (yyval.ptr)=mknode(Number,NULL,NULL,NULL,yylineno);
         (yyval.ptr)->type_float=(yyvsp[0].type_float);
         (yyval.ptr)->type=FLOAT;
     }
-#line 2132 "sysy.tab.cc"
-    break;
-
-  case 61: /* UnaryExp: PrimaryExp  */
-#line 316 "sysy.yy"
-                     {
-    (yyval.ptr)=(yyvsp[0].ptr);
-}
 #line 2140 "sysy.tab.cc"
     break;
 
+  case 61: /* UnaryExp: PrimaryExp  */
+#line 324 "sysy.yy"
+                     {
+    (yyval.ptr)=(yyvsp[0].ptr);
+}
+#line 2148 "sysy.tab.cc"
+    break;
+
   case 62: /* UnaryExp: ADD UnaryExp  */
-#line 319 "sysy.yy"
+#line 327 "sysy.yy"
                    {
         (yyval.ptr)=mknode(UnaryExp,(yyvsp[0].ptr),NULL,NULL,yylineno);
         strcpy((yyval.ptr)->op,"+");
     }
-#line 2149 "sysy.tab.cc"
+#line 2157 "sysy.tab.cc"
     break;
 
   case 63: /* UnaryExp: SUB UnaryExp  */
-#line 323 "sysy.yy"
+#line 331 "sysy.yy"
                    {
         (yyval.ptr)=mknode(UnaryExp,(yyvsp[0].ptr),NULL,NULL,yylineno);
         strcpy((yyval.ptr)->op,"-");
     }
-#line 2158 "sysy.tab.cc"
+#line 2166 "sysy.tab.cc"
     break;
 
   case 64: /* UnaryExp: NOT UnaryExp  */
-#line 327 "sysy.yy"
+#line 335 "sysy.yy"
                    {
         (yyval.ptr)=mknode(UnaryExp,(yyvsp[0].ptr),NULL,NULL,yylineno);
         strcpy((yyval.ptr)->op,"!");
     }
-#line 2167 "sysy.tab.cc"
-    break;
-
-  case 65: /* UnaryExp: FuncCall  */
-#line 331 "sysy.yy"
-               {
-        (yyval.ptr)=(yyvsp[0].ptr);
-    }
 #line 2175 "sysy.tab.cc"
     break;
 
+  case 65: /* UnaryExp: FuncCall  */
+#line 339 "sysy.yy"
+               {
+        (yyval.ptr)=(yyvsp[0].ptr);
+    }
+#line 2183 "sysy.tab.cc"
+    break;
+
   case 66: /* FuncCall: IDENT LP RP  */
-#line 337 "sysy.yy"
+#line 345 "sysy.yy"
                       {
     (yyval.ptr)=mknode(FuncCall,NULL,NULL,NULL,yylineno);
     strcpy((yyval.ptr)->type_id,(yyvsp[-2].type_id));
 }
-#line 2184 "sysy.tab.cc"
+#line 2192 "sysy.tab.cc"
     break;
 
   case 67: /* FuncCall: IDENT LP FuncRParams RP  */
-#line 341 "sysy.yy"
+#line 349 "sysy.yy"
                               {
         (yyval.ptr)=mknode(FuncCall,(yyvsp[-1].ptr),NULL,NULL,yylineno);
         strcpy((yyval.ptr)->type_id,(yyvsp[-3].type_id));
     }
-#line 2193 "sysy.tab.cc"
-    break;
-
-  case 68: /* FuncRParams: Exp  */
-#line 348 "sysy.yy"
-                 {
-    (yyval.ptr)=mknode(FuncRParams,(yyvsp[0].ptr),NULL,NULL,yylineno);
-}
 #line 2201 "sysy.tab.cc"
     break;
 
-  case 69: /* FuncRParams: FuncRParams COMMA Exp  */
-#line 351 "sysy.yy"
-                            {
-        (yyval.ptr)=mknode(FuncRParams,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);
-    }
+  case 68: /* FuncRParams: Exp  */
+#line 356 "sysy.yy"
+                 {
+    (yyval.ptr)=mknode(FuncRParams,(yyvsp[0].ptr),NULL,NULL,yylineno);
+}
 #line 2209 "sysy.tab.cc"
     break;
 
-  case 70: /* MulExp: UnaryExp  */
-#line 357 "sysy.yy"
-                 {
-    (yyval.ptr)=(yyvsp[0].ptr);
-}
+  case 69: /* FuncRParams: FuncRParams COMMA Exp  */
+#line 359 "sysy.yy"
+                            {
+        (yyval.ptr)=mknode(FuncRParams,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);
+    }
 #line 2217 "sysy.tab.cc"
     break;
 
+  case 70: /* MulExp: UnaryExp  */
+#line 365 "sysy.yy"
+                 {
+    (yyval.ptr)=(yyvsp[0].ptr);
+}
+#line 2225 "sysy.tab.cc"
+    break;
+
   case 71: /* MulExp: MulExp MUL UnaryExp  */
-#line 360 "sysy.yy"
+#line 368 "sysy.yy"
                           {
         (yyval.ptr)=mknode(MulExp,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);
         strcpy((yyval.ptr)->op,"*");
     }
-#line 2226 "sysy.tab.cc"
+#line 2234 "sysy.tab.cc"
     break;
 
   case 72: /* MulExp: MulExp DIV UnaryExp  */
-#line 364 "sysy.yy"
+#line 372 "sysy.yy"
                           {
         (yyval.ptr)=mknode(MulExp,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);
         strcpy((yyval.ptr)->op,"/");
     }
-#line 2235 "sysy.tab.cc"
+#line 2243 "sysy.tab.cc"
     break;
 
   case 73: /* MulExp: MulExp MOD UnaryExp  */
-#line 368 "sysy.yy"
+#line 376 "sysy.yy"
                           {
         (yyval.ptr)=mknode(MulExp,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);
         strcpy((yyval.ptr)->op,"%");
     }
-#line 2244 "sysy.tab.cc"
-    break;
-
-  case 74: /* AddExp: MulExp  */
-#line 375 "sysy.yy"
-               {
-    (yyval.ptr)=(yyvsp[0].ptr);
-}
 #line 2252 "sysy.tab.cc"
     break;
 
+  case 74: /* AddExp: MulExp  */
+#line 383 "sysy.yy"
+               {
+    (yyval.ptr)=(yyvsp[0].ptr);
+}
+#line 2260 "sysy.tab.cc"
+    break;
+
   case 75: /* AddExp: AddExp ADD MulExp  */
-#line 378 "sysy.yy"
+#line 386 "sysy.yy"
                         {
         (yyval.ptr)=mknode(AddExp,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);
         strcpy((yyval.ptr)->op,"+");
     }
-#line 2261 "sysy.tab.cc"
+#line 2269 "sysy.tab.cc"
     break;
 
   case 76: /* AddExp: AddExp SUB MulExp  */
-#line 382 "sysy.yy"
+#line 390 "sysy.yy"
                         {
         (yyval.ptr)=mknode(AddExp,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);
         strcpy((yyval.ptr)->op,"-");
     }
-#line 2270 "sysy.tab.cc"
-    break;
-
-  case 77: /* RelExp: AddExp  */
-#line 389 "sysy.yy"
-               {
-    (yyval.ptr)=(yyvsp[0].ptr);
-}
 #line 2278 "sysy.tab.cc"
     break;
 
+  case 77: /* RelExp: AddExp  */
+#line 397 "sysy.yy"
+               {
+    (yyval.ptr)=(yyvsp[0].ptr);
+}
+#line 2286 "sysy.tab.cc"
+    break;
+
   case 78: /* RelExp: RelExp LT AddExp  */
-#line 392 "sysy.yy"
+#line 400 "sysy.yy"
                        {
         (yyval.ptr)=mknode(RelExp,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);
         strcpy((yyval.ptr)->op,"<");
     }
-#line 2287 "sysy.tab.cc"
+#line 2295 "sysy.tab.cc"
     break;
 
   case 79: /* RelExp: RelExp GT AddExp  */
-#line 396 "sysy.yy"
+#line 404 "sysy.yy"
                        {
         (yyval.ptr)=mknode(RelExp,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);
         strcpy((yyval.ptr)->op,">");
     }
-#line 2296 "sysy.tab.cc"
+#line 2304 "sysy.tab.cc"
     break;
 
   case 80: /* RelExp: RelExp LE AddExp  */
-#line 400 "sysy.yy"
+#line 408 "sysy.yy"
                        {
         (yyval.ptr)=mknode(RelExp,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);
         strcpy((yyval.ptr)->op,"<=");
     }
-#line 2305 "sysy.tab.cc"
+#line 2313 "sysy.tab.cc"
     break;
 
   case 81: /* RelExp: RelExp GE AddExp  */
-#line 404 "sysy.yy"
+#line 412 "sysy.yy"
                        {
         (yyval.ptr)=mknode(RelExp,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);
         strcpy((yyval.ptr)->op,">=");
     }
-#line 2314 "sysy.tab.cc"
-    break;
-
-  case 82: /* EqExp: RelExp  */
-#line 410 "sysy.yy"
-              {
-    (yyval.ptr)=(yyvsp[0].ptr);
-}
 #line 2322 "sysy.tab.cc"
     break;
 
+  case 82: /* EqExp: RelExp  */
+#line 418 "sysy.yy"
+              {
+    (yyval.ptr)=(yyvsp[0].ptr);
+}
+#line 2330 "sysy.tab.cc"
+    break;
+
   case 83: /* EqExp: EqExp EQ RelExp  */
-#line 413 "sysy.yy"
+#line 421 "sysy.yy"
                       {
         (yyval.ptr)=mknode(EqExp,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);
         strcpy((yyval.ptr)->op,"==");
     }
-#line 2331 "sysy.tab.cc"
+#line 2339 "sysy.tab.cc"
     break;
 
   case 84: /* EqExp: EqExp NE RelExp  */
-#line 417 "sysy.yy"
+#line 425 "sysy.yy"
                       {
         (yyval.ptr)=mknode(EqExp,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);
         strcpy((yyval.ptr)->op,"!=");
     }
-#line 2340 "sysy.tab.cc"
-    break;
-
-  case 85: /* LAndExp: EqExp  */
-#line 424 "sysy.yy"
-               {
-    (yyval.ptr)=(yyvsp[0].ptr);
-}
 #line 2348 "sysy.tab.cc"
     break;
 
+  case 85: /* LAndExp: EqExp  */
+#line 432 "sysy.yy"
+               {
+    (yyval.ptr)=(yyvsp[0].ptr);
+}
+#line 2356 "sysy.tab.cc"
+    break;
+
   case 86: /* LAndExp: LAndExp AND EqExp  */
-#line 427 "sysy.yy"
+#line 435 "sysy.yy"
                         {
         (yyval.ptr)=mknode(LAndExp,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);
         strcpy((yyval.ptr)->op,"&&");
     }
-#line 2357 "sysy.tab.cc"
-    break;
-
-  case 87: /* LOrExp: LAndExp  */
-#line 434 "sysy.yy"
-                {
-    (yyval.ptr)=(yyvsp[0].ptr);
-}
 #line 2365 "sysy.tab.cc"
     break;
 
+  case 87: /* LOrExp: LAndExp  */
+#line 442 "sysy.yy"
+                {
+    (yyval.ptr)=(yyvsp[0].ptr);
+}
+#line 2373 "sysy.tab.cc"
+    break;
+
   case 88: /* LOrExp: LOrExp OR LAndExp  */
-#line 437 "sysy.yy"
+#line 445 "sysy.yy"
                         {
         (yyval.ptr)=mknode(LOrExp,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);
         strcpy((yyval.ptr)->op,"||");
     }
-#line 2374 "sysy.tab.cc"
+#line 2382 "sysy.tab.cc"
     break;
 
 
-#line 2378 "sysy.tab.cc"
+#line 2386 "sysy.tab.cc"
 
       default: break;
     }
@@ -2604,6 +2612,6 @@ yyreturn:
   return yyresult;
 }
 
-#line 444 "sysy.yy"
+#line 452 "sysy.yy"
 
 

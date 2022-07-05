@@ -4,10 +4,18 @@
     #include "cmath"
     #include "cstring"
     #include "ast.hpp"
+    #include "FlexLexer.h"
+    #include "def.h"
     extern char *yytext;
-    extern FILE *yyin;
-    extern int yylineno;
-    extern int yylex(void);
+    //extern FILE *yyin;
+    //extern int yylineno;
+    //#define yylineno
+    // extern int yyFlexLexer::yylex();
+    //extern int yyFlexLexer::yylex();
+    extern yyFlexLexer *yyflexlexer;
+    #define yylineno yyflexlexer->lineno()
+    #define yylex() yyflexlexer->yylex()
+    
     void yyerror(const char* fmt, ...);
     using namespace std;
     AST ast;
