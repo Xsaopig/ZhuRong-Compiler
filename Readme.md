@@ -18,7 +18,7 @@ main.cpp:(.text+0x90): undefined reference to `yyin'
 ## Make文件还没编写
 运行命令：
 
-flex sysy.y
+flex sysy.l
 
 bison -d sysy.yy
 
