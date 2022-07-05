@@ -15,8 +15,8 @@
 ~~/usr/bin/ld: main.cpp:(.text+0x98): undefined reference to `yylineno'~~
 
 
-~~## Make文件还没编写~~
-##makefile已经编写
+## ~~Make文件还没编写~~
+## makefile已经编写
 直接make即可输出源文件test.c的语法树
 
 
