@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
 	yyflexlexer=new yyFlexLexer(in,out);
 
 	yyparse();
-	printf("共有%d行源代码\n",yylineno);//由于.l文件中有%option yylineno，所以yylineno在yyflexlexer中是自动管理的，遇到换行就+1
+	printf("源程序共有%d行代码\n",yylineno);//由于.l文件中有%option yylineno，所以yylineno在yyflexlexer中是自动管理的，遇到换行就+1
 	return 0;
 }
 /*
