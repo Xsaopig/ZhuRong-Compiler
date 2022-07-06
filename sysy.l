@@ -20,8 +20,10 @@
 %option yylineno
 
 ILEN    ([Uu](L|l|LL|ll)?|(L|l|LL|ll)[Uu]?)
-FLEN    ([dDfF])
+FLEN    ([lLfF])
+
 float   (([0-9]*\.[0-9]+)|([0-9]+\.))
+float_hex  (([0-9a-fA-F]*\.[0-9a-fA-F]+)|([0-9a-fA-F]+\.))
 block "{"[.|\n]*"}"
 
 %%
@@ -73,7 +75,10 @@ block "{"[.|\n]*"}"
 0[xX][0-9a-fA-F]+{ILEN}?    {yylval.type_int=cal16(yytext); return INTCONST;}
 
 {float}{FLEN}?    {yylval.type_float=atof(yytext); return FLOATCONST;}
-({float}|0|([1-9][0-9]*))[eE]"-"?(0|([1-9][0-9]*)){FLEN}?   {yylval.type_float=atof(yytext); return FLOATCONST;}
+({float}|0|([1-9][0-9]*))[eE][-+]?(0|([1-9][0-9]*)){FLEN}?   {yylval.type_float=atof(yytext); return FLOATCONST;}
+
+0[xX]{float_hex}{FLEN}?    {yylval.type_float=atof(yytext); return FLOATCONST;}
+0[xX]({float_hex}|0|([1-9a-fA-F][0-9a-fA-F]*))[pP][-+]?(0|([1-9a-fA-F][0-9a-fA-F]*)){FLEN}?   {yylval.type_float=atof(yytext); return FLOATCONST;}
 
 [_a-zA-Z][_a-zA-Z0-9]*  {strcpy(yylval.type_id,yytext); return IDENT;}
 
@@ -109,3 +114,4 @@ int cal16(char *s)
     }
     return ans;
 }
+

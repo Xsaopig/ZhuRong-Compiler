@@ -1,7 +1,9 @@
 #include <stdarg.h>
 #include <cstdio>
+#include <string>
 #include "sysy.tab.hh"
-extern char filename[50];
+using namespace std;
+extern string filename;
 void yyerror(const char* fmt, ...) {
     va_list ap;
     va_start(ap, fmt);

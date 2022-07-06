@@ -13,7 +13,7 @@
     
     void yyerror(const char* fmt, ...);
     using namespace std;
-    AST ast;
+    extern AST ast;
 %}
 
 %union {
