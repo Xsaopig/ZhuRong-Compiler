@@ -1,10 +1,10 @@
-# symboltable version_0.1
+# symboltable版本
 ## 与cpp版相比较大致改动
 + 定义了符号表类Symboltable
 
 
 
-# cpp版本
+# [cpp版本](https://github.com/Xsaopig/ZhuRong-Compiler/tree/cpp-version)
 将语法树生成的版本转换为cpp版
 
 ## makefile已经编写
