@@ -2,7 +2,9 @@
 #include "sysy.tab.hh"
 #include <cstdlib>
 #include <cstring>
+#include "Symboltable.hpp"
 extern char last[50];
+extern Symboltable symboltable;
 enum node_kind  {   
     Root, CompUnit, Decl, ConstDecl, BType, BlockItems, ConstDef, VarDecl, VarDef, FuncCall,
     InitVal, FuncDef, FuncFParams, FuncFParam, Block, Stmt, Cond, LVal,
@@ -35,7 +37,9 @@ class AST
 private:
     struct node *root;
 public:
+    int lev;
     void printAST(struct node *T, int indent, int deep);
+    void ASTtoSymtab(struct node *T);
     struct node* setroot(struct node *root);
 };
 

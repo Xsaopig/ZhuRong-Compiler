@@ -1,4 +1,4 @@
-%error-verbose
+%define parse.error verbose
 %locations
 %{
     #include "cmath"
@@ -41,7 +41,7 @@
 %type <ptr> InitVal FuncDef FuncFParams
 %type <ptr> FuncFParam Block Stmt
 %type <ptr> Exp Cond LVal PrimaryExp Number InitVals
-%type <ptr> UnaryExp UnaryOp FuncRParams Idents FuncFParamArray
+%type <ptr> UnaryExp FuncRParams Idents FuncFParamArray
 %type <ptr> MulExp AddExp RelExp EqExp LAndExp LOrExp
  
 %%
@@ -49,8 +49,8 @@
 Root: CompUnit {
     $$=mknode(Root,$1,NULL,NULL,yylineno);
     struct node* root=ast.setroot($$);
-    ast.printAST(root,0,0);
-
+    // ast.printAST(root,0,0);
+    ast.ASTtoSymtab(root);
 }
     ;
 
