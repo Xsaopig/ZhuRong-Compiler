@@ -39,8 +39,9 @@ private:
 public:
     int lev;
     void printAST(struct node *T, int indent, int deep);
-    void ASTtoSymtab(struct node *T);
+    void ASTtoSymtab(struct node *T);   //AST转符号表
     struct node* setroot(struct node *root);
+    struct node* getroot() {return root;}
 };
 
 struct node *mknode(int kind, struct node *first, struct node *second, struct node *third, int pos);

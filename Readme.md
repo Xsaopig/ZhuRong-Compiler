@@ -1,6 +1,8 @@
 # symboltable版本
 ## 与cpp版相比较大致改动
 + 定义了符号表类Symboltable
++ AST类中添加了ASTtoSym函数，符号表大致创建完成（除了每个符号的type）
++ 定义了类型表达式类Type（具体怎么用还没想到）
 
 
 
