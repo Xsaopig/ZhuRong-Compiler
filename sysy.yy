@@ -49,7 +49,7 @@
 Root: CompUnit {
     $$=mknode(Root,$1,NULL,NULL,yylineno);
     struct node* root=ast.setroot($$);
-    // ast.printAST(root,0,0);
+    //ast.printAST(root,0,0);
     ast.ASTtoSymtab(root);
 }
     ;
@@ -82,12 +82,12 @@ Decl: ConstDecl SEMI {
 ConstDecl: CONST BType ConstDef {
     $$=mknode(ConstDecl,$2,$3,NULL,yylineno);
     $$->type=$2->type;
-    $$->pretype($2->pretype.getvalue());
+    //$$->pretype=new BasicType($2->pretype->getvalue());
 }
     | ConstDecl COMMA ConstDef {
         $$=mknode(ConstDecl,$1,$3,NULL,yylineno);
         $$->type=$1->type;
-        $$->pretype($1->pretype.getvalue());
+        //$$->pretype=new BasicType($1->pretype->getvalue());
     }
     ;
 
@@ -95,12 +95,12 @@ ConstDecl: CONST BType ConstDef {
 BType: INT {
     $$=mknode(BType,NULL,NULL,NULL,yylineno);
     $$->type=INT;
-    $$->pretype("int");
+    $$->pretype=new BasicType("int");
     }
     | FLOAT {
         $$=mknode(BType,NULL,NULL,NULL,yylineno);
         $$->type=FLOAT;
-        $$->pretype("float");
+        $$->pretype=new BasicType("float");
     } 
     ;
 
@@ -115,12 +115,10 @@ ConstDef: Idents ASSIGN InitVal {
 VarDecl: BType VarDef {
     $$=mknode(VarDecl,$1,$2,NULL,yylineno);
     $$->type=$1->type;
-    $$->pretype($1->pretype.getvalue());
 }
     | VarDecl COMMA VarDef {
         $$=mknode(VarDecl,$1,$3,NULL,yylineno);
         $$->type=$1->type;
-        $$->pretype($1->pretype.getvalue());
     }
     ;
 
@@ -313,13 +311,13 @@ Number: INTCONST {
     $$=mknode(Number,NULL,NULL,NULL,yylineno);
     $$->type_int=$1;
     $$->type=INT;
-    $$->pretype("int");
+    $$->pretype=new BasicType("int");
 }
     | FLOATCONST {
         $$=mknode(Number,NULL,NULL,NULL,yylineno);
         $$->type_float=$1;
         $$->type=FLOAT;
-        $$->pretype("float");
+        $$->pretype=new BasicType("float");
     }
     ;
 
