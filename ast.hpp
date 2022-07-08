@@ -2,7 +2,10 @@
 #include "sysy.tab.hh"
 #include <cstdlib>
 #include <cstring>
+#include "Symboltable.hpp"
+#include "Type.hpp"
 extern char last[50];
+extern Symboltable symboltable;
 enum node_kind  {   
     Root, CompUnit, Decl, ConstDecl, BType, BlockItems, ConstDef, VarDecl, VarDef, FuncCall,
     InitVal, FuncDef, FuncFParams, FuncFParam, Block, Stmt, Cond, LVal,
@@ -24,6 +27,7 @@ struct node {    //以下对结点属性定义没有考虑存储效率，只是�
     char Snext[15];               //该结点对应语句执行后的下一条语句位置标号
     struct codenode *code; //该结点中间代码链表头指针
     char op[10];
+    Type pretype;
     int type;                    //结点对应值的类型
     int pos;                     //语法单位所在位置行号
     int offset;                   //偏移量
@@ -37,8 +41,12 @@ private:
 public:
     int lev;
     void printAST(struct node *T, int indent, int deep);
-    void ASTtoSymtab(struct node *T);
+    void ASTtoSymtab(struct node *T);   //AST转符号表
+    string& getTypeClass(Type pretype); //得到符号类型
+
     struct node* setroot(struct node *root);
+    struct node* getroot() {return root;}
+   
 };
 
 struct node *mknode(int kind, struct node *first, struct node *second, struct node *third, int pos);

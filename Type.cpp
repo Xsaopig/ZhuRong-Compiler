@@ -33,3 +33,7 @@ Fun_Type::Fun_Type(vector<Type *> T)
     NameofClass=string("Fun_Type");
     value.assign(T.begin(),T.end());
 }
+
+
+
+

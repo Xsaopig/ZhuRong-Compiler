@@ -1,5 +1,5 @@
 #include "ast.hpp"
-#include "Symboltable.hpp"
+
 char last[50];
 Symboltable symboltable;
 
@@ -13,7 +13,24 @@ struct node *mknode(int kind, struct node *first, struct node *second, struct no
     T->pos = pos;
     return T;
 }
-
+string& AST::getTypeClass(Type pretype){
+        string str=pretype.getNameofClass();
+        if(str=="BasicType"||str=="Array_Type"){
+            return pretype.getvalue();
+        }
+        if(str=="Fun_Type"||str=="Product_Type"){
+            vector<type *> vec(pretype.getvalue());
+            string res;
+            for (int i = 0; i < vec.size()-1; i++){
+		        res+=to_string(vec.at(i));
+                res+=",";
+	        }
+            res+=to_string(vec.at(i));
+            return res;
+        }
+        return nullptr;
+            
+}
 struct node* AST::setroot(struct node *root){
     this->root=root;
     return this->root;
@@ -499,64 +516,70 @@ void AST::printAST(struct node *T, int indent, int deep) {
 }
 
 void AST::ASTtoSymtab(struct node *T) {
+    Symbol mysymbol;
+    struct node *cur,*T0;
+    int i;
     if(T) {
         switch(T->kind) {
         case Root:
             ASTtoSymtab(T->ptr[0]);
             break;
         case CompUnit:
-                ASTtoSymtab(T->ptr[0]);
-                ASTtoSymtab(T->ptr[1]);
+            ASTtoSymtab(T->ptr[0]);
+            ASTtoSymtab(T->ptr[1]);
             break;
         case FuncDef:
-            Symbol mysymbal;
+            mysymbol.name=string(T->type_id);
+            mysymbol.level=lev;
+            mysymbol.type=T->ptr[0]->type;//类型有误，VOID未加入，后续调整
+            if(T->ptr[0]){
+                    mysymbol.types=T->ptr[0]->pretype.getvalue();
+            }
+            else  mysymbol.types="void";
 
-            strcpy(mysymbal.name,T->type_id);
-            mysymbal.level=lev;
-            mysymbal.type=T->ptr[0]->type;//类型有误，VOID未加入，后续调整
-            int i=0;
-            struct node*T0=T->ptr[1];
+            i=0;
+            T0=T->ptr[1];
             while(T0){
                 i++;
                 if(T0->ptr[0]->kind==FuncFParams) T0=T0->ptr[0];
                 else T0=NULL;
             }
-            mysymbal.paramnum=i;
-            mysymbal.flag='F';
-            //mysymbal.offset=
-            symboltable.Push(mysymbal);  //函数名入表
+            mysymbol.paramnum=i;
+            mysymbol.flag='F';
 
-            int temp=symboltable.Push_index();
+            symboltable.Push(mysymbol);  //函数名入表
+
+            symboltable.Push_index();
             ASTtoSymtab(T->ptr[1]);   //进入函数参数
-
             ASTtoSymtab(T->ptr[2]);
-
-            symboltable.Pop_until(temp);
+            symboltable.Pop_until(symboltable.Pop_index());
             break;
         case FuncFParams:
             ASTtoSymtab(T->ptr[0]);
             ASTtoSymtab(T->ptr[1]);
             break;
         case FuncFParam:
-            Symbol mysymbal;
+            
 
-            strcpy(mysymbal.name,T->type_id);
-            mysymbal.level=1;
-            mysymbal.type=T->ptr[0]->type;//类型后续调整
-            mysymbal.flag='P';
+            mysymbol.name=string(T->type_id);
+            mysymbol.level=1;
+            mysymbol.type=T->ptr[0]->type;//类型后续调整
+            mysymbol.types=T->ptr[0]->pretype.getvalue();
+            mysymbol.flag='P';
 
             if(T->ptr[1]) {
                 int i = 1;
-                struct node *cur = T->ptr[1];
+                cur = T->ptr[1];
                 while(cur->ptr[0]) {
                     i++;
                     cur = cur->ptr[0];
                 }
-                for (int n = 0; n < i; n++)
-                   strcat(mysymbal.name,"[]");//数组参数的类型[]记在name
+
+            for (int n = 0; n < i; n++)
+                mysymbol.types+=string("[]");//数组参数的类型[]记在types
             }
 
-            symboltable.Push(mysymbal);  //参数名入表
+            symboltable.Push(mysymbol);  //参数名入表
 
             break;
         case FuncFParamArray:
@@ -567,13 +590,14 @@ void AST::ASTtoSymtab(struct node *T) {
             break;
         case Block:
             lev=lev+1;  
+            
             symboltable.Push_index();
-
+            
+            
             ASTtoSymtab(T->ptr[0]);
             ASTtoSymtab(T->ptr[1]);
-            int ret=symboltable.Pop_index();
-            symboltable.Pop_until(ret);
-                        
+            i=symboltable.Pop_index();
+            symboltable.Pop_until(i);   //asd     
             lev=lev-1;
             break;
         case BlockItems:
@@ -584,43 +608,43 @@ void AST::ASTtoSymtab(struct node *T) {
             ASTtoSymtab(T->ptr[0]);
             break;
         case ConstDecl:
-            Symbol mysymbal;
-            if(T->ptr[0]->kind==ConstDecl)  ASTtoSymtab(T->ptr[0]);
-          
-            strcpy(mysymbal.name,T->ptr[1]->ptr[0]->type_id);
-            mysymbal.level=lev;
-            mysymbal.type=T->type;//类型后续调整
-            mysymbal.flag='V';
-            strcpy(mysymbal.alias,"const");//const存在别名
-
-            struct node *cur=T->ptr[1]->ptr[0];
-            int i=0;
-             while(cur->ptr[0]) {
-                    i++;
-                    cur = cur->ptr[0];
-                }
-            for (int n = 0; n < i; n++)
-                   strcat(mysymbal.name,"[]");//数组的类型[]记在name
             
-             symboltable.Push(mysymbal);  //常量（变量）入表
+            if(T->ptr[0]->kind==ConstDecl)  ASTtoSymtab(T->ptr[0]);
+            mysymbol.name=string(T->ptr[1]->ptr[0]->type_id);
+            mysymbol.level=lev;
+            mysymbol.type=T->type;//类型后续调整
+            mysymbol.types="const "
+            mysymbol.types+=T->pretype.getvalue();
+            mysymbol.flag='V';
+ 
+            cur=T->ptr[1]->ptr[0];
+            i=0;
+            while(cur->ptr[0]) {
+                i++;
+                cur = cur->ptr[0];
+            }
+            for (int n = 0; n < i; n++)
+                   mysymbol.types+=string("[]");//数组的类型[]
+            
+             symboltable.Push(mysymbol);  //常量（变量）入表
             break;
         case VarDecl:
-            Symbol mysymbal;
             if(T->ptr[0]->kind==VarDecl)  ASTtoSymtab(T->ptr[0]);
-            strcpy(mysymbal.name,T->ptr[1]->ptr[0]->type_id);
-            mysymbal.level=lev;
-            mysymbal.type=T->type;//类型后续调整
-            mysymbal.flag='V';
-            struct node *cur=T->ptr[1]->ptr[0];
-            int i=0;
-             while(cur->ptr[0]) {
-                    i++;
-                    cur = cur->ptr[0];
-                }
+            mysymbol.name=string(T->ptr[1]->ptr[0]->type_id);
+            mysymbol.level=lev;
+            mysymbol.type=T->type;//类型后续调整
+            mysymbol.types=T->pretype.getvalue();
+            mysymbol.flag='V';
+            cur=T->ptr[1]->ptr[0];
+            i=0;
+            while(cur->ptr[0]) {
+                i++;
+                cur = cur->ptr[0];
+            }
             for (int n = 0; n < i; n++)
-                   strcat(mysymbal.name,"[]");//数组的类型[]记在name
+                mysymbol.types+=string("[]");//数组的类型[]记在name
             
-             symboltable.Push(mysymbal);  //常量（变量）入表
+             symboltable.Push(mysymbol);  //常量（变量）入表
             break;
         case ConstDef:
         case VarDef:

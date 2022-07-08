@@ -7,6 +7,7 @@ using namespace std;
 class Symbol
 {
 public:
+    Symbol(){};
     Symbol(string name);
     Symbol(const Symbol &symbol);//复制构造函数
     ~Symbol();
@@ -16,10 +17,11 @@ public:
     string name;  //变量或函数名
     int level;      //层号，外部变量名或函数名层号为0，形参名为1，每到1个复合语句层号加1，退出减1
     int type;       //变量类型或函数返回值类型
-    int paramnum;   //形式参数个数
+    string types;
+    int paramnum=0;   //形式参数个数
     string alias; //别名，为解决嵌套层次使用，使得每一个数据名称唯一
     char flag;  //符号标记，函数：'F'  变量：'V'   参数：'P'  临时变量：'T'
-    char offset;    //外部变量和局部变量在其静态数据区或活动记录中的偏移量
+    char offset=0;    //外部变量和局部变量在其静态数据区或活动记录中的偏移量
                     //或函数活动记录大小，目标代码生成时使用
     //其它...
     //添加属性的时候别忘了修改 复制构造函数 与 复制函数Clone()！
@@ -27,6 +29,7 @@ public:
 };
 
 class Symboltable   //符号表，是一个顺序栈，index初值为0
+                    //对空符号表进行删除，会 exit(1)
 {
 public:
     Symboltable();
@@ -50,4 +53,5 @@ public:
         return temp;
     };
 
+    void print();//打印符号表
 };
