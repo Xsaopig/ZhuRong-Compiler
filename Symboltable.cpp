@@ -9,7 +9,7 @@ Symbol::Symbol(string name)
     level=0;
     flag='V';
     type=INT;
-    type="int";
+    types="int";
     paramnum=0;
     offset=0x00;
 }
