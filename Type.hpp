@@ -56,13 +56,11 @@ class Fun_Type :public Type
 {
 public:
     Fun_Type() {NameofClass=string("Fun_Type");};
-    Fun_Type(Type* t1,Type* t2,Type *t3,Type* t4);
-    Fun_Type(Type* t1,Type* t2,Type *t3);
-    Fun_Type(Type* t1,Type* t2);
-    Fun_Type(Type* t1);
+    Fun_Type(vector<Type *> T);
     ~Fun_Type() {};
     vector<Type *> getvalue() {return value;}
 private:
     vector<Type *> value;
 };
+
 
