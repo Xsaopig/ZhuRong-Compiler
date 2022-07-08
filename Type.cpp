@@ -28,36 +28,8 @@ Array_Type::  Array_Type(int I,Array_Type T)
     value="("+to_string(I)+","+T.getvalue()+")";
 }
 
-Fun_Type::Fun_Type(Type* T1)
+Fun_Type::Fun_Type(vector<Type *> T)
 {
     NameofClass=string("Fun_Type");
-    value.push_back(T1);
+    value.assign(T.begin(),T.end());
 }
-
-Fun_Type::Fun_Type(Type* T1,Type* T2)
-{
-    NameofClass=string("Fun_Type");
-    value.push_back(T1);
-    value.push_back(T2);
-}
-
-Fun_Type::Fun_Type(Type* T1,Type* T2,Type *T3)
-{
-    NameofClass=string("Fun_Type");
-    value.push_back(T1);
-    value.push_back(T2);
-    value.push_back(T3);
-}
-
-Fun_Type::Fun_Type(Type* T1,Type* T2,Type *T3,Type* T4)
-{
-    NameofClass=string("Fun_Type");
-    value.push_back(T1);
-    value.push_back(T2);
-    value.push_back(T3);
-    value.push_back(T4);
-}
-
-
-
-
