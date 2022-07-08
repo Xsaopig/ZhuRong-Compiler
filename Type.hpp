@@ -48,7 +48,7 @@ public:
     ~Array_Type() {};
     string&  getvalue() {return value;}
 private:
-    string& value;
+    string value;
 }
 
 //函数类型，如fun(T)
