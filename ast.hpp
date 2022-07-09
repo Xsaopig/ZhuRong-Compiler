@@ -4,6 +4,7 @@
 #include <cstring>
 #include "Symboltable.hpp"
 #include "Type.hpp"
+#include "IR.hpp"
 extern char last[50];
 extern Symboltable symboltable;
 enum node_kind  {   
@@ -23,9 +24,9 @@ struct node {    //以下对结点属性定义没有考虑存储效率，只是�
     struct node *ptr[3];                   //子树指针，由kind确定有多少棵子树
     int level;                    //层号
     int place;                    //表示结点对应的变量或运算结果临时变量在符号表的位置序号
-    char Etrue[15],Efalse[15];      //对布尔表达式的翻译时，真假转移目标的标号
-    char Snext[15];               //该结点对应语句执行后的下一条语句位置标号
-    struct codenode *code; //该结点中间代码链表头指针
+    string Etrue,Efalse;      //对布尔表达式的翻译时，真假转移目标的标号
+    string Snext;               //该结点对应语句执行后的下一条语句位置标号
+    struct codenode *code;        //该结点中间代码链表头指针
     char op[10];
     Type* pretype;
     int type;                    //结点对应值的类型
@@ -42,7 +43,7 @@ public:
     int lev=0;
     void printAST(struct node *T, int indent, int deep);
     void ASTtoSymtab(struct node *T);   //AST转符号表
-    string& getTypeClass(Type pretype); //得到符号类型
+    // string& getTypeClass(Type pretype); //得到符号类型
 
     struct node* setroot(struct node *root);
     struct node* getroot() {return root;}
