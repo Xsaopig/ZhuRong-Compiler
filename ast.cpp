@@ -525,15 +525,19 @@ void AST::ASTtoSymtab(struct node *T) {
     if(T) {
         switch(T->kind) {
         case Root:
+            T->level=0;//根节点在第0层
             ASTtoSymtab(T->ptr[0]);
             break;
         case CompUnit:
+            T->level=0; //CompUnit结点的子节点也在第0层
+            T->ptr[0]->level=0;
+            if(T->ptr[1]) T->ptr[1]->level=0;
             ASTtoSymtab(T->ptr[0]);
             ASTtoSymtab(T->ptr[1]);
             break;
         case FuncDef:
             mysymbol.name=string(T->type_id);
-            mysymbol.level=lev;
+            mysymbol.level=T->level;
             // if(T->ptr[0]) mysymbol.type=T->ptr[0]->type;//类型有误，VOID未加入，后续调整
             son=static_cast<BasicType*>(T->pretype);
             mysymbol.types=son->getvalue();
@@ -547,20 +551,29 @@ void AST::ASTtoSymtab(struct node *T) {
             }
             mysymbol.paramnum=i;
             mysymbol.flag='F';
-
             symboltable.Push(mysymbol);  //函数名入表
-
             symboltable.Push_index();
+            
+            
+            if(T->ptr[0]) T->ptr[0]->level=0;//函数类型结点还在第0层
+            if(T->ptr[1]) T->ptr[1]->level=1;   //参数在第1层
+            T->ptr[2]->level=1;   //函数体在第1层
+            
+            
             ASTtoSymtab(T->ptr[1]);   //进入函数参数
             ASTtoSymtab(T->ptr[2]);
             symboltable.Pop_until(symboltable.Pop_index());
             break;
         case FuncFParams:
+            T->ptr[0]->level=1;   
+            if(T->ptr[1]) T->ptr[1]->level=1;
             ASTtoSymtab(T->ptr[0]);
             ASTtoSymtab(T->ptr[1]);
+            
             break;
         case FuncFParam:
-            
+            T->ptr[0]->level=1;   
+            if(T->ptr[1]) T->ptr[1]->level=1;
 
             mysymbol.name=string(T->type_id);
             mysymbol.level=1;
@@ -585,37 +598,41 @@ void AST::ASTtoSymtab(struct node *T) {
 
             break;
         case FuncFParamArray:
-                
+            if(T->ptr[0]) T->ptr[0]->level=T->level;
+            if(T->ptr[1]) T->ptr[1]->level=T->level;
             break;
         case BType:
             
             break;
         case Block:
-            lev=lev+1;  
+            if(T->ptr[0]) T->ptr[0]->level=T->level;
+            
+            // lev=lev+1;  
             
             symboltable.Push_index();
-            
-            
             ASTtoSymtab(T->ptr[0]);
-            ASTtoSymtab(T->ptr[1]);
             i=symboltable.Pop_index();
-            symboltable.Pop_until(i);   //asd     
-            lev=lev-1;
+            symboltable.Pop_until(i);       
+            // lev=lev-1;
             break;
         case BlockItems:
+            if(T->ptr[0]) T->ptr[0]->level=(T->ptr[0]->kind==Block)?T->level+1:T->level;
+            if(T->ptr[1])  T->ptr[1]->level=(T->ptr[1]->kind==Block)?T->level+1:T->level;
             ASTtoSymtab(T->ptr[0]);
             ASTtoSymtab(T->ptr[1]);
             break;
         case Decl:
+            T->ptr[0]->level=T->level;
             ASTtoSymtab(T->ptr[0]);
             break;
         case ConstDecl:
-            
+            T->ptr[0]->level=T->level;
+            T->ptr[1]->level=T->level;
+
             if(T->ptr[0]->kind==ConstDecl)  ASTtoSymtab(T->ptr[0]);
             mysymbol.name=string(T->ptr[1]->ptr[0]->type_id);
-            mysymbol.level=lev;
+            mysymbol.level=T->level;
             // mysymbol.type=T->type;//类型后续调整
-            // mysymbol.alias="const ";
             son=static_cast<BasicType*>(T->pretype);
             mysymbol.types=son->getvalue();
             mysymbol.flag='C';
@@ -632,9 +649,12 @@ void AST::ASTtoSymtab(struct node *T) {
              symboltable.Push(mysymbol);  //常量（变量）入表
             break;
         case VarDecl:
+            T->ptr[0]->level=T->level;
+            T->ptr[1]->level=T->level;
+
             if(T->ptr[0]->kind==VarDecl)  ASTtoSymtab(T->ptr[0]);
             mysymbol.name=string(T->ptr[1]->ptr[0]->type_id);
-            mysymbol.level=lev;
+            mysymbol.level=T->level;
             // mysymbol.type=T->type;//类型后续调整
             son=static_cast<BasicType*>(T->pretype);
             mysymbol.types=son->getvalue();
@@ -652,37 +672,50 @@ void AST::ASTtoSymtab(struct node *T) {
              symboltable.Push(mysymbol);  //常量（变量）入表
             break;
         case ConstDef:
+            T->ptr[0]->level=T->level;
+            T->ptr[1]->level=T->level;
+            break;
         case VarDef:
-        
+            T->ptr[0]->level=T->level;
+            if(T->ptr[1]) T->ptr[1]->level=T->level;
             break;
         case Idents:
-
+            if(T->ptr[0]) T->ptr[0]->level=T->level;
+            if(T->ptr[1]) T->ptr[1]->level=T->level;
             break;
         case InitVals:
-
+            if(T->ptr[0]) T->ptr[0]->level=T->level;
+            if(T->ptr[1]) T->ptr[1]->level=T->level;
             break;
         case InitVal:
-
+            if(T->ptr[0]) T->ptr[0]->level=T->level;
             break;
         case ASSIGN:
-
+            if(T->ptr[0]) T->ptr[0]->level=T->level;
+            if(T->ptr[1]) T->ptr[1]->level=T->level;
             ASTtoSymtab(T->ptr[0]);
             ASTtoSymtab(T->ptr[1]);
             break;
         case LVal:
-            
+            if(T->ptr[0]) T->ptr[0]->level=T->level;
+            if(T->ptr[1]) T->ptr[1]->level=T->level;
             break;
         case Number://单个数值需要处理吗？测试案例有些只有一个整数
-
             break;
         case FuncCall:
-  
+            if(T->ptr[0]) T->ptr[0]->level=T->level;
+            if(T->ptr[1]) T->ptr[1]->level=T->level;
+            if(T->ptr[2]) T->ptr[2]->level=T->level;
             break;
         case FuncRParams:
-
+            if(T->ptr[0]) T->ptr[0]->level=T->level;
+            if(T->ptr[1]) T->ptr[1]->level=T->level;
+            if(T->ptr[2]) T->ptr[2]->level=T->level;
             break;
         case UnaryExp:
-
+            if(T->ptr[0]) T->ptr[0]->level=T->level;
+            if(T->ptr[1]) T->ptr[1]->level=T->level;
+            if(T->ptr[2]) T->ptr[2]->level=T->level;
             break;
         case AddExp:
         case MulExp:
@@ -690,24 +723,29 @@ void AST::ASTtoSymtab(struct node *T) {
         case LAndExp:
         case EqExp:
         case RelExp:
-
+            if(T->ptr[0]) T->ptr[0]->level=T->level;
+            if(T->ptr[1]) T->ptr[1]->level=T->level;
+            if(T->ptr[2]) T->ptr[2]->level=T->level;
             break;
 
         case IF:
+            T->ptr[0]->level=T->level;
+            if(T->ptr[1]) T->ptr[1]->level=(T->ptr[1]->kind==Block)?T->level+1:T->level;
+            if(T->ptr[2]) T->ptr[2]->level=(T->ptr[2]->kind==Block)?T->level+1:T->level;
             ASTtoSymtab(T->ptr[1]);
             ASTtoSymtab(T->ptr[2]);
             break;
         case WHILE:
+            if(T->ptr[0]) T->ptr[0]->level=T->level;
+            if(T->ptr[1]) T->ptr[1]->level=(T->ptr[1]->kind==Block)?T->level+1:T->level;
             ASTtoSymtab(T->ptr[1]);
             break;
         case RETURN:
-
+            if(T->ptr[0]) T->ptr[0]->level=T->level;
             break;
         case CONTINUE:
-
             break;
         case BREAK:
-
             break;
         }
     }

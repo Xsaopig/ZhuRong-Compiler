@@ -49,8 +49,9 @@
 Root: CompUnit {
     $$=mknode(Root,$1,NULL,NULL,yylineno);
     struct node* root=ast.setroot($$);
-    //ast.printAST(root,0,0);
-    ast.ASTtoSymtab(root);
+    // ast.printAST(root,0,0);
+    // ast.ASTtoSymtab(root);
+    genIR(root);
 }
     ;
 
