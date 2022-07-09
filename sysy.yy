@@ -82,12 +82,12 @@ Decl: ConstDecl SEMI {
 ConstDecl: CONST BType ConstDef {
     $$=mknode(ConstDecl,$2,$3,NULL,yylineno);
     $$->type=$2->type;
-    //$$->pretype=new BasicType($2->pretype->getvalue());
+    $$->pretype=$2->pretype;
 }
     | ConstDecl COMMA ConstDef {
         $$=mknode(ConstDecl,$1,$3,NULL,yylineno);
         $$->type=$1->type;
-        //$$->pretype=new BasicType($1->pretype->getvalue());
+        $$->pretype=$1->pretype;
     }
     ;
 
@@ -115,10 +115,14 @@ ConstDef: Idents ASSIGN InitVal {
 VarDecl: BType VarDef {
     $$=mknode(VarDecl,$1,$2,NULL,yylineno);
     $$->type=$1->type;
+    $$->pretype=$1->pretype;
+    $2->pretype=$$->pretype;
 }
     | VarDecl COMMA VarDef {
         $$=mknode(VarDecl,$1,$3,NULL,yylineno);
         $$->type=$1->type;
+        $$->pretype=$1->pretype;
+        $3->pretype=$$->pretype;
     }
     ;
 
@@ -168,18 +172,22 @@ InitVal: Exp {
 FuncDef: VOID IDENT LP RP Block {
     $$=mknode(FuncDef,NULL,NULL,$5,yylineno);
     strcpy($$->type_id,$2);
+    $$->pretype=new BasicType("void");
 }
     | BType IDENT LP FuncFParams RP Block {
         $$=mknode(FuncDef,$1,$4,$6,yylineno);
         strcpy($$->type_id,$2);
+        $$->pretype=$1->pretype;
     }
     | BType IDENT LP RP Block {
         $$=mknode(FuncDef,$1,NULL,$5,yylineno);
         strcpy($$->type_id,$2);
+        $$->pretype=$1->pretype;
     }
     | VOID IDENT LP FuncFParams RP Block {
         $$=mknode(FuncDef,NULL,$4,$6,yylineno);
         strcpy($$->type_id,$2);
+        $$->pretype=new BasicType("void");
     }
     ;
 

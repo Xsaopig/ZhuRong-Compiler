@@ -39,7 +39,7 @@ class AST
 private:
     struct node *root;
 public:
-    int lev;
+    int lev=0;
     void printAST(struct node *T, int indent, int deep);
     void ASTtoSymtab(struct node *T);   //AST转符号表
     string& getTypeClass(Type pretype); //得到符号类型

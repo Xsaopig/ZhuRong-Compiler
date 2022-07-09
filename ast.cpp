@@ -534,12 +534,9 @@ void AST::ASTtoSymtab(struct node *T) {
         case FuncDef:
             mysymbol.name=string(T->type_id);
             mysymbol.level=lev;
-            mysymbol.type=T->ptr[0]->type;//类型有误，VOID未加入，后续调整
-            if(T->ptr[0]){
-                    son=static_cast<BasicType*>(T->ptr[0]->pretype);
-                    mysymbol.types=son->getvalue();
-            }
-            else  mysymbol.types="void";
+            // if(T->ptr[0]) mysymbol.type=T->ptr[0]->type;//类型有误，VOID未加入，后续调整
+            son=static_cast<BasicType*>(T->pretype);
+            mysymbol.types=son->getvalue();
 
             i=0;
             T0=T->ptr[1];
@@ -567,7 +564,7 @@ void AST::ASTtoSymtab(struct node *T) {
 
             mysymbol.name=string(T->type_id);
             mysymbol.level=1;
-            mysymbol.type=T->ptr[0]->type;//类型后续调整
+            // mysymbol.type=T->ptr[0]->type;//类型后续调整
             son=static_cast<BasicType*>(T->ptr[0]->pretype);
             mysymbol.types=son->getvalue();
             mysymbol.flag='P';
@@ -617,12 +614,11 @@ void AST::ASTtoSymtab(struct node *T) {
             if(T->ptr[0]->kind==ConstDecl)  ASTtoSymtab(T->ptr[0]);
             mysymbol.name=string(T->ptr[1]->ptr[0]->type_id);
             mysymbol.level=lev;
-            mysymbol.type=T->type;//类型后续调整
-            mysymbol.alias="const ";
-            //son=static_cast<BasicType*>(T->pretype);
-            //mysymbol.types=son->getvalue();
-
-            mysymbol.flag='V';
+            // mysymbol.type=T->type;//类型后续调整
+            // mysymbol.alias="const ";
+            son=static_cast<BasicType*>(T->pretype);
+            mysymbol.types=son->getvalue();
+            mysymbol.flag='C';
  
             cur=T->ptr[1]->ptr[0];
             i=0;
@@ -639,9 +635,9 @@ void AST::ASTtoSymtab(struct node *T) {
             if(T->ptr[0]->kind==VarDecl)  ASTtoSymtab(T->ptr[0]);
             mysymbol.name=string(T->ptr[1]->ptr[0]->type_id);
             mysymbol.level=lev;
-            mysymbol.type=T->type;//类型后续调整
-            //son=static_cast<BasicType*>(T->ptr[0]->pretype);
-            //mysymbol.types=son->getvalue();
+            // mysymbol.type=T->type;//类型后续调整
+            son=static_cast<BasicType*>(T->pretype);
+            mysymbol.types=son->getvalue();
 
             mysymbol.flag='V';
             cur=T->ptr[1]->ptr[0];
@@ -651,7 +647,7 @@ void AST::ASTtoSymtab(struct node *T) {
                 cur = cur->ptr[0];
             }
             for (int n = 0; n < i; n++)
-                mysymbol.name+=string("[]");//数组的类型[]记在name
+                mysymbol.types+=string("[]");//数组的类型[]记在types
             
              symboltable.Push(mysymbol);  //常量（变量）入表
             break;

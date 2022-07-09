@@ -1,9 +1,17 @@
 /*这里是测试语法树输出的文件*/
-// #include "stdio.h"
-// #define A (a=a+c)
-int main(int a,int b)
+int main()
 {
-    int c;
-    int d[10][20];
+    int a=5;
+    int b;
+    int i=3;
+    if(a>1){
+        b=2;
+    }
+    else
+        b=3;
+    while(i<10)
+    {
+        i=i+1;
+    }
     return 0;
 }

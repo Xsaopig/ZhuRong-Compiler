@@ -49,7 +49,7 @@ public:
     string&  getvalue() {return value;}
 private:
     string value;
-}
+};
 
 //函数类型，如fun(T)
 class Fun_Type :public Type
