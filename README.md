@@ -1,3 +1,11 @@
+# IR版本
+## 采用LLVM IR，[参考资料](https://www.zhihu.com/column/c_1267851596689457152)
++ 定义了genIR函数(未完成)
+
+# 语义检查
++ 暂且跳过，如有必要可在ASTtoSym函数中完成语义检查
+
+
 # symboltable版本
 ## 与cpp版相比较大致改动
 + 定义了符号表类Symboltable
