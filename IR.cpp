@@ -1,9 +1,63 @@
 #include "ast.hpp"
-void genIR(struct node *T) {
+string IRBuilder::newAlias(){
+    return string("%")+to_string(no++);
+}
+string IRBuilder::newlabel(){//注意在LLVM IR中，标号label跟局部变量一样用%N表示
+    return string("label %")+to_string(no++);
+}
+
+struct codenode* IRBuilder::makecodenode(enum op_kind kind,vector<Opn*>& opns){
+    struct codenode *p=new struct codenode();
+    p->op=kind;
+    p->opns=opns;
+    p->pre=p->next=p;
+    return p;
+}
+
+struct codenode *genLabel(string label){
+    struct codenode *p=new struct codenode();
+    p->op=LABEL;
+    Opn *opn=new Opn();
+    opn->id=label;
+    vector<Opn*> opns={opn};
+    p->opns=opns;
+    p->next=p->pre=p;
+    return p;
+}
+
+//合并多个中间代码的双向循环链表，首尾相连
+struct codenode *merge(int num,...){
+    struct codenode *h1,*h2,*p,*t1,*t2;
+    va_list ap;
+    va_start(ap,num);
+    h1=va_arg(ap,struct codenode *);
+    while (--num>0) {
+        h2=va_arg(ap,struct codenode *);
+        if (h1==NULL) h1=h2;
+        else if (h2){
+            t1=h1->pre;
+            t2=h2->pre;
+            t1->next=h2;
+            t2->next=h1;
+            h1->pre=t2;
+            h2->pre=t1;
+            }
+        }
+    va_end(ap);
+    return h1;
+}
+
+
+void IRBuilder::genIR(struct node *T) {
     Symbol mysymbol;
     struct node *cur,*T0;
     BasicType* son;
     int i;
+    int index;
+    Symbol *symbol;
+    Opn *opn;
+    string opn_type;
+    vector<Opn*> opns;
     if(T) {
         switch(T->kind) {
         case Root:
@@ -33,17 +87,32 @@ void genIR(struct node *T) {
             }
             mysymbol.paramnum=i;
             mysymbol.flag='F';
-            symboltable.Push(mysymbol);  //函数名入表
+            T->place=symboltable.Push(mysymbol)-1;  //函数名入表
             symboltable.Push_index();
+
+            //接下来处理T->code
+            //在LLVM IR中，函数定义形式如：define i32 @main   
+            //i32代表int返回值类型，@在LLVM IR中是全局符号的意思
+            opn_type= (!mysymbol.types.compare("int"))?"i32":mysymbol.types;//int对应的是i32，float和void不变
+            opn=new Opn(IDENT,opn_type,T->level,T->place);//两个类型、层号、在符号表中的位置
+            opn->id=mysymbol.name;//操作数名就是函数名
+            opns.push_back(opn);//函数定义操作只有一个操作数
+            T->code=makecodenode(DEFINE,opns);
             
-            
+
+            //计算子节点的level（继承属性）
             if(T->ptr[0]) T->ptr[0]->level=0;//函数类型结点还在第0层
             if(T->ptr[1]) T->ptr[1]->level=1;   //参数在第1层
             T->ptr[2]->level=1;   //函数体在第1层
             
             
             genIR(T->ptr[1]);   //进入函数参数
-            genIR(T->ptr[2]);
+            opn_type=newlabel();            //这一句和下面一句不要合成一句，会报错（奇怪）
+            T->ptr[2]->Snext=opn_type;      //T->Snext
+            genIR(T->ptr[2]);   //函数体
+
+            T->code = merge(4, T->code, T->ptr[1] ? T->ptr[1]->code : NULL, T->ptr[2]->code, genLabel(T->ptr[2]->Snext));
+
             symboltable.Pop_until(symboltable.Pop_index());
             break;
         case FuncFParams:
@@ -181,6 +250,21 @@ void genIR(struct node *T) {
         case LVal:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
             if(T->ptr[1]) T->ptr[1]->level=T->level;
+
+            // if(!T->ptr[0] && !T->ptr[1]){// IDENT
+            //     index=symboltable.Search(T->type_id);//找到符号的索引
+            //     symbol=symboltable.getSymbol(index)
+            //     if(symbol没别名){
+            //         T->codenode->string=symbol->name;
+            //     }
+            //     else{
+            //         T->codenode->string=symbol->别名;
+            //         symbol->别名=make_别名();
+            //     }
+            // }
+            // else {// LVal LB Exp RB 
+            //     T->codenode->string=T->ptr[0]->codenode->string+"{"+T->ptr[1]->string+"}";
+            // }
             break;
         case Number://单个数值需要处理吗？测试案例有些只有一个整数
             break;

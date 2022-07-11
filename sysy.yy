@@ -51,7 +51,8 @@ Root: CompUnit {
     struct node* root=ast.setroot($$);
     // ast.printAST(root,0,0);
     // ast.ASTtoSymtab(root);
-    genIR(root);
+    IRBuilder IRbuilder;
+    IRbuilder.genIR(root);
 }
     ;
 
