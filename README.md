@@ -1,5 +1,9 @@
 # IR版本
 ## 采用LLVM IR，[参考资料](https://www.zhihu.com/column/c_1267851596689457152)
+
+生成LLVM IR的命令: clang -emit-llvm -S test.c
+
++ 定义了IRbuild类
 + 定义了genIR函数(未完成)
 
 # 语义检查
