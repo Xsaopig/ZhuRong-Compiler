@@ -80,14 +80,14 @@ void IRBuilder::genIR(struct node *T) {
             genIR(T->ptr[0]);
             T->code=T->ptr[0]->code;
             if(T->ptr[1]){
-                    T->ptr[1]->level=0;
-                    genIR(T->ptr[1]);
-                    T->code=merge(2,T->code,T->ptr[1]->code);
+                T->ptr[1]->level=0;
+                genIR(T->ptr[1]);
+                T->code=merge(2,T->code,T->ptr[1]->code);
             }
             break;
         case FuncDef:
-            record=op;  //记录进函数前的局部值
-            op=0;
+            record=no;  //记录进函数前的局部值
+            no=0;
             mysymbol.name=string(T->type_id);
             mysymbol.level=T->level;
             // if(T->ptr[0]) mysymbol.type=T->ptr[0]->type;//类型有误，VOID未加入，后续调整
@@ -125,14 +125,14 @@ void IRBuilder::genIR(struct node *T) {
             genIR(T->ptr[1]);   //进入函数参数
             opn_type=newlabel();            //这一句和下面一句不要合成一句，会报错（奇怪）
             T->ptr[2]->Snext=opn_type;      //T->Snext
-            op=op+1;
+            no=no+1;
             genIR(T->ptr[2]);   //函数体
 
             T->code = merge(4, T->code, T->ptr[1] ? T->ptr[1]->code : NULL, T->ptr[2]->code, genLabel(T->ptr[2]->Snext));
 
             symboltable.Pop_until(symboltable.Pop_index());
 
-            op=record;
+            no=record;
             break;
         case FuncFParams:
             T->ptr[0]->level=1;   
@@ -210,7 +210,7 @@ void IRBuilder::genIR(struct node *T) {
             genIR(T->ptr[0]);
             T->code=T->ptr[0]->code;
             if(T->ptr[1]) {
-                genTAC(T->ptr[1]);
+                genIR(T->ptr[1]);
                 T->code = merge(2, T->code, T->ptr[1]->code);
             }
             break;
@@ -244,7 +244,7 @@ void IRBuilder::genIR(struct node *T) {
             T->place=symboltable.Push(mysymbol)-1;  //常量（变量）入表
 
             opn_type= (!mysymbol.types.compare("int"))?"i32":mysymbol.types;//int对应的是i32，float和void不变
-            opn=new Opn(CONST,opn_type,T->level,T->place);//两个类型、层号、在符号表中的位置
+            opn=new Opn(CONSTANT,opn_type,T->level,T->place);//两个类型、层号、在符号表中的位置
             if(T->level==0){
                 opn->id=newGloabl();
             }
@@ -252,7 +252,7 @@ void IRBuilder::genIR(struct node *T) {
                 opn->id=newAlias();
             }
             opns.push_back(opn);
-            T->code=codegen(CONST,opns);
+            T->code=codegen(CONSTANT,opns);
              genIR(T->ptr[1]);
             T->code = merge(2, T->code, T->ptr[1]->code);
             break;
@@ -335,16 +335,16 @@ void IRBuilder::genIR(struct node *T) {
             break;
         case ASSIGN:
             index=symboltable.Search(T->ptr[0]->type_id);//找到符号的索引
-            mysymbol=symboltable.getSymbol(index);
-            if(mysymbol.alias.empty()){
+            symbol=symboltable.getSymbol(index);
+            if(symbol->alias.empty()){
                 opn_type=newlabel();            
                 T->Snext=opn_type; 
                 Exp(T);
             }
             else{
-                mysymbol.alias=newAlias();
-                new_symbol.Clone(mysymbol);
-                new_symbol.name=mysymbol.alias;
+                symbol->alias=newAlias();
+                new_symbol.Clone(*symbol);
+                new_symbol.name=symbol->alias;
                 new_symbol.alias="";
                 symboltable.Push(new_symbol);//变量换名入表后再赋值
 
@@ -484,3 +484,4 @@ void IRBuilder::genIR(struct node *T) {
         }
     }
 }
+

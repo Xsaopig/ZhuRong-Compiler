@@ -28,7 +28,7 @@ public:
 
 enum op_kind {//LLVM IR指令类型，后面用到再加
     VAR,  //变量
-    CONST,  //常量
+    CONSTANT,  //常量
     LABEL,//特殊，标号，实际上没有这一条指令
     DEFINE,//函数定义 
     ALLOCA,//从栈中分配空间
@@ -43,6 +43,7 @@ enum op_kind {//LLVM IR指令类型，后面用到再加
 struct codenode//中间代码结点
 {
     enum op_kind op;
+    Opn* result;       //部分指令有返回值，如: %7 = icmp sgt i32 %6, 1
     vector<Opn*> opns;//LLVM IR有的指令的操作数数量是不确定的，如phi指令
     struct codenode *pre,*next;//双向链表
 };
@@ -58,5 +59,5 @@ public:
     string newGloabl();
     struct codenode* codegen(enum op_kind kind,vector<Opn*>& opns);
     string newlabel();
-
+    
 };
