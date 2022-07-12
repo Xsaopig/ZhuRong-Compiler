@@ -8,7 +8,7 @@ make: *** No rule to make target 'all'.  Stop.
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Tue Jul 12 16:04:00 2022
+# Make data base, printed on Tue Jul 12 16:30:06 2022
 
 # Variables
 
@@ -127,7 +127,7 @@ _ = /home/pi/.vscode-server/bin/92d25e35d9bf1a6b16f7d0758f25d48ace11e5b9/node
 # environment
 XDG_RUNTIME_DIR = /run/user/1000
 # environment
-VSCODE_IPC_HOOK_CLI = /run/user/1000/vscode-ipc-6d737ec4-de53-4378-8e4e-36361cddd9b0.sock
+VSCODE_IPC_HOOK_CLI = /run/user/1000/vscode-ipc-82d7b7e4-647b-4fcf-a8f1-9aab02fd4cc2.sock
 # environment
 XDG_SESSION_CLASS = user
 # environment
@@ -235,7 +235,7 @@ parser/sysy.yy:
 # Not a target:
 makefile:
 #  Implicit rule search has been done.
-#  Last modified 2022-07-12 14:09:21.343119518
+#  Last modified 2022-07-12 16:28:19.722942085
 #  File has been updated.
 #  Successfully updated.
 
@@ -259,6 +259,6 @@ parser/sysy.l:
 # strcache performance: lookups = 40 / hit rate = 32%
 # hash-table stats:
 # Load=27/8192=0%, Rehash=0, Collisions=0/40=0%
-# Finished Make data base on Tue Jul 12 16:04:00 2022
+# Finished Make data base on Tue Jul 12 16:30:06 2022
 
  

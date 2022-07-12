@@ -1,3 +1,5 @@
+//这是测试Type的文件，需要改后缀名
+
 #include <iostream>
 #include "Type.hpp"
 #define TYPE dynamic_cast<Type*>
