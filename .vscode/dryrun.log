@@ -1,0 +1,8 @@
+make --dry-run --always-make --keep-going --print-directory
+make: Entering directory '/home/pi/Desktop/ZhuRong-Compiler'
+bison -d ./parser/sysy.yy  
+flex -+ ./parser/sysy.l
+g++ -g *.cc *.cpp ./AST/*.cpp ./IR/*.cpp ./Type/*.cpp ./Symboltable/*.cpp -o complier
+./complier test.c
+make: Leaving directory '/home/pi/Desktop/ZhuRong-Compiler'
+ 

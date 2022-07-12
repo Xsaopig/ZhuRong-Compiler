@@ -696,27 +696,28 @@ void AST::calAttr(struct node *T){
         switch(T->kind) {
         case Root:
             T->level=0;//根节点在第0层
-            calAttr(T->ptr[0]);
+            if(T->ptr[0]) calAttr(T->ptr[0]);
             break;
         case CompUnit:
             T->level=0; //CompUnit结点的子节点也在第0层
-            T->ptr[0]->level=0;
+            if(T->ptr[0]) T->ptr[0]->level=0;
             if(T->ptr[1]) T->ptr[1]->level=0;
-            calAttr(T->ptr[0]);
-            calAttr(T->ptr[1]);
+            if(T->ptr[0]) calAttr(T->ptr[0]);
+            if(T->ptr[1]) calAttr(T->ptr[1]);
             break;
         case FuncDef:
             if(T->ptr[0]) T->ptr[0]->level=0;//函数类型结点还在第0层
             if(T->ptr[1]) T->ptr[1]->level=1;   //参数在第1层
-            if(T->ptr[2]) T->ptr[2]->level=1;   //函数体在第1层
-            calAttr(T->ptr[1]);   //进入函数参数
-            calAttr(T->ptr[2]);
+            if(T->ptr[2]) T->ptr[2]->level=0;   //函数体在第1层，但是Block会加1
+            if(T->ptr[0]) calAttr(T->ptr[0]);
+            if(T->ptr[1]) calAttr(T->ptr[1]);
+            if(T->ptr[2]) calAttr(T->ptr[2]);
             break;
         case FuncFParams:
             if(T->ptr[0]) T->ptr[0]->level=1;   
             if(T->ptr[1]) T->ptr[1]->level=1;
-            calAttr(T->ptr[0]);
-            calAttr(T->ptr[1]);
+            if(T->ptr[0]) calAttr(T->ptr[0]);
+            if(T->ptr[1]) calAttr(T->ptr[1]);
             break;
         case FuncFParam:
             if(T->ptr[0]) T->ptr[0]->level=1;   
@@ -729,74 +730,97 @@ void AST::calAttr(struct node *T){
         case BType:
             break;
         case Block:
-            if(T->ptr[0]) T->ptr[0]->level=T->level;
-            calAttr(T->ptr[0]);
+            if(T->ptr[0]) T->ptr[0]->level=T->level+1;
+            if(T->ptr[0]) calAttr(T->ptr[0]);
             break;
         case BlockItems:
-            if(T->ptr[0]) T->ptr[0]->level=(T->ptr[0]->kind==Block)?T->level+1:T->level;
-            if(T->ptr[1])  T->ptr[1]->level=(T->ptr[1]->kind==Block)?T->level+1:T->level;
-            calAttr(T->ptr[0]);
-            calAttr(T->ptr[1]);
+            if(T->ptr[0]) T->ptr[0]->level=T->level;
+            if(T->ptr[1])  T->ptr[1]->level=T->level;
+            if(T->ptr[0]) calAttr(T->ptr[0]);
+            if(T->ptr[1]) calAttr(T->ptr[1]);
             break;
         case Decl:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
-            calAttr(T->ptr[0]);
+            if(T->ptr[0]) calAttr(T->ptr[0]);
+            if(T->ptr[1]) calAttr(T->ptr[1]);
             break;
         case ConstDecl:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
             if(T->ptr[1]) T->ptr[1]->level=T->level;
-            if(T->ptr[0]->kind==ConstDecl)  calAttr(T->ptr[0]);
+            if(T->ptr[0]) calAttr(T->ptr[0]);
+            if(T->ptr[1]) calAttr(T->ptr[1]);
             break;
         case VarDecl:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
             if(T->ptr[1]) T->ptr[1]->level=T->level;
-            if(T->ptr[0]->kind==VarDecl)  calAttr(T->ptr[0]);
+            if(T->ptr[0]) calAttr(T->ptr[0]);
+            if(T->ptr[1]) calAttr(T->ptr[1]);
             break;
         case ConstDef:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
             if(T->ptr[1]) T->ptr[1]->level=T->level;
+            if(T->ptr[0]) calAttr(T->ptr[0]);
+            if(T->ptr[1]) calAttr(T->ptr[1]);
             break;
         case VarDef:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
             if(T->ptr[1]) T->ptr[1]->level=T->level;
+            if(T->ptr[0]) calAttr(T->ptr[0]);
+            if(T->ptr[1]) calAttr(T->ptr[1]);
             break;
         case Idents:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
             if(T->ptr[1]) T->ptr[1]->level=T->level;
+            if(T->ptr[0]) calAttr(T->ptr[0]);
+            if(T->ptr[1]) calAttr(T->ptr[1]);
             break;
         case InitVals:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
             if(T->ptr[1]) T->ptr[1]->level=T->level;
+            if(T->ptr[0]) calAttr(T->ptr[0]);
+            if(T->ptr[1]) calAttr(T->ptr[1]);
             break;
         case InitVal:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
+            if(T->ptr[0]) calAttr(T->ptr[0]);
             break;
         case ASSIGN:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
             if(T->ptr[1]) T->ptr[1]->level=T->level;
-            calAttr(T->ptr[0]);
-            calAttr(T->ptr[1]);
+            if(T->ptr[0]) calAttr(T->ptr[0]);
+            if(T->ptr[1]) calAttr(T->ptr[1]);
             break;
         case LVal:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
             if(T->ptr[1]) T->ptr[1]->level=T->level;
+            if(T->ptr[0]) calAttr(T->ptr[0]);
+            if(T->ptr[1]) calAttr(T->ptr[1]);
             break;
-        case Number://单个数值需要处理吗？测试案例有些只有一个整数
+        case Number:
             break;
         case FuncCall:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
             if(T->ptr[1]) T->ptr[1]->level=T->level;
             if(T->ptr[2]) T->ptr[2]->level=T->level;
+            if(T->ptr[0]) calAttr(T->ptr[0]);
+            if(T->ptr[1]) calAttr(T->ptr[1]);
+            if(T->ptr[2]) calAttr(T->ptr[2]);
             break;
         case FuncRParams:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
             if(T->ptr[1]) T->ptr[1]->level=T->level;
             if(T->ptr[2]) T->ptr[2]->level=T->level;
+            if(T->ptr[0]) calAttr(T->ptr[0]);
+            if(T->ptr[1]) calAttr(T->ptr[1]);
+            if(T->ptr[2]) calAttr(T->ptr[2]);
             break;
         case UnaryExp:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
             if(T->ptr[1]) T->ptr[1]->level=T->level;
             if(T->ptr[2]) T->ptr[2]->level=T->level;
+            if(T->ptr[0]) calAttr(T->ptr[0]);
+            if(T->ptr[1]) calAttr(T->ptr[1]);
+            if(T->ptr[2]) calAttr(T->ptr[2]);
             break;
         case AddExp:
         case MulExp:
@@ -807,26 +831,37 @@ void AST::calAttr(struct node *T){
             if(T->ptr[0]) T->ptr[0]->level=T->level;
             if(T->ptr[1]) T->ptr[1]->level=T->level;
             if(T->ptr[2]) T->ptr[2]->level=T->level;
+            if(T->ptr[0]) calAttr(T->ptr[0]);
+            if(T->ptr[1]) calAttr(T->ptr[1]);
+            if(T->ptr[2]) calAttr(T->ptr[2]);
             break;
 
         case IF:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
-            if(T->ptr[1]) T->ptr[1]->level=(T->ptr[1]->kind==Block)?T->level+1:T->level;
-            if(T->ptr[2]) T->ptr[2]->level=(T->ptr[2]->kind==Block)?T->level+1:T->level;
-            calAttr(T->ptr[1]);
-            calAttr(T->ptr[2]);
+            if(T->ptr[1]) T->ptr[1]->level=(T->ptr[1]->kind!=Block)?T->level+1:T->level;
+            if(T->ptr[2]) T->ptr[2]->level=(T->ptr[2]->kind!=Block)?T->level+1:T->level;
+            if(T->ptr[0]) calAttr(T->ptr[0]);
+            if(T->ptr[1]) calAttr(T->ptr[1]);
+            if(T->ptr[2]) calAttr(T->ptr[2]);
             break;
         case WHILE:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
-            if(T->ptr[1]) T->ptr[1]->level=(T->ptr[1]->kind==Block)?T->level+1:T->level;
-            calAttr(T->ptr[1]);
+            if(T->ptr[1]) T->ptr[1]->level=(T->ptr[1]->kind!=Block)?T->level+1:T->level;
+            if(T->ptr[0]) calAttr(T->ptr[0]);
+            if(T->ptr[1]) calAttr(T->ptr[1]);
             break;
         case RETURN:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
+            if(T->ptr[0]) calAttr(T->ptr[0]);
+            if(T->ptr[1]) calAttr(T->ptr[1]);
+            if(T->ptr[2]) calAttr(T->ptr[2]);
             break;
         case CONTINUE:
-            break;
+            
         case BREAK:
+            if(T->ptr[0]) calAttr(T->ptr[0]);
+            if(T->ptr[1]) calAttr(T->ptr[1]);
+            if(T->ptr[2]) calAttr(T->ptr[2]);
             break;
         }
     }
