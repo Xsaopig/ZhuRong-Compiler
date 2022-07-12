@@ -73,11 +73,9 @@ struct node *mywhile;
 //     if(T) {
 //         switch(T->kind) {
 //         case Root:
-//             T->level=0;//根节点在第0层
 //             genIR(T->ptr[0]);
 //             break;
 //         case CompUnit:
-//             T->level=0; //CompUnit结点的子节点也在第0层
 //             T->ptr[0]->level=0;
 //             if(T->ptr[1]) T->ptr[1]->level=0;
 //             genIR(T->ptr[0]);
@@ -184,14 +182,11 @@ struct node *mywhile;
             
 //             break;
 //         case FuncFParamArray:
-//             if(T->ptr[0]) T->ptr[0]->level=T->level;
-//             if(T->ptr[1]) T->ptr[1]->level=T->level;
 //             break;
 //         case BType:
             
 //             break;
 //         case Block:
-//             if(T->ptr[0]) T->ptr[0]->level=T->level;
             
 //             // lev=lev+1;  
             
@@ -208,8 +203,6 @@ struct node *mywhile;
 //             // lev=lev-1;
 //             break;
 //         case BlockItems:
-//             if(T->ptr[0]) T->ptr[0]->level=(T->ptr[0]->kind==Block)?T->level+1:T->level;
-//             if(T->ptr[1])  T->ptr[1]->level=(T->ptr[1]->kind==Block)?T->level+1:T->level;
 //             genIR(T->ptr[0]);
 //             T->code=T->ptr[0]->code;
 //             if(T->ptr[1]) {
@@ -218,13 +211,10 @@ struct node *mywhile;
 //             }
 //             break;
 //         case Decl:
-//             T->ptr[0]->level=T->level;
 //             genIR(T->ptr[0]);
 //             T->code=T->ptr[0]->code;
 //             break;
 //         case ConstDecl:
-//             T->ptr[0]->level=T->level;
-//             T->ptr[1]->level=T->level;
 
 //             if(T->ptr[0]->kind==ConstDecl)  genIR(T->ptr[0]);
 
@@ -260,8 +250,6 @@ struct node *mywhile;
 //             T->code = merge(2, T->code, T->ptr[1]->code);
 //             break;
 //         case VarDecl:
-//             T->ptr[0]->level=T->level;
-//             T->ptr[1]->level=T->level;
 
 //             if(T->ptr[0]->kind==VarDecl)  genIR(T->ptr[0]);
 
@@ -296,43 +284,34 @@ struct node *mywhile;
 //             T->code = merge(2, T->code, T->ptr[1]->code);
 //             break;
 //         case ConstDef:
-//             T->ptr[0]->level=T->level;
-//             T->ptr[1]->level=T->level;
 //             genIR(T->ptr[0]);
 //             genIR(T->ptr[1]);
 //             break;
 //         case VarDef:
-//             T->ptr[0]->level=T->level;
 //             genIR(T->ptr[0]);
             
 //             if(T->ptr[1]) {
-//                 T->ptr[1]->level=T->level;
 //                 genIR(T->ptr[1]);
 //             }
 //             break;
 //         case Idents:
 //             if(T->ptr[0]) {
-//                 T->ptr[0]->level=T->level;
 //                 genIR(T->ptr[0]);
 //             }
 //             if(T->ptr[1]) {
-//                 T->ptr[1]->level=T->level;
 //                 genIR(T->ptr[1]);
 //             }
 //             break;
 //         case InitVals:
 //             if(T->ptr[0]) {
-//                 T->ptr[0]->level=T->level;
 //                 genIR(T->ptr[0]);
 //             }
 //             if(T->ptr[1]) {
-//                 T->ptr[1]->level=T->level;
 //                   genIR(T->ptr[1]);
 //             }
 //             break;
 //         case InitVal:
 //             if(T->ptr[0]) {
-//                 T->ptr[0]->level=T->level;
 //                 genIR(T->ptr[0]);
 //             }
 //             break;
@@ -359,7 +338,6 @@ struct node *mywhile;
 //             break;
 //         case LVal:
 //             if(T->ptr[0]) {
-//                 T->ptr[0]->level=T->level;
 //                 struct node *New_Idents = mknode(Idents, T->ptr[0], T->ptr[1], NULL, T->pos);
 //                 New_Idents->type_id=T->type_id;
 //                 struct node *cur = New_Idents;
@@ -375,7 +353,6 @@ struct node *mywhile;
 //                 }
 //                 free(cur);
 
-//                 T->ptr[1]->level=T->level;
 //                 Exp(T->ptr[1]);
 //             }
 
@@ -383,22 +360,18 @@ struct node *mywhile;
 //         case Number://单个数值需要处理吗？测试案例有些只有一个整数
 //             break;
 //         case FuncCall:
-//             if(T->ptr[0]) T->ptr[0]->level=T->level;
 //             Exp(T);
 //             break;
 //         case FuncRParams:
 //             if(T->ptr[0]){
-//                 T->ptr[0]->level=T->level;
 //                 genIR(T->ptr[0]);
 //                 }
 //             if(T->ptr[1]) {
-//                 T->ptr[1]->level=T->level;
 //                 genIR(T->ptr[1]);
 //             }
 //             break;
 //         case UnaryExp:
 //             if(T->ptr[0]) {
-//                 T->ptr[0]->level=T->level;
 //                 genIR(T->ptr[0]);
 //             }
 
@@ -409,18 +382,13 @@ struct node *mywhile;
 //         case LAndExp:
 //         case EqExp:
 //         case RelExp:
-//             if(T->ptr[0]) T->ptr[0]->level=T->level;
-//             if(T->ptr[1]) T->ptr[1]->level=T->level;
 
 //             break;
 
 //         case IF:
 //             opn_type=newlabel();            
 //             T->Snext=opn_type; 
-//             T->ptr[0]->level=T->level;
-//             if(T->ptr[1]) T->ptr[1]->level=(T->ptr[1]->kind==Block)?T->level+1:T->level;
 //             if(T->ptr[2]) {
-//                 T->ptr[2]->level=(T->ptr[2]->kind==Block)?T->level+1:T->level;
 //                 T->ptr[0]->Etrue=newlabel();
 //                 T->ptr[0]->Efalse=newlabel();
 //                 boolExp(T->ptr[0]);
@@ -440,8 +408,6 @@ struct node *mywhile;
 //             }
 //             break;
 //         case WHILE:
-//             if(T->ptr[0]) T->ptr[0]->level=T->level;
-//             if(T->ptr[1]) T->ptr[1]->level=(T->ptr[1]->kind==Block)?T->level+1:T->level;
 //             mywhile=T;
 //             T->Snext=newlabel();
 //             T->ptr[0]->Etrue=newlabel();
@@ -455,7 +421,6 @@ struct node *mywhile;
 //             break;
 //         case RETURN:
 //             if(T->ptr[0]) {
-//                 T->ptr[0]->level=T->level;
 //                 Exp(T->ptr[0]);
 //                 if (T->ptr[0]->kind == Number) {
 //                     opn_type= (T->ptr[0]->type==INT)?"i32":mysymbol.types;//int对应的是i32，float和void不变

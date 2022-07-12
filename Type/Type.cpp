@@ -3,35 +3,54 @@
 Product_Type::Product_Type(Type* T1,Type* T2)
 {
     NameofClass=string("Product_Type");
-    value.push_back(T1);
-    value.push_back(T2);
+    eles.push_back(T1);
+    eles.push_back(T2);
+    value="<"+T1->getvalue()+","+T2->getvalue()+">";
 }
 
 Product_Type::Product_Type(Type* T1,Type* T2,int n)
 {
     NameofClass=string("Product_Type");
-    value.push_back(T1);
-    while(--n>=0)
-        value.push_back(T2);
+    eles.push_back(T1);
+    value="<"+T1->getvalue();
+    while(--n>=0){
+        eles.push_back(T2);
+        value+=","+T2->getvalue();
+    }
+    value+=">";
     
 }
 
-Array_Type:: Array_Type(int I,BasicType T)
+Array_Type::Array_Type(int I,BasicType& T)
 {
     NameofClass=string("Array_Type");
-    value="("+to_string(I)+","+T.getvalue()+")";
+    value=T.getvalue()+"["+to_string(I)+"]";
+    lev=1;
+    elements_nums.push_back(I);
+    basictype=T;
 }
 
-Array_Type::  Array_Type(int I,Array_Type T)
+Array_Type::Array_Type(int I,Array_Type& T)
 {
     NameofClass=string("Array_Type");
-    value="("+to_string(I)+","+T.getvalue()+")";
+    value=T.getvalue()+"["+to_string(I)+"]";
+    lev=T.lev+1;
+    elements_nums=T.elements_nums;
+    elements_nums.push_back(I);
+    basictype=T.basictype;
 }
 
-Fun_Type::Fun_Type(vector<Type *> T)
+Fun_Type::Fun_Type(BasicType& R,vector<Type *> T)
 {
     NameofClass=string("Fun_Type");
-    value.assign(T.begin(),T.end());
+    args.assign(T.begin(),T.end());
+    basictype=R;
+    value=R.getvalue()+"(";
+    for(auto &ptr:T){
+        value+=ptr->getvalue()+",";
+    }
+    value.pop_back();
+    value+=")";
 }
 
 

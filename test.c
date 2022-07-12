@@ -1,12 +1,6 @@
 /*这里是测试语法树输出的文件*/
 
-
-
-int main()
+int main(int b[][20][20][30])
 {
-    int a,b;
-    a=3;
-    b=a+1;
-    a=9;
     return 0;
 }
