@@ -4,7 +4,9 @@
 
 int main()
 {
-    int a;
+    int a,b;
     a=3;
+    b=a+1;
+    a=9;
     return 0;
 }

@@ -47,7 +47,9 @@ public:
 
     struct node* setroot(struct node *root);
     struct node* getroot() {return root;}
-   
+    void calAttr(struct node *T);//计算属性，包括level
 };
 
 struct node *mknode(int kind, struct node *first, struct node *second, struct node *third, int pos);
+
+

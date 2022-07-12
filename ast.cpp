@@ -4,6 +4,9 @@ char last[50];
 Symboltable symboltable;
 
 
+
+
+
 struct node *mknode(int kind, struct node *first, struct node *second, struct node *third, int pos) {
     struct node *T = (struct node *)malloc(sizeof(struct node));
     T->kind = (enum node_kind)kind;
@@ -749,4 +752,9 @@ void AST::ASTtoSymtab(struct node *T) {
             break;
         }
     }
+}
+
+
+void AST::calAttr(struct node *T){
+    
 }
