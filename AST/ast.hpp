@@ -49,8 +49,6 @@ public:
     int lev=0;
     void printAST(struct node *T, int indent, int deep);        //打印AST
     void ASTtoSymtab(struct node *T,Symboltable &symboltable);  //AST转符号表
-    // string& getTypeClass(Type pretype);                         //得到符号类型
-
     struct node* setroot(struct node *root);   
     struct node* getroot() {return root;}    
     void calAttr(struct node *T);                               //计算各结点属性

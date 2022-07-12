@@ -20,25 +20,6 @@ struct node *mknode(int kind, struct node *first, struct node *second, struct no
     return T;
 }
 
-//转换函数，后面如果用到再说吧
-/*string& AST::getTypeClass(Type pretype){
-        string str=pretype.getNameofClass();
-        if(str=="BasicType"||str=="Array_Type"){
-            return pretype.getvalue();
-        }
-        if(str=="Fun_Type"||str=="Product_Type"){
-            vector<type *> vec(pretype.getvalue());
-            string res;
-            for (int i = 0; i < vec.size()-1; i++){
-		        res+=to_string(vec.at(i));
-                res+=",";
-	        }
-            res+=to_string(vec.at(i));
-            return res;
-        }
-        return nullptr;
-}*/
-
 struct node* AST::setroot(struct node *root){
     this->root=root;
     return this->root;
