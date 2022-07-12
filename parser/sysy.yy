@@ -1,19 +1,18 @@
 %define parse.error verbose
 %locations
 %{
-    #include "cmath"
-    #include "cstring"
-    #include "ast.hpp"
-    #include "FlexLexer.h"
+    #include <cmath>
+    #include <cstring>
+    #include <FlexLexer.h>
+    #include "./AST/ast.hpp"
+    #include "./Type/Type.hpp"
     extern char *yytext;
-
     extern yyFlexLexer *yyflexlexer;
     #define yylineno yyflexlexer->lineno()
     #define yylex() yyflexlexer->yylex()
-    
     void yyerror(const char* fmt, ...);
     using namespace std;
-    extern AST ast;
+    extern ASTBuilder ASTbuilder;
 %}
 
 %union {
@@ -48,10 +47,7 @@
 
 Root: CompUnit {
     $$=mknode(Root,$1,NULL,NULL,yylineno);
-    struct node* root=ast.setroot($$);
-    // ast.printAST(root,0,0);
-    // ast.ASTtoSymtab(root);
-    genIR(root);
+    ASTbuilder.setroot($$);
 }
     ;
 

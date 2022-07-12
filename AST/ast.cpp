@@ -1,11 +1,14 @@
 #include "ast.hpp"
 
-char last[50];
-Symboltable symboltable;
-
-
-
-
+void ASTBuilder::Build()
+{
+    yyparse();
+    struct node *root=ast.getroot();
+    ast.printAST(root,0,0);
+    printf("源程序共有%d行代码\n",yylineno);//由于.l文件中有%option yylineno，所以yylineno在yyflexlexer中是自动管理的，遇到换行就+1
+    ast.calAttr(root);
+    ast.ASTtoSymtab(root,symboltable);
+}
 
 struct node *mknode(int kind, struct node *first, struct node *second, struct node *third, int pos) {
     struct node *T = (struct node *)malloc(sizeof(struct node));
@@ -520,7 +523,8 @@ void AST::printAST(struct node *T, int indent, int deep) {
     }
 }
 
-void AST::ASTtoSymtab(struct node *T) {
+//AST转化为符号表
+void AST::ASTtoSymtab(struct node *T,Symboltable &symboltable) {
     Symbol mysymbol;
     struct node *cur,*T0;
     BasicType* son;
@@ -528,15 +532,11 @@ void AST::ASTtoSymtab(struct node *T) {
     if(T) {
         switch(T->kind) {
         case Root:
-            T->level=0;//根节点在第0层
-            ASTtoSymtab(T->ptr[0]);
+            ASTtoSymtab(T->ptr[0],symboltable);
             break;
         case CompUnit:
-            T->level=0; //CompUnit结点的子节点也在第0层
-            T->ptr[0]->level=0;
-            if(T->ptr[1]) T->ptr[1]->level=0;
-            ASTtoSymtab(T->ptr[0]);
-            ASTtoSymtab(T->ptr[1]);
+            ASTtoSymtab(T->ptr[0],symboltable);
+            ASTtoSymtab(T->ptr[1],symboltable);
             break;
         case FuncDef:
             mysymbol.name=string(T->type_id);
@@ -558,25 +558,17 @@ void AST::ASTtoSymtab(struct node *T) {
             symboltable.Push_index();
             
             
-            if(T->ptr[0]) T->ptr[0]->level=0;//函数类型结点还在第0层
-            if(T->ptr[1]) T->ptr[1]->level=1;   //参数在第1层
-            T->ptr[2]->level=1;   //函数体在第1层
             
-            
-            ASTtoSymtab(T->ptr[1]);   //进入函数参数
-            ASTtoSymtab(T->ptr[2]);
+            ASTtoSymtab(T->ptr[1],symboltable);   //进入函数参数
+            ASTtoSymtab(T->ptr[2],symboltable);
             symboltable.Pop_until(symboltable.Pop_index());
             break;
         case FuncFParams:
-            T->ptr[0]->level=1;   
-            if(T->ptr[1]) T->ptr[1]->level=1;
-            ASTtoSymtab(T->ptr[0]);
-            ASTtoSymtab(T->ptr[1]);
+            ASTtoSymtab(T->ptr[0],symboltable);
+            ASTtoSymtab(T->ptr[1],symboltable);
             
             break;
         case FuncFParam:
-            T->ptr[0]->level=1;   
-            if(T->ptr[1]) T->ptr[1]->level=1;
 
             mysymbol.name=string(T->type_id);
             mysymbol.level=1;
@@ -601,38 +593,30 @@ void AST::ASTtoSymtab(struct node *T) {
 
             break;
         case FuncFParamArray:
-            if(T->ptr[0]) T->ptr[0]->level=T->level;
-            if(T->ptr[1]) T->ptr[1]->level=T->level;
             break;
         case BType:
             
             break;
         case Block:
-            if(T->ptr[0]) T->ptr[0]->level=T->level;
             
             // lev=lev+1;  
             
             symboltable.Push_index();
-            ASTtoSymtab(T->ptr[0]);
+            ASTtoSymtab(T->ptr[0],symboltable);
             i=symboltable.Pop_index();
             symboltable.Pop_until(i);       
             // lev=lev-1;
             break;
         case BlockItems:
-            if(T->ptr[0]) T->ptr[0]->level=(T->ptr[0]->kind==Block)?T->level+1:T->level;
-            if(T->ptr[1])  T->ptr[1]->level=(T->ptr[1]->kind==Block)?T->level+1:T->level;
-            ASTtoSymtab(T->ptr[0]);
-            ASTtoSymtab(T->ptr[1]);
+            ASTtoSymtab(T->ptr[0],symboltable);
+            ASTtoSymtab(T->ptr[1],symboltable);
             break;
         case Decl:
-            T->ptr[0]->level=T->level;
-            ASTtoSymtab(T->ptr[0]);
+            ASTtoSymtab(T->ptr[0],symboltable);
             break;
         case ConstDecl:
-            T->ptr[0]->level=T->level;
-            T->ptr[1]->level=T->level;
 
-            if(T->ptr[0]->kind==ConstDecl)  ASTtoSymtab(T->ptr[0]);
+            if(T->ptr[0]->kind==ConstDecl)  ASTtoSymtab(T->ptr[0],symboltable);
             mysymbol.name=string(T->ptr[1]->ptr[0]->type_id);
             mysymbol.level=T->level;
             // mysymbol.type=T->type;//类型后续调整
@@ -652,10 +636,8 @@ void AST::ASTtoSymtab(struct node *T) {
              symboltable.Push(mysymbol);  //常量（变量）入表
             break;
         case VarDecl:
-            T->ptr[0]->level=T->level;
-            T->ptr[1]->level=T->level;
 
-            if(T->ptr[0]->kind==VarDecl)  ASTtoSymtab(T->ptr[0]);
+            if(T->ptr[0]->kind==VarDecl)  ASTtoSymtab(T->ptr[0],symboltable);
             mysymbol.name=string(T->ptr[1]->ptr[0]->type_id);
             mysymbol.level=T->level;
             // mysymbol.type=T->type;//类型后续调整
@@ -675,11 +657,126 @@ void AST::ASTtoSymtab(struct node *T) {
              symboltable.Push(mysymbol);  //常量（变量）入表
             break;
         case ConstDef:
-            T->ptr[0]->level=T->level;
-            T->ptr[1]->level=T->level;
             break;
         case VarDef:
-            T->ptr[0]->level=T->level;
+            break;
+        case Idents:
+            break;
+        case InitVals:
+            break;
+        case InitVal:
+            break;
+        case ASSIGN:
+            ASTtoSymtab(T->ptr[0],symboltable);
+            ASTtoSymtab(T->ptr[1],symboltable);
+            break;
+        case LVal:
+            break;
+        case Number://单个数值需要处理吗？测试案例有些只有一个整数
+            break;
+        case FuncCall:
+            break;
+        case FuncRParams:
+            break;
+        case UnaryExp:
+            break;
+        case AddExp:
+        case MulExp:
+        case LOrExp:
+        case LAndExp:
+        case EqExp:
+        case RelExp:
+            break;
+
+        case IF:
+            ASTtoSymtab(T->ptr[1],symboltable);
+            ASTtoSymtab(T->ptr[2],symboltable);
+            break;
+        case WHILE:
+            ASTtoSymtab(T->ptr[1],symboltable);
+            break;
+        case RETURN:
+            break;
+        case CONTINUE:
+            break;
+        case BREAK:
+            break;
+        }
+    }
+}
+
+//计算各结点属性
+void AST::calAttr(struct node *T){
+    Symbol mysymbol;
+    struct node *cur,*T0;
+    BasicType* son;
+    int i;
+    if(T) {
+        switch(T->kind) {
+        case Root:
+            T->level=0;//根节点在第0层
+            calAttr(T->ptr[0]);
+            break;
+        case CompUnit:
+            T->level=0; //CompUnit结点的子节点也在第0层
+            T->ptr[0]->level=0;
+            if(T->ptr[1]) T->ptr[1]->level=0;
+            calAttr(T->ptr[0]);
+            calAttr(T->ptr[1]);
+            break;
+        case FuncDef:
+            if(T->ptr[0]) T->ptr[0]->level=0;//函数类型结点还在第0层
+            if(T->ptr[1]) T->ptr[1]->level=1;   //参数在第1层
+            if(T->ptr[2]) T->ptr[2]->level=1;   //函数体在第1层
+            calAttr(T->ptr[1]);   //进入函数参数
+            calAttr(T->ptr[2]);
+            break;
+        case FuncFParams:
+            if(T->ptr[0]) T->ptr[0]->level=1;   
+            if(T->ptr[1]) T->ptr[1]->level=1;
+            calAttr(T->ptr[0]);
+            calAttr(T->ptr[1]);
+            break;
+        case FuncFParam:
+            if(T->ptr[0]) T->ptr[0]->level=1;   
+            if(T->ptr[1]) T->ptr[1]->level=1;
+            break;
+        case FuncFParamArray:
+            if(T->ptr[0]) T->ptr[0]->level=T->level;
+            if(T->ptr[1]) T->ptr[1]->level=T->level;
+            break;
+        case BType:
+            break;
+        case Block:
+            if(T->ptr[0]) T->ptr[0]->level=T->level;
+            calAttr(T->ptr[0]);
+            break;
+        case BlockItems:
+            if(T->ptr[0]) T->ptr[0]->level=(T->ptr[0]->kind==Block)?T->level+1:T->level;
+            if(T->ptr[1])  T->ptr[1]->level=(T->ptr[1]->kind==Block)?T->level+1:T->level;
+            calAttr(T->ptr[0]);
+            calAttr(T->ptr[1]);
+            break;
+        case Decl:
+            if(T->ptr[0]) T->ptr[0]->level=T->level;
+            calAttr(T->ptr[0]);
+            break;
+        case ConstDecl:
+            if(T->ptr[0]) T->ptr[0]->level=T->level;
+            if(T->ptr[1]) T->ptr[1]->level=T->level;
+            if(T->ptr[0]->kind==ConstDecl)  calAttr(T->ptr[0]);
+            break;
+        case VarDecl:
+            if(T->ptr[0]) T->ptr[0]->level=T->level;
+            if(T->ptr[1]) T->ptr[1]->level=T->level;
+            if(T->ptr[0]->kind==VarDecl)  calAttr(T->ptr[0]);
+            break;
+        case ConstDef:
+            if(T->ptr[0]) T->ptr[0]->level=T->level;
+            if(T->ptr[1]) T->ptr[1]->level=T->level;
+            break;
+        case VarDef:
+            if(T->ptr[0]) T->ptr[0]->level=T->level;
             if(T->ptr[1]) T->ptr[1]->level=T->level;
             break;
         case Idents:
@@ -696,8 +793,8 @@ void AST::ASTtoSymtab(struct node *T) {
         case ASSIGN:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
             if(T->ptr[1]) T->ptr[1]->level=T->level;
-            ASTtoSymtab(T->ptr[0]);
-            ASTtoSymtab(T->ptr[1]);
+            calAttr(T->ptr[0]);
+            calAttr(T->ptr[1]);
             break;
         case LVal:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
@@ -732,16 +829,16 @@ void AST::ASTtoSymtab(struct node *T) {
             break;
 
         case IF:
-            T->ptr[0]->level=T->level;
+            if(T->ptr[0]) T->ptr[0]->level=T->level;
             if(T->ptr[1]) T->ptr[1]->level=(T->ptr[1]->kind==Block)?T->level+1:T->level;
             if(T->ptr[2]) T->ptr[2]->level=(T->ptr[2]->kind==Block)?T->level+1:T->level;
-            ASTtoSymtab(T->ptr[1]);
-            ASTtoSymtab(T->ptr[2]);
+            calAttr(T->ptr[1]);
+            calAttr(T->ptr[2]);
             break;
         case WHILE:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
             if(T->ptr[1]) T->ptr[1]->level=(T->ptr[1]->kind==Block)?T->level+1:T->level;
-            ASTtoSymtab(T->ptr[1]);
+            calAttr(T->ptr[1]);
             break;
         case RETURN:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
@@ -752,9 +849,5 @@ void AST::ASTtoSymtab(struct node *T) {
             break;
         }
     }
-}
-
-
-void AST::calAttr(struct node *T){
     
 }

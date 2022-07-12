@@ -1,3 +1,6 @@
+#ifndef    HEADER_TYPE
+#define    HEADER_TYPE
+
 #include <vector>
 #include <iostream>
 using namespace std;
@@ -63,3 +66,4 @@ private:
     vector<Type *> value;
 };
 
+#endif

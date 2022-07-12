@@ -1,12 +1,17 @@
+#ifndef    HEADER_AST
+#define    HEADER_AST 
+
 #include <cstdio>
-#include "sysy.tab.hh"
 #include <cstdlib>
 #include <cstring>
-#include "Symboltable.hpp"
-#include "Type.hpp"
-#include "IR.hpp"
-extern char last[50];
-extern Symboltable symboltable;
+#include <FlexLexer.h>
+#include "../sysy.tab.hh"
+#include "../Symboltable/Symboltable.hpp"
+#include "../Type/Type.hpp"
+#include "../IR/IR.hpp"
+#define yylex() yyflexlexer->yylex()
+#define yylineno yyflexlexer->lineno()
+extern yyFlexLexer *yyflexlexer;
 enum node_kind  {   
     Root, CompUnit, Decl, ConstDecl, BType, BlockItems, ConstDef, VarDecl, VarDef, FuncCall,
     InitVal, FuncDef, FuncFParams, FuncFParam, Block, Stmt, Cond, LVal,
@@ -38,18 +43,31 @@ struct node {    //以下对结点属性定义没有考虑存储效率，只是�
 class AST
 {
 private:
+    char last[50];
     struct node *root;
 public:
     int lev=0;
-    void printAST(struct node *T, int indent, int deep);
-    void ASTtoSymtab(struct node *T);   //AST转符号表
-    // string& getTypeClass(Type pretype); //得到符号类型
+    void printAST(struct node *T, int indent, int deep);        //打印AST
+    void ASTtoSymtab(struct node *T,Symboltable &symboltable);  //AST转符号表
+    // string& getTypeClass(Type pretype);                         //得到符号类型
 
-    struct node* setroot(struct node *root);
-    struct node* getroot() {return root;}
-    void calAttr(struct node *T);//计算属性，包括level
+    struct node* setroot(struct node *root);   
+    struct node* getroot() {return root;}    
+    void calAttr(struct node *T);                               //计算各结点属性
 };
 
 struct node *mknode(int kind, struct node *first, struct node *second, struct node *third, int pos);
 
+extern int yyparse(void);
+class ASTBuilder{
+private:
+    AST ast;
+    Symboltable symboltable;
+public:
+    void setroot(struct node *root) {ast.setroot(root);} 
+    struct node* getroot() {return ast.getroot();}
+    void Build();
+};
 
+
+#endif

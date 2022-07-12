@@ -1,7 +1,10 @@
+#ifndef HEADER_SYMBOLTABLE
+#define HEADER_SYMBOLTABLE
 #include <string>
 #include <vector>
 #include <stack>
-#include "sysy.tab.hh"
+#include <iostream>
+#include "../sysy.tab.hh"
 using namespace std;
 
 class Symbol
@@ -55,3 +58,5 @@ public:
 
     void print();//打印符号表
 };
+
+#endif

@@ -1,6 +1,13 @@
+#ifndef    HEADER_IR
+#define    HEADER_IR  
+ 
+
+
+
 #include <string>
-#include "stdarg.h"
+#include <stdarg.h>
 #include <vector>
+#include "../AST/ast.hpp"
 using namespace std;
 void genIR(struct node *T);
 class Opn//操作数
@@ -51,6 +58,7 @@ struct codenode//中间代码结点
 class IRBuilder
 {
 private:
+    struct node* root;//AST根节点
     int no=0;//用来生成新的alias
     int no_gloabl=0;
 public:
@@ -59,5 +67,10 @@ public:
     string newGloabl();
     struct codenode* codegen(enum op_kind kind,vector<Opn*>& opns);
     string newlabel();
+    void Build(struct node *T);
     
 };
+
+
+
+#endif   
