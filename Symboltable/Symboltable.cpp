@@ -13,17 +13,17 @@ Symbol::Symbol(string name)
     paramnum=0;
     offset=0x00;
 }
-Symbol::Symbol(const Symbol &symbol)
-{
-    this->name=symbol.name;
-    this->alias=symbol.alias;
-    this->flag=symbol.flag;
-    this->type=symbol.type;
-     this->types=symbol.types;
-    this->paramnum=symbol.paramnum;
-    this->offset=symbol.offset;
-    this->level=symbol.level;
-}
+// Symbol::Symbol(const Symbol &symbol)
+// {
+//     this->name=symbol.name;
+//     this->alias=symbol.alias;
+//     this->flag=symbol.flag;
+//     this->type=symbol.type;
+//      this->types=symbol.types;
+//     this->paramnum=symbol.paramnum;
+//     this->offset=symbol.offset;
+//     this->level=symbol.level;
+// }
 Symbol::~Symbol() {}
 bool Symbol::Clone(const Symbol &symbol)//复制函数
 {
@@ -35,6 +35,7 @@ bool Symbol::Clone(const Symbol &symbol)//复制函数
     this->paramnum=symbol.paramnum;
     this->offset=symbol.offset;
     this->level=symbol.level;
+    this->pretype=symbol.pretype;
     return true;
 }
 
@@ -70,7 +71,6 @@ int Symboltable::Pop()
     if(symbols.size()<=0) exit(1);  
     symbols.pop_back();
     index--;
-    print();
     return symbols.size();
 }
 
@@ -79,8 +79,8 @@ int Symboltable::Pop_until(int index)
 {
     if(index==this->index) return this->index;
     while(Pop()!=index);
+    print();
     return this->index;
-
     /*int prelevel=getSymbol(index).level-1;
     while(getSymbol(Pop()).level!=prelevel);
     return index;*/
@@ -89,7 +89,7 @@ int Symboltable::Pop_until(int index)
 //根据name查找符号,返回index
 int Symboltable::Search(string name)   
 {
-    for(int i=0;i<=index;i++)
+    for(int i=0;i<index;i++)
         if(!name.compare(symbols[i].name)) return i;
     return -1;
 }
@@ -122,4 +122,9 @@ void Symboltable::print()//打印符号表
         printf("%c\t",symbols[i].offset);
         printf("\n");
     }
+}
+
+void Symboltable::reset()
+{
+    Pop_until(0);
 }

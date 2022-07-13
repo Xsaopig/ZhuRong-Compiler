@@ -80,11 +80,28 @@ ConstDecl: CONST BType ConstDef {
     $$=mknode(ConstDecl,$2,$3,NULL,yylineno);
     $$->type=$2->type;
     $$->pretype=$2->pretype;
+    $3->pretype=$$->pretype;
 }
     | ConstDecl COMMA ConstDef {
         $$=mknode(ConstDecl,$1,$3,NULL,yylineno);
         $$->type=$1->type;
         $$->pretype=$1->pretype;
+        $3->pretype=$$->pretype;
+    }
+    ;
+
+//变量声明
+VarDecl: BType VarDef {
+    $$=mknode(VarDecl,$1,$2,NULL,yylineno);
+    $$->type=$1->type;
+    $$->pretype=$1->pretype;
+    $2->pretype=$$->pretype;
+}
+    | VarDecl COMMA VarDef {
+        $$=mknode(VarDecl,$1,$3,NULL,yylineno);
+        $$->type=$1->type;
+        $$->pretype=$1->pretype;
+        $3->pretype=$$->pretype;
     }
     ;
 
@@ -105,22 +122,8 @@ BType: INT {
 //常数定义
 ConstDef: Idents ASSIGN InitVal {
     $$=mknode(ConstDef,$1,$3,NULL,yylineno);
+    
 }
-    ;
-
-//变量声明
-VarDecl: BType VarDef {
-    $$=mknode(VarDecl,$1,$2,NULL,yylineno);
-    $$->type=$1->type;
-    $$->pretype=$1->pretype;
-    $2->pretype=$$->pretype;
-}
-    | VarDecl COMMA VarDef {
-        $$=mknode(VarDecl,$1,$3,NULL,yylineno);
-        $$->type=$1->type;
-        $$->pretype=$1->pretype;
-        $3->pretype=$$->pretype;
-    }
     ;
 
 //变量定义
@@ -136,10 +139,25 @@ VarDef: Idents {
 Idents: IDENT {
     $$=mknode(Idents,NULL,NULL,NULL,yylineno);
     strcpy($$->type_id,$1);
+    $$->pretype=new BasicType("unknown");
 }
     | Idents LB Exp RB {
         $$=mknode(Idents,$1,$3,NULL,yylineno);
         strcpy($$->type_id,$1->type_id);
+        if($3->kind==Number && $3->type==INT){
+            $$->pretype=($1->pretype->is_Array_Type())
+                ?new Array_Type($3->type_int,*(static_cast<Array_Type*>($1->pretype)))
+                :new Array_Type($3->type_int,*(static_cast<BasicType*>($1->pretype)));
+        }
+        else if($3->kind==Number && $3->type==FLOAT){//数组形参中有浮点数
+            yyerror("size of array has non-integral type");
+            exit(100);
+        }
+        else{
+            $$->pretype=($1->pretype->is_Array_Type())
+                ?new Array_Type(-1,*(static_cast<Array_Type*>($1->pretype)))
+                :new Array_Type(-1,*(static_cast<BasicType*>($1->pretype)));
+        }
     }
     ;
 
@@ -162,6 +180,7 @@ InitVal: Exp {
     }
     | LC RC {
         $$=mknode(Block,NULL,NULL,NULL,yylineno);
+        $$->pretype=new BasicType("void");
     }
     ;
 
@@ -175,6 +194,7 @@ FuncDef: VOID IDENT LP RP Block {
         $$=mknode(FuncDef,$1,$4,$6,yylineno);
         strcpy($$->type_id,$2);
         $$->pretype=$1->pretype;
+        
     }
     | BType IDENT LP RP Block {
         $$=mknode(FuncDef,$1,NULL,$5,yylineno);
@@ -191,28 +211,44 @@ FuncDef: VOID IDENT LP RP Block {
 //函数形参表
 FuncFParams: FuncFParam {
     $$=mknode(FuncFParams,$1,NULL,NULL,yylineno);
+    $$->pretype=$1->pretype;
 }
     | FuncFParams COMMA FuncFParam {
         $$=mknode(FuncFParams,$1,$3,NULL,yylineno);
+        $$->pretype=new Product_Type($1->pretype,$3->pretype);
     }
     ;
 
 //函数形参的数组表示
 FuncFParamArray: LB RB {
     $$=mknode(FuncFParamArray,NULL,NULL,NULL,yylineno);
+    $$->pretype=new Array_Type(0,*(new BasicType("unknown")));
+
 }
     | FuncFParamArray LB Exp RB {
         $$=mknode(FuncFParamArray,$1,$3,NULL,yylineno);
+        if($3->kind==Number && $3->type==INT)
+            $$->pretype=new Array_Type($3->type_int,*(static_cast<Array_Type*>($1->pretype)));
+        else if($3->kind==Number && $3->type==FLOAT){
+            yyerror("size of array has non-integral type");//数组形参中有浮点数
+            exit(100);
+        }
+        else
+            $$->pretype=new Array_Type(-1,*(static_cast<Array_Type*>($1->pretype)));
     }
 
 //函数形参
 FuncFParam: BType IDENT {
     $$=mknode(FuncFParam,$1,NULL,NULL,yylineno);
     strcpy($$->type_id,$2);
+    $$->pretype=$1->pretype;
 }
     | BType IDENT FuncFParamArray {
         $$=mknode(FuncFParam,$1,$3,NULL,yylineno);
         strcpy($$->type_id,$2);
+        // static_cast<Array_Type*>($3->pretype)->basictype=*(static_cast<BasicType*>($1->pretype));
+        static_cast<Array_Type*>($3->pretype)->setBasicType(*(static_cast<BasicType*>($1->pretype)));
+        $$->pretype=$3->pretype;
     }
     ;
 
@@ -237,6 +273,7 @@ Block: LC BlockItems RC {
 }
     | LC RC {
         $$=mknode(Block,NULL,NULL,NULL,yylineno);
+        $$->pretype=new BasicType("void");
     }
     ;
 

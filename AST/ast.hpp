@@ -12,6 +12,7 @@
 #define yylex() yyflexlexer->yylex()
 #define yylineno yyflexlexer->lineno()
 extern yyFlexLexer *yyflexlexer;
+void yyerror(const char* fmt, ...);
 enum node_kind  {   
     Root, CompUnit, Decl, ConstDecl, BType, BlockItems, ConstDef, VarDecl, VarDef, FuncCall,
     InitVal, FuncDef, FuncFParams, FuncFParam, Block, Stmt, Cond, LVal,
@@ -51,7 +52,7 @@ public:
     void ASTtoSymtab(struct node *T,Symboltable &symboltable);  //AST转符号表
     struct node* setroot(struct node *root);   
     struct node* getroot() {return root;}    
-    void calAttr(struct node *T);                               //计算各结点属性
+    void calAttr(struct node *T,Symboltable &symboltable);      //计算各结点属性
 };
 
 struct node *mknode(int kind, struct node *first, struct node *second, struct node *third, int pos);

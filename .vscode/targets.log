@@ -8,7 +8,7 @@ make: *** No rule to make target 'all'.  Stop.
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Tue Jul 12 16:30:06 2022
+# Make data base, printed on Wed Jul 13 06:08:17 2022
 
 # Variables
 
@@ -97,7 +97,7 @@ MOTD_SHOWN = pam
 # automatic
 ^F = $(notdir $^)
 # environment
-SSH_CLIENT = 192.168.123.1 49426 22
+SSH_CLIENT = 192.168.123.1 55209 22
 # automatic
 ?F = $(notdir $?)
 # environment
@@ -127,7 +127,7 @@ _ = /home/pi/.vscode-server/bin/92d25e35d9bf1a6b16f7d0758f25d48ace11e5b9/node
 # environment
 XDG_RUNTIME_DIR = /run/user/1000
 # environment
-VSCODE_IPC_HOOK_CLI = /run/user/1000/vscode-ipc-82d7b7e4-647b-4fcf-a8f1-9aab02fd4cc2.sock
+VSCODE_IPC_HOOK_CLI = /run/user/1000/vscode-ipc-e6845ac2-ff1b-4374-a786-c0c8a9d6e2ec.sock
 # environment
 XDG_SESSION_CLASS = user
 # environment
@@ -139,7 +139,7 @@ HOME = /home/pi
 # environment
 ELECTRON_RUN_AS_NODE = 1
 # environment
-XDG_SESSION_ID = 14
+XDG_SESSION_ID = 38
 # default
 .RECIPEPREFIX := 
 # automatic
@@ -149,7 +149,7 @@ SUFFIXES :=
 # default
 .FEATURES := target-specific order-only second-expansion else-if shortest-stem undefine oneshell nocomment grouped-target extra-prereqs archives jobserver output-sync check-symlink load
 # environment
-SSH_CONNECTION = 192.168.123.1 49426 192.168.123.55 22
+SSH_CONNECTION = 192.168.123.1 55209 192.168.123.55 22
 # variable set hash-table stats:
 # Load=69/1024=7%, Rehash=0, Collisions=1/99=1%
 
@@ -259,6 +259,6 @@ parser/sysy.l:
 # strcache performance: lookups = 40 / hit rate = 32%
 # hash-table stats:
 # Load=27/8192=0%, Rehash=0, Collisions=0/40=0%
-# Finished Make data base on Tue Jul 12 16:30:06 2022
+# Finished Make data base on Wed Jul 13 06:08:17 2022
 
  

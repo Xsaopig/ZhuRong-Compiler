@@ -13,6 +13,10 @@ public:
     ~Type() {};
     string getNameofClass() {return NameofClass;}//获取当前对象的类名，类型转换时要用
     string getvalue() {return value;}
+    bool is_BasicType() {return NameofClass.compare("BasicType")==0?true:false;}
+    bool is_Product_Type() {return NameofClass.compare("Product_Type")==0?true:false;}
+    bool is_Array_Type() {return NameofClass.compare("Array_Type")==0?true:false;}
+    bool is_Fun_Type() {return NameofClass.compare("Fun_Type")==0?true:false;}
 protected:
     string NameofClass;
     string value;
@@ -25,6 +29,7 @@ public:
     BasicType() {NameofClass=string("BasicType");};
     ~BasicType() {};
     BasicType(string type) {NameofClass=string("BasicType");value=type;}
+    void setvalue(string s){value=s;}
 private:
 };
 
@@ -36,6 +41,7 @@ public:
     Product_Type(Type* t1,Type* t2);
     Product_Type(Type* t1,Type* t2,int n);
     ~Product_Type() {};
+    bool sameas(vector<Type *> &t);//比较两个积类型是否相同
     vector<Type *> eles;//每个元素的类型
 private:
 };
@@ -48,7 +54,9 @@ public:
     Array_Type(int i,BasicType& t);
     Array_Type(int i,Array_Type& t);
     ~Array_Type() {};
-    int lev;                    //数组的层数
+    void setBasicType(BasicType& t);//设置basictype
+    Type* Lower_one_level();      //数组降低一层
+    int lev=0;                    //数组的层数
     vector<int> elements_nums;  //数组每层元素的个数，最里层元素在第一个
     BasicType basictype;        //数组的基本类型    
 private:
@@ -63,7 +71,8 @@ public:
     Fun_Type(BasicType& R,vector<Type *> T);
     ~Fun_Type() {};
     string getvalue() {return value;}
-    BasicType basictype;//函数的返回值类型    
+    int num_args=0;     //参数的个数    
+    BasicType basictype;//函数的返回值类型
     vector<Type *> args;//参数的类型
 private:
 };

@@ -4,6 +4,7 @@
 #include <vector>
 #include <stack>
 #include <iostream>
+#include "../Type/Type.hpp"
 #include "../sysy.tab.hh"
 using namespace std;
 
@@ -12,7 +13,7 @@ class Symbol
 public:
     Symbol(){};
     Symbol(string name);
-    Symbol(const Symbol &symbol);//复制构造函数
+    // Symbol(const Symbol &symbol);//复制构造函数
     ~Symbol();
     bool Clone(const Symbol &symbol);//复制函数
 public:            
@@ -28,6 +29,8 @@ public:
                     //或函数活动记录大小，目标代码生成时使用
     //其它...
     //添加属性的时候别忘了修改 复制构造函数 与 复制函数Clone()！
+
+    Type *pretype;
 
 };
 
@@ -57,6 +60,7 @@ public:
     };
 
     void print();//打印符号表
+    void reset();//重置符号表
 };
 
 #endif

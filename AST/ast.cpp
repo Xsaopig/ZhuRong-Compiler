@@ -6,7 +6,9 @@ void ASTBuilder::Build()
     struct node *root=ast.getroot();
     ast.printAST(root,0,0);
     printf("源程序共有%d行代码\n",yylineno);//由于.l文件中有%option yylineno，所以yylineno在yyflexlexer中是自动管理的，遇到换行就+1
-    ast.calAttr(root);
+    ast.calAttr(root,symboltable);
+    cout<<"计算属性结束"<<endl;
+    symboltable.reset();
     ast.ASTtoSymtab(root,symboltable);
 }
 
@@ -612,7 +614,7 @@ void AST::ASTtoSymtab(struct node *T,Symboltable &symboltable) {
                 cur = cur->ptr[0];
             }
             for (int n = 0; n < i; n++)
-                   mysymbol.name+=string("[]");//数组的类型[]
+                   mysymbol.types+=string("[]");//数组的类型[]
             
              symboltable.Push(mysymbol);  //常量（变量）入表
             break;
@@ -687,181 +689,372 @@ void AST::ASTtoSymtab(struct node *T,Symboltable &symboltable) {
 }
 
 //计算各结点属性
-void AST::calAttr(struct node *T){
-    Symbol mysymbol;
+void AST::calAttr(struct node *T,Symboltable &symboltable){
+    Symbol mysymbol,*symbol;
     struct node *cur,*T0;
     BasicType* son;
-    int i;
+    vector<Type *> args;
+    Type *realarg;
+    int i,index;
     if(T) {
         switch(T->kind) {
         case Root:
             T->level=0;//根节点在第0层
-            if(T->ptr[0]) calAttr(T->ptr[0]);
+            if(T->ptr[0]) calAttr(T->ptr[0],symboltable);
             break;
         case CompUnit:
             T->level=0; //CompUnit结点的子节点也在第0层
             if(T->ptr[0]) T->ptr[0]->level=0;
             if(T->ptr[1]) T->ptr[1]->level=0;
-            if(T->ptr[0]) calAttr(T->ptr[0]);
-            if(T->ptr[1]) calAttr(T->ptr[1]);
+            if(T->ptr[0]) calAttr(T->ptr[0],symboltable);
+            if(T->ptr[1]) calAttr(T->ptr[1],symboltable);
             break;
         case FuncDef:
-            if(T->ptr[0]) T->ptr[0]->level=0;//函数类型结点还在第0层
+            if(T->ptr[0]) T->ptr[0]->level=0;   //函数类型结点还在第0层
             if(T->ptr[1]) T->ptr[1]->level=1;   //参数在第1层
             if(T->ptr[2]) T->ptr[2]->level=0;   //函数体在第1层，但是Block会加1
-            if(T->ptr[0]) calAttr(T->ptr[0]);
-            if(T->ptr[1]) calAttr(T->ptr[1]);
-            if(T->ptr[2]) calAttr(T->ptr[2]);
+
+            //计算T->pretype
+            if(T->ptr[1])//如果函数有形参
+            {
+                if(T->ptr[1]->pretype->is_Product_Type())//函数定义的形参只有一个,是积类型
+                    args=static_cast<Product_Type*>(T->ptr[1]->pretype)->eles;
+                else//函数定义的形参只有一个
+                    args.push_back(T->ptr[1]->pretype);
+            }
+            T->pretype=new Fun_Type(*(static_cast<BasicType*>(T->pretype)),args);
+            
+            //符号入表
+            mysymbol.name=string(T->type_id);
+            mysymbol.level=T->level;
+            mysymbol.pretype=T->pretype;
+            mysymbol.types=T->pretype->getvalue();
+            mysymbol.paramnum=static_cast<Fun_Type*>(T->pretype)->num_args;
+            mysymbol.flag='F';
+            index=symboltable.Push(mysymbol)-1;
+
+            symboltable.Push_index();
+            if(T->ptr[0]) calAttr(T->ptr[0],symboltable);
+            if(T->ptr[1]) calAttr(T->ptr[1],symboltable);
+            if(T->ptr[2]) calAttr(T->ptr[2],symboltable);
+            symboltable.Pop_until(symboltable.Pop_index());
+            
+           
             break;
         case FuncFParams:
             if(T->ptr[0]) T->ptr[0]->level=1;   
             if(T->ptr[1]) T->ptr[1]->level=1;
-            if(T->ptr[0]) calAttr(T->ptr[0]);
-            if(T->ptr[1]) calAttr(T->ptr[1]);
+            if(T->ptr[0]) calAttr(T->ptr[0],symboltable);
+            if(T->ptr[1]) calAttr(T->ptr[1],symboltable);
             break;
         case FuncFParam:
             if(T->ptr[0]) T->ptr[0]->level=1;   
             if(T->ptr[1]) T->ptr[1]->level=1;
+            if(T->ptr[0]) calAttr(T->ptr[0],symboltable);
+            if(T->ptr[1]) calAttr(T->ptr[1],symboltable);
+
+            mysymbol.name=string(T->type_id);
+            mysymbol.level=T->level;
+            mysymbol.pretype=T->pretype;
+            mysymbol.types=T->pretype->getvalue();
+            mysymbol.flag='P';
+            symboltable.Push(mysymbol);  
             break;
         case FuncFParamArray:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
             if(T->ptr[1]) T->ptr[1]->level=T->level;
+            if(T->ptr[0]) calAttr(T->ptr[0],symboltable);
+            if(T->ptr[1]) calAttr(T->ptr[1],symboltable);
             break;
         case BType:
             break;
         case Block:
             if(T->ptr[0]) T->ptr[0]->level=T->level+1;
-            if(T->ptr[0]) calAttr(T->ptr[0]);
+            if(T->ptr[0]) calAttr(T->ptr[0],symboltable);
+            if(T->ptr[0]) T->pretype=T->ptr[0]->pretype;
             break;
         case BlockItems:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
             if(T->ptr[1])  T->ptr[1]->level=T->level;
-            if(T->ptr[0]) calAttr(T->ptr[0]);
-            if(T->ptr[1]) calAttr(T->ptr[1]);
+            if(T->ptr[0]) calAttr(T->ptr[0],symboltable);
+            if(T->ptr[1]) calAttr(T->ptr[1],symboltable);
             break;
         case Decl:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
-            if(T->ptr[0]) calAttr(T->ptr[0]);
-            if(T->ptr[1]) calAttr(T->ptr[1]);
+            if(T->ptr[0]) calAttr(T->ptr[0],symboltable);
+            if(T->ptr[1]) calAttr(T->ptr[1],symboltable);
             break;
         case ConstDecl:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
             if(T->ptr[1]) T->ptr[1]->level=T->level;
-            if(T->ptr[0]) calAttr(T->ptr[0]);
-            if(T->ptr[1]) calAttr(T->ptr[1]);
+            if(T->ptr[0]) calAttr(T->ptr[0],symboltable);
+            if(T->ptr[1]) calAttr(T->ptr[1],symboltable);
             break;
         case VarDecl:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
             if(T->ptr[1]) T->ptr[1]->level=T->level;
-            if(T->ptr[0]) calAttr(T->ptr[0]);
-            if(T->ptr[1]) calAttr(T->ptr[1]);
+            if(T->ptr[0]) calAttr(T->ptr[0],symboltable);
+            if(T->ptr[1]) calAttr(T->ptr[1],symboltable);
             break;
         case ConstDef:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
             if(T->ptr[1]) T->ptr[1]->level=T->level;
-            if(T->ptr[0]) calAttr(T->ptr[0]);
-            if(T->ptr[1]) calAttr(T->ptr[1]);
+            if(T->ptr[0]) calAttr(T->ptr[0],symboltable);
+            if(T->ptr[1]) calAttr(T->ptr[1],symboltable);
+            //计算T->pretype
+            if(T->ptr[0]->pretype->is_BasicType()){
+                *T->ptr[0]->pretype=*T->pretype;
+            }
+            else if(T->ptr[0]->pretype->is_Array_Type())
+                static_cast<Array_Type*>(T->ptr[0]->pretype)->setBasicType(*static_cast<BasicType*>(T->pretype));
+            T->pretype=T->ptr[0]->pretype;
+            // cout<<T->pretype->getvalue()<<endl;
+
+            //符号入表
+            mysymbol.name=string(T->ptr[0]->type_id);
+            mysymbol.level=T->level;
+            mysymbol.flag='V';
+            mysymbol.pretype=T->pretype;
+            mysymbol.types=T->pretype->getvalue();
+            symboltable.Push(mysymbol);
             break;
         case VarDef:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
             if(T->ptr[1]) T->ptr[1]->level=T->level;
-            if(T->ptr[0]) calAttr(T->ptr[0]);
-            if(T->ptr[1]) calAttr(T->ptr[1]);
+            if(T->ptr[0]) calAttr(T->ptr[0],symboltable);
+            
+            //计算T->pretype
+            if(T->ptr[0]->pretype->is_BasicType()){
+                *T->ptr[0]->pretype=*T->pretype;
+            }
+            else if(T->ptr[0]->pretype->is_Array_Type())
+                static_cast<Array_Type*>(T->ptr[0]->pretype)->setBasicType(*static_cast<BasicType*>(T->pretype));
+            T->pretype=T->ptr[0]->pretype;
+            // cout<<T->pretype->getvalue()<<endl;
+
+            //符号入表
+            mysymbol.name=string(T->ptr[0]->type_id);
+            mysymbol.level=T->level;
+            mysymbol.flag='V';
+            mysymbol.pretype=T->pretype;
+            mysymbol.types=T->pretype->getvalue();
+            symboltable.Push(mysymbol);
+
+            if(T->ptr[1]) calAttr(T->ptr[1],symboltable);
+            // if(T->ptr[1]) cout<<T->ptr[1]->pretype->getvalue()<<endl;
             break;
         case Idents:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
             if(T->ptr[1]) T->ptr[1]->level=T->level;
-            if(T->ptr[0]) calAttr(T->ptr[0]);
-            if(T->ptr[1]) calAttr(T->ptr[1]);
+            if(T->ptr[0]) calAttr(T->ptr[0],symboltable);
+            if(T->ptr[1]) calAttr(T->ptr[1],symboltable);
             break;
         case InitVals:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
             if(T->ptr[1]) T->ptr[1]->level=T->level;
-            if(T->ptr[0]) calAttr(T->ptr[0]);
-            if(T->ptr[1]) calAttr(T->ptr[1]);
+            if(T->ptr[0]) calAttr(T->ptr[0],symboltable);
+            if(T->ptr[1]) calAttr(T->ptr[1],symboltable);
+            T->pretype=T->ptr[0]->pretype;
             break;
         case InitVal:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
-            if(T->ptr[0]) calAttr(T->ptr[0]);
+            if(T->ptr[0]) calAttr(T->ptr[0],symboltable);
+            T->pretype=T->ptr[0]->pretype;
             break;
         case ASSIGN:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
             if(T->ptr[1]) T->ptr[1]->level=T->level;
-            if(T->ptr[0]) calAttr(T->ptr[0]);
-            if(T->ptr[1]) calAttr(T->ptr[1]);
+            if(T->ptr[0]) calAttr(T->ptr[0],symboltable);
+            if(T->ptr[1]) calAttr(T->ptr[1],symboltable);
+            
+            //隐式类型转换
+            if(T->ptr[0]->pretype->getvalue().compare("int")==0 && T->ptr[1]->pretype->getvalue().compare("float")==0){
+                static_cast<BasicType*>(T->ptr[1]->pretype)->setvalue("int");
+                T->ptr[1]->type=INT;
+                T->ptr[1]->type_int=T->ptr[1]->type_float;
+            }
+            else if(T->ptr[0]->pretype->getvalue().compare("float")==0 && T->ptr[1]->pretype->getvalue().compare("int")==0){
+                T->pretype=new BasicType("bool");
+                static_cast<BasicType*>(T->ptr[1]->pretype)->setvalue("float");
+                T->ptr[1]->type=FLOAT;
+                T->ptr[1]->type_float=T->ptr[1]->type_int;
+            }
+            
+            cout<<T->ptr[1]->pretype->getvalue()<<endl;
+
             break;
         case LVal:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
             if(T->ptr[1]) T->ptr[1]->level=T->level;
-            if(T->ptr[0]) calAttr(T->ptr[0]);
-            if(T->ptr[1]) calAttr(T->ptr[1]);
+            if(T->ptr[0]) calAttr(T->ptr[0],symboltable);
+            if(T->ptr[1]) calAttr(T->ptr[1],symboltable);
+
+            if(!T->ptr[0])//LVal: IDENT
+            {
+                index=symboltable.Search(string(T->type_id));
+                if(index==-1){
+                    yyerror("undefined symbol");
+                    exit(101);
+                }
+                symbol=symboltable.getSymbol(index);
+                T->pretype=symbol->pretype;
+            }
+            else{//LVal: LVal LB Exp RB
+                if(!T->ptr[0]->pretype->is_Array_Type()){
+                    yyerror("symbols are not arrays");
+                    exit(104);
+                }
+                else if(T->ptr[1]->pretype->is_BasicType() && T->ptr[1]->pretype->getvalue().compare("int")==0){
+                    T->pretype=static_cast<Array_Type*>(T->ptr[0]->pretype)->Lower_one_level();
+                }
+                else{
+                    yyerror("illegal use of array");
+                    exit(105);
+                }
+            }   
             break;
         case Number:
+
             break;
         case FuncCall:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
             if(T->ptr[1]) T->ptr[1]->level=T->level;
             if(T->ptr[2]) T->ptr[2]->level=T->level;
-            if(T->ptr[0]) calAttr(T->ptr[0]);
-            if(T->ptr[1]) calAttr(T->ptr[1]);
-            if(T->ptr[2]) calAttr(T->ptr[2]);
+            if(T->ptr[0]) calAttr(T->ptr[0],symboltable);
+            if(T->ptr[1]) calAttr(T->ptr[1],symboltable);
+            if(T->ptr[2]) calAttr(T->ptr[2],symboltable);
+
+
+
+            index=symboltable.Search(string(T->type_id));
+            if(index==-1){
+                yyerror("undefined function");
+                exit(102);
+            }
+            symbol=symboltable.getSymbol(index);
+            T->pretype=symbol->pretype;
+            
+            if(!T->pretype->is_Fun_Type()){//符号表中的符号并非函数
+                yyerror("symbols are not functions");
+                exit(103);
+            }
+            args=static_cast<Fun_Type*>(T->pretype)->args;//函数的形参
+            realarg=(T->ptr[0])?T->ptr[0]->pretype:nullptr;//函数的实参
+            // cout<<"函数类型:"<<T->pretype->getvalue()<<endl;
+            // if(T->ptr[0]) cout<<"调用时的实参类型:"<<T->ptr[0]->pretype->getvalue()<<endl;
+            // else cout<<"调用时没有实参"<<endl;
+            if(realarg==nullptr && args.size()!=0){//有形参没实参
+                yyerror("No overloaded function found");
+                exit(107);
+            }
+            else if(args.size()==0 && T->ptr[0]){//没形参有实参
+                yyerror("No overloaded function found");
+                exit(107);
+            }
+            else if(realarg && realarg->is_BasicType() && 
+            ((args.size()==1 && args[0]->getvalue().compare(realarg->getvalue())!=0) || args.size()!=1) ){//有一个实参且与形参不同
+                yyerror("No overloaded function found");
+                exit(107);
+            }
+            else if(realarg && realarg->is_Product_Type() 
+            && !static_cast<Product_Type*>(realarg)->sameas(args)){//有多个实参且与形参不同
+                yyerror("No overloaded function found");
+                exit(107);
+            }
+            else
+                T->pretype=&(static_cast<Fun_Type*>(T->pretype)->basictype);
+            
+            // cout<<T->pretype->getvalue()<<endl;
             break;
         case FuncRParams:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
             if(T->ptr[1]) T->ptr[1]->level=T->level;
             if(T->ptr[2]) T->ptr[2]->level=T->level;
-            if(T->ptr[0]) calAttr(T->ptr[0]);
-            if(T->ptr[1]) calAttr(T->ptr[1]);
-            if(T->ptr[2]) calAttr(T->ptr[2]);
+            if(T->ptr[0]) calAttr(T->ptr[0],symboltable);
+            if(T->ptr[1]) calAttr(T->ptr[1],symboltable);
+            if(T->ptr[2]) calAttr(T->ptr[2],symboltable);
+
+
+            if(T->ptr[1]){
+                T->pretype=new Product_Type(T->ptr[0]->pretype,T->ptr[1]->pretype);
+            }
+            else{
+                T->pretype=T->ptr[0]->pretype;
+            }
             break;
         case UnaryExp:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
             if(T->ptr[1]) T->ptr[1]->level=T->level;
             if(T->ptr[2]) T->ptr[2]->level=T->level;
-            if(T->ptr[0]) calAttr(T->ptr[0]);
-            if(T->ptr[1]) calAttr(T->ptr[1]);
-            if(T->ptr[2]) calAttr(T->ptr[2]);
+            if(T->ptr[0]) calAttr(T->ptr[0],symboltable);
+            if(T->ptr[1]) calAttr(T->ptr[1],symboltable);
+            if(T->ptr[2]) calAttr(T->ptr[2],symboltable);
+
+            T->pretype=T->ptr[0]->pretype;
             break;
         case AddExp:
         case MulExp:
-        case LOrExp:
-        case LAndExp:
-        case EqExp:
-        case RelExp:
+                if(T->ptr[0]->pretype->is_BasicType()==false || T->ptr[1]->pretype->is_BasicType()==false)
+                {
+                    yyerror("type error");
+                    exit(106);
+                }
+                if(T->ptr[0]->pretype->getvalue().compare("int")==0 && T->ptr[1]->pretype->getvalue().compare("int")==0){
+                    T->pretype=new BasicType("int");
+                }
+                else if(T->ptr[0]->pretype->getvalue().compare("float")==0 || T->ptr[1]->pretype->getvalue().compare("float")==0){
+                    T->pretype=new BasicType("float");
+                }
+            break;
+        case LOrExp://逻辑或表达式
+        case LAndExp://逻辑与表达式
+        case EqExp://相等性表达式
+        case RelExp://关系表达式
             if(T->ptr[0]) T->ptr[0]->level=T->level;
             if(T->ptr[1]) T->ptr[1]->level=T->level;
             if(T->ptr[2]) T->ptr[2]->level=T->level;
-            if(T->ptr[0]) calAttr(T->ptr[0]);
-            if(T->ptr[1]) calAttr(T->ptr[1]);
-            if(T->ptr[2]) calAttr(T->ptr[2]);
-            break;
+            if(T->ptr[0]) calAttr(T->ptr[0],symboltable);
+            if(T->ptr[1]) calAttr(T->ptr[1],symboltable);
+            if(T->ptr[2]) calAttr(T->ptr[2],symboltable);
 
+            if(T->ptr[0]->pretype->getvalue().compare("int")==0 && T->ptr[1]->pretype->getvalue().compare("int")==0){
+                T->pretype=new BasicType("bool");
+            }
+            else if(T->ptr[0]->pretype->getvalue().compare("float")==0 && T->ptr[1]->pretype->getvalue().compare("float")==0){
+                T->pretype=new BasicType("bool");
+            }
+            else {
+                yyerror("type error");
+                exit(106);
+            }
+
+            break;
         case IF:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
             if(T->ptr[1]) T->ptr[1]->level=(T->ptr[1]->kind!=Block)?T->level+1:T->level;
             if(T->ptr[2]) T->ptr[2]->level=(T->ptr[2]->kind!=Block)?T->level+1:T->level;
-            if(T->ptr[0]) calAttr(T->ptr[0]);
-            if(T->ptr[1]) calAttr(T->ptr[1]);
-            if(T->ptr[2]) calAttr(T->ptr[2]);
+            if(T->ptr[0]) calAttr(T->ptr[0],symboltable);
+            if(T->ptr[1]) calAttr(T->ptr[1],symboltable);
+            if(T->ptr[2]) calAttr(T->ptr[2],symboltable);
             break;
         case WHILE:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
             if(T->ptr[1]) T->ptr[1]->level=(T->ptr[1]->kind!=Block)?T->level+1:T->level;
-            if(T->ptr[0]) calAttr(T->ptr[0]);
-            if(T->ptr[1]) calAttr(T->ptr[1]);
+            if(T->ptr[0]) calAttr(T->ptr[0],symboltable);
+            if(T->ptr[1]) calAttr(T->ptr[1],symboltable);
             break;
         case RETURN:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
-            if(T->ptr[0]) calAttr(T->ptr[0]);
-            if(T->ptr[1]) calAttr(T->ptr[1]);
-            if(T->ptr[2]) calAttr(T->ptr[2]);
+            if(T->ptr[0]) calAttr(T->ptr[0],symboltable);
+            if(T->ptr[1]) calAttr(T->ptr[1],symboltable);
+            if(T->ptr[2]) calAttr(T->ptr[2],symboltable);
             break;
         case CONTINUE:
             
         case BREAK:
-            if(T->ptr[0]) calAttr(T->ptr[0]);
-            if(T->ptr[1]) calAttr(T->ptr[1]);
-            if(T->ptr[2]) calAttr(T->ptr[2]);
+            if(T->ptr[0]) calAttr(T->ptr[0],symboltable);
+            if(T->ptr[1]) calAttr(T->ptr[1],symboltable);
+            if(T->ptr[2]) calAttr(T->ptr[2],symboltable);
             break;
         }
     }
