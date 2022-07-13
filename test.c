@@ -4,10 +4,9 @@ int get(int x,float y){
     return 1;
 }
 
-int main()
+int main(float g)
 {
-    int a=5;
-    int c=1;
-    float b=get(a,b);
+    int a[20];
+    float b=get(a[1],g);
     return 0;
 }

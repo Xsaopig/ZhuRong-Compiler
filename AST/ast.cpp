@@ -4,8 +4,8 @@ void ASTBuilder::Build()
 {
     yyparse();
     struct node *root=ast.getroot();
-    ast.printAST(root,0,0);
-    printf("源程序共有%d行代码\n",yylineno);//由于.l文件中有%option yylineno，所以yylineno在yyflexlexer中是自动管理的，遇到换行就+1
+     ast.printAST(root,0,0);
+    // printf("源程序共有%d行代码\n",yylineno);//由于.l文件中有%option yylineno，所以yylineno在yyflexlexer中是自动管理的，遇到换行就+1
     ast.calAttr(root,symboltable);
     cout<<"计算属性结束"<<endl;
     symboltable.reset();
@@ -309,7 +309,7 @@ void AST::printAST(struct node *T, int indent, int deep) {
                     cur->ptr[0]->kind = LVal;
                     cur = cur->ptr[0];
                 }
-                free(cur);
+                // free(cur);
             }
             else 
                 printf("%s\n", T->type_id);//暂时不管类型和数组
