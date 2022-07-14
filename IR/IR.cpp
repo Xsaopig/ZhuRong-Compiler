@@ -240,4 +240,5 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
             if(T->ptr[2]) genIR(T->ptr[2],symboltable);
             break;
         }
+        }
     }
