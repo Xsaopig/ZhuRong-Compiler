@@ -10,7 +10,6 @@
 #include "../AST/ast.hpp"
 using namespace std;
 void genIR(struct node *T);
-
 class Opn//操作数
 {
 public:
@@ -45,7 +44,26 @@ enum op_kind {//LLVM IR指令类型，后面用到再加
     ICMP,//比较
     BR,//跳转
     PHI,//根据分支赋值
-    RET
+    RET,
+    _ADD,
+    _SUB,
+    _MUL,
+    _DIV,
+    _MOD,
+    _NEG,
+    AUTOADD,
+    AUTOSUB,
+    FUNCTION,
+    CALL,
+    _AND,
+    _OR,
+    _EQ,
+    _NE,
+    SLT,
+    SGT,
+    SLE,
+    SGE,
+    ERROR
 };
 
 struct codenode//中间代码结点
@@ -64,11 +82,14 @@ private:
     int no_gloabl=0;
     Symboltable symboltable;
 public:
-    void genIR(struct node *T,Symboltable &symboltable);
-    string newAlias();
-    string newGloabl();
+    void genIR(struct node *T);
+    string newAlias(){ return string("%")+to_string(no++);};
+    string newGloabl(){ return string("@")+to_string(no_gloabl++);};
+    string newlabel(){ return string("label %")+to_string(no++);};
+
     struct codenode* codegen(enum op_kind kind,vector<Opn*>& opns);
-    string newlabel();
+    struct codenode *merge(int num,...);
+
     void Build(struct node *T);
     
 };

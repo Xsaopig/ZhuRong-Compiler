@@ -8,8 +8,8 @@ void ASTBuilder::Build()
     // printf("源程序共有%d行代码\n",yylineno);//由于.l文件中有%option yylineno，所以yylineno在yyflexlexer中是自动管理的，遇到换行就+1
     ast.calAttr(root,symboltable);
     cout<<"计算属性结束"<<endl;
-    symboltable.reset();
-    ast.ASTtoSymtab(root,symboltable);
+    // symboltable.reset();
+    // ast.ASTtoSymtab(root,symboltable);
 }
 
 struct node *mknode(int kind, struct node *first, struct node *second, struct node *third, int pos) {
@@ -767,11 +767,14 @@ void AST::calAttr(struct node *T,Symboltable &symboltable){
             if(T->ptr[1]) calAttr(T->ptr[1],symboltable);
             break;
         case BType:
+            T->width=4;
             break;
         case Block:
+            symboltable.Push_index();
             if(T->ptr[0]) T->ptr[0]->level=T->level+1;
             if(T->ptr[0]) calAttr(T->ptr[0],symboltable);
             if(T->ptr[0]) T->pretype=T->ptr[0]->pretype;
+            symboltable.Pop_until(symboltable.Pop_index());
             break;
         case BlockItems:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
@@ -880,7 +883,7 @@ void AST::calAttr(struct node *T,Symboltable &symboltable){
                 T->ptr[1]->type_float=T->ptr[1]->type_int;
             }
             
-            cout<<T->ptr[1]->pretype->getvalue()<<endl;
+            // cout<<T->ptr[1]->pretype->getvalue()<<endl;
 
             break;
         case LVal:
