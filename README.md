@@ -1,7 +1,5 @@
-IRv1版本不可用
-仅完成genIR（）部分，剩余很多功能函数没实现
-
-修了个小bug，在printAST函数的Lval分支中不应该free(cur)
+# 重新开始中间代码生成
+放弃LLVM IR，采用四元式
 
 ## 配置了debug文件
 
