@@ -110,11 +110,13 @@ BType: INT {
     $$=mknode(BType,NULL,NULL,NULL,yylineno);
     $$->type=INT;
     $$->pretype=new BasicType("int");
+    $$->width=4;
     }
     | FLOAT {
         $$=mknode(BType,NULL,NULL,NULL,yylineno);
         $$->type=FLOAT;
         $$->pretype=new BasicType("float");
+        $$->width=4;
     } 
     ;
 

@@ -34,17 +34,17 @@ struct codenode *IRBuilder::codegen(enum op_kind kind,Opn& opn1,Opn& opn2,Opn& r
     return p;
 }
 
-struct codenode *genLabel(string label)
-{
-    // struct codenode *p = new struct codenode();
-    // p->op = LABEL;
-    // Opn *opn = new Opn();
-    // opn->id = label;
-    // vector<Opn *> opns = {opn};
-    // p->opns = opns;
-    // p->next = p->pre = p;
-    // return p;
-}
+// struct codenode *genLabel(string label)
+// {
+//     // struct codenode *p = new struct codenode();
+//     // p->op = LABEL;
+//     // Opn *opn = new Opn();
+//     // opn->id = label;
+//     // vector<Opn *> opns = {opn};
+//     // p->opns = opns;
+//     // p->next = p->pre = p;
+//     // return p;
+// }
 
 //合并多个中间代码的双向循环链表，首尾相连
 struct codenode *IRBuilder::merge(int num, ...)
@@ -226,19 +226,15 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
         case LVal:
             if(T->ptr[0]) genIR(T->ptr[0],symboltable);
             if(T->ptr[1]) genIR(T->ptr[1],symboltable);
-            //这一部分得看龙书313页，数组元素寻址的翻译模式
             if(!T->ptr[0])
             {//LVal: IDENT
                 index=symboltable.Search(string(T->type_id));
                 T->place=index;
                 T->code=nullptr;
-                T->offset=0;
+                T->offset=-1;//不是数组，不需要offset
             }
-            else/*
-                这一步应该输出：
-                  t(x) = c                                    //c是IDENT对应的符号的偏移地址
-                  t(x+1) = T.width * symboltable[Exp.place]   //这一步是计算数组元素在数组中的偏移地址
-                */
+            else
+            //这一部分得看龙书313页，数组元素寻址的翻译模式
             {//LVal: LVal LB Exp RB
                 if(!T->ptr[0]->ptr[0]){         //LVal: (IDENT) LB Exp RB
                     T->offset=newtemp(new BasicType("int"),T->level,0);
@@ -328,4 +324,5 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
             break;
         }
         }
+        return;
     }

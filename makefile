@@ -1,4 +1,3 @@
-
 run: complier test.c
 	./complier test.c
 complier: sysy.tab.cc lex.yy.cc 
