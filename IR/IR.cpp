@@ -6,13 +6,32 @@ void IRBuilder::Build(struct node *T)
     genIR(T,symboltable);
 }
 
-struct codenode *IRBuilder::codegen(enum op_kind kind, vector<Opn *> &opns)
+int IRBuilder::newtemp(Type *pretype,int level,int offset)//不知道就填0
 {
-    // struct codenode *p = new struct codenode();
-    // p->op = kind;
-    // p->opns = opns;
-    // p->pre = p->next = p;
-    // return p;
+    Symbol x;
+    x.name="t"+to_string(no++);
+    x.flag='T';
+    x.level=level;
+    x.offset=offset;
+    x.paramnum=0;
+    x.pretype=pretype;
+    if(pretype!=nullptr)
+        x.types=pretype->getvalue();
+    else
+        x.types="unknown";
+    int place=symboltable.Push(x)-1;
+    return place;
+}
+
+struct codenode *IRBuilder::codegen(enum op_kind kind,Opn& opn1,Opn& opn2,Opn& result)
+{
+    struct codenode *p = new struct codenode();
+    p->op = kind;
+    p->opn1=opn1;
+    p->opn2=opn2;
+    p->result=p->result;
+    p->pre = p->next = p;
+    return p;
 }
 
 struct codenode *genLabel(string label)
@@ -56,18 +75,15 @@ struct codenode *IRBuilder::merge(int num, ...)
 
 
 void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
-    // Symboltable symboltable;
     Symbol mysymbol;
-    Symbol new_symbol;
     struct node *cur,*T0;
     BasicType* son;
     int record;
     int i;
     int index;
     Symbol *symbol;
-    Opn *opn;
     string opn_type;
-    vector<Opn*> opns;
+    Opn *opn1,*opn2,*result;
         if(T) {
         switch(T->kind) {
         case Root:
@@ -109,6 +125,14 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
             mysymbol.level=T->level;
             mysymbol.pretype=T->pretype;
             mysymbol.types=T->pretype->getvalue();
+            if(T->pretype->is_BasicType()){
+                if(!T->pretype->getvalue().compare("int"))
+                    mysymbol.type=INT;
+                else if(!T->pretype->getvalue().compare("float"))
+                    mysymbol.type=FLOAT;
+                else
+                    mysymbol.type=VOID;
+            }
             mysymbol.flag='P';
             T->place=symboltable.Push(mysymbol)-1;  
             
@@ -148,9 +172,17 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
             //符号入表
             mysymbol.name=string(T->ptr[0]->type_id);
             mysymbol.level=T->level;
-            mysymbol.flag='V';
+            mysymbol.flag='C';
             mysymbol.pretype=T->pretype;
             mysymbol.types=T->pretype->getvalue();
+            if(T->pretype->is_BasicType()){
+                if(!T->pretype->getvalue().compare("int"))
+                    mysymbol.type=INT;
+                else if(!T->pretype->getvalue().compare("float"))
+                    mysymbol.type=FLOAT;
+                else
+                    mysymbol.type=VOID;
+            }
             T->place=symboltable.Push(mysymbol)-1;
             break;
         case VarDef:
@@ -162,6 +194,14 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
             mysymbol.flag='V';
             mysymbol.pretype=T->pretype;
             mysymbol.types=T->pretype->getvalue();
+            if(T->pretype->is_BasicType()){
+                if(!T->pretype->getvalue().compare("int"))
+                    mysymbol.type=INT;
+                else if(!T->pretype->getvalue().compare("float"))
+                    mysymbol.type=FLOAT;
+                else
+                    mysymbol.type=VOID;
+            }
             T->place=symboltable.Push(mysymbol)-1;      
             break;
         case Idents:
@@ -186,8 +226,50 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
         case LVal:
             if(T->ptr[0]) genIR(T->ptr[0],symboltable);
             if(T->ptr[1]) genIR(T->ptr[1],symboltable);
+            //这一部分得看龙书313页，数组元素寻址的翻译模式
+            if(!T->ptr[0])
+            {//LVal: IDENT
+                index=symboltable.Search(string(T->type_id));
+                T->place=index;
+                T->code=nullptr;
+                T->offset=0;
+            }
+            else/*
+                这一步应该输出：
+                  t(x) = c                                    //c是IDENT对应的符号的偏移地址
+                  t(x+1) = T.width * symboltable[Exp.place]   //这一步是计算数组元素在数组中的偏移地址
+                */
+            {//LVal: LVal LB Exp RB
+                if(!T->ptr[0]->ptr[0]){         //LVal: (IDENT) LB Exp RB
+                    T->place=newtemp(new BasicType("int"),T->level,0);
+                    T->offset=newtemp(new BasicType("int"),T->level,0);
+                    T->array=symboltable.getSymbol(symboltable.Search(string(T->ptr[0]->type_id)));
+                    T->ndim=1;
+                    T->width=4;//int和float都占用4个字节
+                    //暂时先不链接codenode，直接printf输出
+                    symbol=symboltable.getSymbol(T->place);
+                    cout<<symbol->name<<" = "<<(int)symbol->offset<<endl;
+                    symbol=symboltable.getSymbol(T->offset);
+                    if(T->ptr[1]->kind==Number)
+                        cout<<symbol->name<<" = "<<T->width<<" * "<<T->ptr[1]->type_int<<endl;
+                    else 
+                        cout<<symbol->name<<" = "<<T->width<<" * "<<symboltable.getSymbol(T->ptr[1]->place)->name<<endl;
+                }
+                else{                           //LVal: (LVal LB Exp RB) LB Exp RB
+                    T->ndim++;
+                    T->place=newtemp(new BasicType("int"),T->level,0);
+                    T->array=T->ptr[0]->array;
+                    //暂时先不链接codenode，直接printf输出
+                    symbol=symboltable.getSymbol(T->place);
+                    int limit=static_cast<Array_Type*>(T->array->pretype)->elements_nums[T->ndim];
+                    cout<<symbol->name<<" = "<<symboltable.getSymbol(T->ptr[0]->place)->name<<" * "<<limit<<endl;
+                    if(T->ptr[1]->kind==Number)
+                        cout<<symbol->name<<" = "<<symbol->name<<" + "<<T->ptr[1]->type_int<<endl;
+                    else
+                        cout<<symbol->name<<" = "<<symbol->name<<" + "<<symboltable.getSymbol(T->ptr[1]->place)->name<<endl;
+                }
 
-
+            }
             break;
         case Number:
 

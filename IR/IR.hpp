@@ -10,31 +10,43 @@
 #include "../AST/ast.hpp"
 using namespace std;
 void genIR(struct node *T);
+enum opn_kind {Var,Imm,Void};
 class Opn//操作数
 {
 public:
-    int kind;                   //VAR、IMM、NULL
+    enum opn_kind kind;                   //Var、Imm、Void
     string type;                //操作数类型，包括 int , float , void
 
-    union {
-        int     const_int;      //整常数值，立即数
-        float   const_float;    //浮点常数值，立即数
-        string    id;         //变量或临时变量的别名或标号字符串
-    };
+    int     const_int;      //整常数值，立即数
+    float   const_float;    //浮点常数值，立即数
+    string    id;         //变量或临时变量的别名或标号字符串
+
     int level;                  //变量的层号，0表示是全局变量，数据保存在静态数据区
     int offset;                 //变量单元偏移量，或函数在符号表的定义位置序号，目标代码生成时用
 public:
     Opn(){};
-    Opn(int kind,string type,int level,int offset){
+    Opn(enum opn_kind kind,string type,int level,int offset){
         this->kind=kind;
         this->type=type;
         this->level=level;
         this->offset=offset;
     };
+    Opn(enum opn_kind kind,string type,int level,int offset,int const_int,float const_float,string id){
+        this->kind=kind;
+        this->type=type;
+        this->level=level;
+        this->offset=offset;
+        this->const_float=const_float;
+        this->const_int=const_int;
+        this->id=id;
+    };
 };
 
 enum op_kind {//指令类型，后面用到再加
-
+    _ADD,
+    _SUB,
+    _ASSIGN,
+    _MUL
 };
 
 struct codenode//中间代码结点
@@ -49,19 +61,16 @@ class IRBuilder
 private:
     struct node* root;//AST根节点
     Symboltable symboltable;
-    int no=0;//用来生成新的alias
-    int no_gloabl=0;
+    int no=0;//用来生成新的temp
 public:
     void genIR(struct node *T,Symboltable &symboltable);
-    string newAlias(){ return string("%")+to_string(no++);};
-    string newGloabl(){ return string("@")+to_string(no_gloabl++);};
-    string newlabel(){ return string("label %")+to_string(no++);};
-
-    struct codenode* codegen(enum op_kind kind,vector<Opn*>& opns);
+    
+    struct codenode* codegen(enum op_kind kind,Opn& opn1,Opn& opn2,Opn& result);
     struct codenode *merge(int num,...);
 
     void Build(struct node *T);
     
+    int newtemp(Type *pretype,int level,int offset);
 };
 
 
