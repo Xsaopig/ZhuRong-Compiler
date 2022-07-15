@@ -89,7 +89,7 @@ int Symboltable::Pop_until(int index)
 //根据name查找符号,返回index
 int Symboltable::Search(string name)   
 {
-    for(int i=0;i<index;i++)
+    for(int i=index-1;i>=0;i--)
         if(!name.compare(symbols[i].name)) return i;
     return -1;
 }
