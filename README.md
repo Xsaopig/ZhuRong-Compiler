@@ -5,6 +5,8 @@
 
 vscode环境下工作目录为ZhuRong-Complier文件夹时，F5可调试(需要在main.cpp的界面中按F5)
 
+如果想要运行时打印符号表，请使用make debug
+
 ## 修改了项目结构
 
 函数调用关系如下
