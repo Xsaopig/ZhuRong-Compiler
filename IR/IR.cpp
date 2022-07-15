@@ -102,7 +102,7 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
             mysymbol.paramnum=static_cast<Fun_Type*>(T->pretype)->num_args;
             mysymbol.flag='F';
             index=symboltable.Push(mysymbol)-1;
-            
+            offset=0;//offset是相对地址
             T->place=index;
 
             symboltable.Push_index();
@@ -134,6 +134,8 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
                     mysymbol.type=VOID;
             }
             mysymbol.flag='P';
+            mysymbol.offset=offset;
+            offset+=4;
             T->place=symboltable.Push(mysymbol)-1;  
             
             break;
