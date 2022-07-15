@@ -3,6 +3,7 @@
 //%代表局部标识符（寄存器名称也就是局部变量，类型）。
 void IRBuilder::Build(struct node *T)
 {
+    cout<<"开始中间代码生成"<<endl;
     genIR(T,symboltable);
 }
 
@@ -242,9 +243,13 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
             if(T->ptr[0]) genIR(T->ptr[0],symboltable);
             if(T->ptr[1]) genIR(T->ptr[1],symboltable);
 
+            cout<<symboltable.getSymbol(T->ptr[0]->place)->name<<" = "
+                <<symboltable.getSymbol(T->ptr[1]->place)->name<<endl;
+
+
             
             break;
-        case LVal:
+        case LVal://经过处理之后，T->place存储的是对应元素在符号表中的位置
             if(T->ptr[0]) genIR(T->ptr[0],symboltable);
             if(T->ptr[1]) genIR(T->ptr[1],symboltable);
             if(!T->ptr[0])
@@ -258,30 +263,44 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
             //这一部分得看龙书313页，数组元素寻址的翻译模式
             {//LVal: LVal LB Exp RB
                 if(!T->ptr[0]->ptr[0]){         //LVal: (IDENT) LB Exp RB
-                    T->offset=newtemp(new BasicType("int"),T->level,offset);
-                    offset+=4;
                     T->array=symboltable.getSymbol(symboltable.Search(string(T->ptr[0]->type_id)));
                     T->ndim=1;
                     T->width=4;//int和float都占用4个字节
                     //暂时先不链接codenode，直接printf输出
-                    symbol=symboltable.getSymbol(T->offset);
-                    int limit=static_cast<Array_Type*>(T->array->pretype)->elements_nums[T->ndim];//最外围数组的元素个数
-                    if(T->ptr[1]->kind==Number)
-                        cout<<symbol->name<<" = "<<T->ptr[1]->type_int<<" * "<<limit<<endl;
-                    else 
-                        cout<<symbol->name<<" = "<<symboltable.getSymbol(T->ptr[1]->offset)->name<<" * "<<limit<<endl;
+                    if(T->ndim < static_cast<Array_Type*>(T->array->pretype)->lev)
+                    {//没到数组的最后一层
+                        T->offset=newtemp(new BasicType("int"),T->level,offset);
+                        offset+=4;
+                        symbol=symboltable.getSymbol(T->offset);
+                        int limit=static_cast<Array_Type*>(T->array->pretype)->elements_nums[T->ndim];//ndim-1维数组的元素个数
+                        cout<<symbol->name<<" = "<<symboltable.getSymbol(T->ptr[1]->place)->name<<" * "<<limit<<endl;
+                    }
+                    else//数组的最后一层
+                    {
+                        int base_addr=newtemp(new BasicType("int"),T->level,offset);
+                        offset+=4;
+                        cout<<symboltable.getSymbol(base_addr)->name<<" = "<<T->array->offset<<endl;
+                        T->offset=newtemp(new BasicType("int"),T->level,offset);
+                        offset+=4;
+                        symbol=symboltable.getSymbol(T->offset);
+                        cout<<symbol->name<<" = "<<symboltable.getSymbol(T->ptr[1]->place)->name<<endl;
+                        T->place=newtemp(new BasicType("int"),T->level,offset);
+                        offset+=4;
+                        cout<<symboltable.getSymbol(T->place)->name<<" = "
+                            <<symboltable.getSymbol(base_addr)->name<<" [ "
+                            <<symboltable.getSymbol(T->offset)->name<<" ] "<<endl;
+                        
+                    }
                 }
                 else{                           //LVal: (LVal LB Exp RB) LB Exp RB
                     T->ndim=T->ptr[0]->ndim+1;
+                    T->width=T->ptr[0]->width;
                     T->offset=newtemp(new BasicType("int"),T->level,offset);
                     offset+=4;
                     T->array=T->ptr[0]->array;
                     //暂时先不链接codenode，直接printf输出
                     symbol=symboltable.getSymbol(T->ptr[0]->offset);
-                    if(T->ptr[1]->kind==Number)
-                        cout<<symbol->name<<" = "<<symbol->name<<" + "<<T->ptr[1]->type_int<<endl;
-                    else
-                        cout<<symbol->name<<" = "<<symbol->name<<" + "<<symboltable.getSymbol(T->ptr[1]->offset)->name<<endl;
+                    cout<<symbol->name<<" = "<<symbol->name<<" + "<<symboltable.getSymbol(T->ptr[1]->place)->name<<endl;
                     if(T->ndim < static_cast<Array_Type*>(T->array->pretype)->lev)
                     {//没到数组的最后一层
                         int limit=static_cast<Array_Type*>(T->array->pretype)->elements_nums[T->ndim];
@@ -289,14 +308,29 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
                     }
                     else//数组的最后一层
                     {
-                        T->place=T->offset; //至此，T->place存储的是数组的偏移量在符号表中的位置
-                                            //T->array存储的是数组符号的指针，数组的基址可以用T->array访问
+                        //至此，T->place存储的是对应数组元素在符号表中的位置
+                        int base_addr=newtemp(new BasicType("int"),T->level,offset);
+                        offset+=4;
+                        cout<<symboltable.getSymbol(base_addr)->name<<" = "<<T->array->offset<<endl;
+                        T->offset=newtemp(new BasicType("int"),T->level,offset);
+                        offset+=4;
+                        cout<<symboltable.getSymbol(T->offset)->name<<" = "<<T->ptr[0]->width<<" * "<<symboltable.getSymbol(T->ptr[0]->offset)->name<<endl;
+                        T->place=newtemp(new BasicType("int"),T->level,offset);
+                        offset+=4;
+                        cout<<symboltable.getSymbol(T->place)->name<<" = "
+                            <<symboltable.getSymbol(base_addr)->name<<" [ "
+                            <<symboltable.getSymbol(T->offset)->name<<" ] "<<endl;
                     }
                 }
             }
             break;
         case Number:
-
+            T->place=newtemp(T->pretype,T->level,offset);
+            offset+=4;
+            if(T->type==INT)
+                cout<<symboltable.getSymbol(T->place)->name<<" = "<<T->type_int<<endl;
+            else
+                cout<<symboltable.getSymbol(T->place)->name<<" = "<<T->type_float<<endl;
             break;
         case FuncCall:
             if(T->ptr[0]) genIR(T->ptr[0],symboltable);
@@ -337,6 +371,10 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
             if(T->ptr[0]) genIR(T->ptr[0],symboltable);
             if(T->ptr[1]) genIR(T->ptr[1],symboltable);
             if(T->ptr[2]) genIR(T->ptr[2],symboltable);
+            if(T->ptr[0])
+                cout<<"return "<<symboltable.getSymbol(T->ptr[0]->place)->name<<endl;
+            else
+                cout<<"return "<<endl;
             break;
         case CONTINUE:
             
