@@ -194,13 +194,32 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
             mysymbol.flag='V';
             mysymbol.pretype=T->pretype;
             mysymbol.types=T->pretype->getvalue();
-            if(T->pretype->is_BasicType()){
+            mysymbol.offset=offset;
+            if(T->pretype->is_BasicType())
+            {
                 if(!T->pretype->getvalue().compare("int"))
+                {
                     mysymbol.type=INT;
+                    offset+=4;
+                }
                 else if(!T->pretype->getvalue().compare("float"))
+                {    
                     mysymbol.type=FLOAT;
+                    offset+=4;
+                }
                 else
+                {
                     mysymbol.type=VOID;
+                }
+            }
+            else if(T->pretype->is_Array_Type())
+            {
+                int cal=1;//数组元素的个数,如int[4][5]有20个元素
+                for(int i=0;i<static_cast<Array_Type*>(T->pretype)->lev;i++)
+                {
+                    cal=cal*static_cast<Array_Type*>(T->pretype)->elements_nums[i];
+                }
+                offset+=4*cal;
             }
             T->place=symboltable.Push(mysymbol)-1;      
             break;
@@ -237,7 +256,8 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
             //这一部分得看龙书313页，数组元素寻址的翻译模式
             {//LVal: LVal LB Exp RB
                 if(!T->ptr[0]->ptr[0]){         //LVal: (IDENT) LB Exp RB
-                    T->offset=newtemp(new BasicType("int"),T->level,0);
+                    T->offset=newtemp(new BasicType("int"),T->level,offset);
+                    offset+=4;
                     T->array=symboltable.getSymbol(symboltable.Search(string(T->ptr[0]->type_id)));
                     T->ndim=1;
                     T->width=4;//int和float都占用4个字节
@@ -251,7 +271,8 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
                 }
                 else{                           //LVal: (LVal LB Exp RB) LB Exp RB
                     T->ndim=T->ptr[0]->ndim+1;
-                    T->offset=newtemp(new BasicType("int"),T->level,0);
+                    T->offset=newtemp(new BasicType("int"),T->level,offset);
+                    offset+=4;
                     T->array=T->ptr[0]->array;
                     //暂时先不链接codenode，直接printf输出
                     symbol=symboltable.getSymbol(T->ptr[0]->offset);

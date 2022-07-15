@@ -110,14 +110,14 @@ char offset;    //外部变量和局部变量在其静态数据区或活动记�
 void Symboltable::print()//打印符号表
 {
     #ifdef DEBUG
-    printf("index\tname\talias\tlevel\ttypes\t\tflag\tparamnum\toffset\t\n");
+    printf("index\tname\talias\tlevel\ttypes\tflag\tparam\toffset\t\n");
     for(int i=0;i<index;i++){
         printf("%d\t",i);
         printf("%s\t",symbols[i].name.c_str());
         printf("%s\t",symbols[i].alias.c_str());
         printf("%d\t",symbols[i].level);
         // printf("%d\t",symbols[i].type);
-        printf("%s\t\t",symbols[i].types.c_str());
+        printf("%s\t",symbols[i].types.c_str());
         printf("%c\t",symbols[i].flag);
         printf("%d\t",symbols[i].paramnum);
         printf("%d\t",symbols[i].offset);

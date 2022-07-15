@@ -62,6 +62,7 @@ private:
     struct node* root;//AST根节点
     Symboltable symboltable;
     int no=0;//用来生成新的temp
+    int offset=0;//用来计算变量定义时的offset
 public:
     void genIR(struct node *T,Symboltable &symboltable);
     

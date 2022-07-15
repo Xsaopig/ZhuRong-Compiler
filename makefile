@@ -6,6 +6,11 @@ sysy.tab.cc: ./parser/sysy.yy
 	bison -d ./parser/sysy.yy  
 lex.yy.cc: ./parser/sysy.l 
 	flex -+ ./parser/sysy.l
+debug: 
+	flex -+ ./parser/sysy.l
+	bison -d ./parser/sysy.yy 
+	g++ -g *.cc *.cpp ./AST/*.cpp ./IR/*.cpp ./Type/*.cpp ./Symboltable/*.cpp -o complier -DDEBUG
+	./complier test.c
 clean: 
 	rm -f complier;
 	rm -f lex.yy.cc;
