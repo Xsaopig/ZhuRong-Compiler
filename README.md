@@ -3,7 +3,7 @@
 
 ## 配置了debug文件
 
-vscode环境下工作目录为ZhuRong-Complier文件夹时，F5可自动调试
+vscode环境下工作目录为ZhuRong-Complier文件夹时，F5可自动调试(需要在main.cpp的界面中按F5)
 
 ## 修改了项目结构
 
