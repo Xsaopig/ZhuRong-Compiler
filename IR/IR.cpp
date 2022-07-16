@@ -35,10 +35,11 @@ struct codenode *IRBuilder::codegen(enum op_kind kind,Opn& opn1,Opn& opn2,Opn& r
     return p;
 }
 
-void IRBuilder::newLabel(string& s)
+string& IRBuilder::newLabel()
 {
-    s=string("L").append(to_string(label++)).append(string(":"));
-    return ;
+    auto s=new string("L");
+    s->append(to_string(label++));
+    return *s;
 }
 
 //合并多个中间代码的双向循环链表，首尾相连
@@ -144,12 +145,33 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
             break;
         case Block:
             symboltable.Push_index();
-            if(T->ptr[0]) genIR(T->ptr[0],symboltable);
+            if(T->ptr[0]) {
+                T->ptr[0]->Snext=(!T->Snext.empty())?T->Snext:newLabel();
+                if(!T->Sbreak.empty())T->ptr[0]->Sbreak=T->Sbreak;
+                if(!T->Scontinue.empty())T->ptr[0]->Scontinue=T->Scontinue;
+                genIR(T->ptr[0],symboltable);
+            }
             symboltable.Pop_until(symboltable.Pop_index());
             break;
         case BlockItems:
-            if(T->ptr[0]) genIR(T->ptr[0],symboltable);
-            if(T->ptr[1]) genIR(T->ptr[1],symboltable);
+            if(T->ptr[1]){
+                T->ptr[1]->Snext=T->Snext;
+                T->ptr[0]->Snext=newLabel();
+            }
+            else
+                T->ptr[0]->Snext=T->Snext;
+            if(T->ptr[0]) 
+            {
+                if(!T->Sbreak.empty())T->ptr[0]->Sbreak=T->Sbreak;
+                if(!T->Scontinue.empty())T->ptr[0]->Scontinue=T->Scontinue;
+                genIR(T->ptr[0],symboltable);
+            }
+            if(T->ptr[1]) 
+            {    
+                if(!T->Sbreak.empty())T->ptr[1]->Sbreak=T->Sbreak;
+                if(!T->Scontinue.empty())T->ptr[1]->Scontinue=T->Scontinue;
+                genIR(T->ptr[1],symboltable);
+            }    
             break;
         case Decl:
             if(T->ptr[0]) genIR(T->ptr[0],symboltable);
@@ -236,6 +258,7 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
             if(T->ptr[0]) genIR(T->ptr[0],symboltable);
             break;
         case ASSIGN:
+            T->Snext=(T->Snext.empty())?newLabel():T->Snext;
             if(T->ptr[0]) genIR(T->ptr[0],symboltable);
             if(T->ptr[1]) genIR(T->ptr[1],symboltable);
 
@@ -248,9 +271,6 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
                     <<symboltable.getSymbol(T->ptr[0]->offset)->name<<" ] = " 
                     <<symboltable.getSymbol(T->ptr[1]->place)->name<<endl;
 
-            newLabel(T->Snext);
-
-            
             break;
         case LVal://经过处理之后，T->place存储的是对应元素在符号表中的位置
             if(T->ptr[0]) genIR(T->ptr[0],symboltable);
@@ -339,16 +359,26 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
             if(T->ptr[0]) genIR(T->ptr[0],symboltable);
             if(T->ptr[1]) genIR(T->ptr[1],symboltable);
             if(T->ptr[2]) genIR(T->ptr[2],symboltable);
+
+            T->place=symboltable.Search(string(T->type_id));
+            if(T->place!=-1)
+                cout<<"call "<<symboltable.getSymbol(T->place)->name<<"(注意这里参数压栈的顺序反了)"<<endl;
             break;
         case FuncRParams:
             if(T->ptr[0]) genIR(T->ptr[0],symboltable);
             if(T->ptr[1]) genIR(T->ptr[1],symboltable);
-            if(T->ptr[2]) genIR(T->ptr[2],symboltable);
+            if(T->ptr[1])
+                cout<<"param "<<symboltable.getSymbol(T->ptr[1]->place)->name<<endl;
+            else
+                cout<<"param "<<symboltable.getSymbol(T->ptr[0]->place)->name<<endl;
             break;
         case UnaryExp:
             if(T->ptr[0]) genIR(T->ptr[0],symboltable);
-            if(T->ptr[1]) genIR(T->ptr[1],symboltable);
-            if(T->ptr[2]) genIR(T->ptr[2],symboltable);
+            T->place=newtemp(T->pretype,T->level,offset);
+            offset+=4;
+            cout<<symboltable.getSymbol(T->place)->name<<" = "
+                <<string(T->op)<<" "
+                <<symboltable.getSymbol(T->ptr[0]->place)->name<<endl;
             break;
         case AddExp:
             if(T->ptr[0]) genIR(T->ptr[0],symboltable);
@@ -371,35 +401,95 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
                 <<symboltable.getSymbol(T->ptr[1]->place)->name<<endl;
             break;
         case LOrExp://逻辑或表达式
+            T->Etrue=(T->Etrue.empty())?newLabel():T->Etrue;
+            T->Efalse=(T->Efalse.empty())?newLabel():T->Efalse;
+            T->ptr[0]->Etrue=T->Etrue;
+            T->ptr[0]->Efalse=newLabel();
+            T->ptr[1]->Etrue=T->Etrue;
+            T->ptr[1]->Efalse=T->Efalse;
             if(T->ptr[0]) genIR(T->ptr[0],symboltable);
+            cout<<T->ptr[0]->Efalse<<":"<<endl;
             if(T->ptr[1]) genIR(T->ptr[1],symboltable);
             if(T->ptr[2]) genIR(T->ptr[2],symboltable);
+
+
+
             break;
         case LAndExp://逻辑与表达式
+            T->Etrue=(T->Etrue.empty())?newLabel():T->Etrue;
+            T->Efalse=(T->Efalse.empty())?newLabel():T->Efalse;
+            T->ptr[0]->Etrue=newLabel();
+            T->ptr[0]->Efalse=T->Efalse;
+            T->ptr[1]->Etrue=T->Etrue;
+            T->ptr[1]->Efalse=T->Efalse;
             if(T->ptr[0]) genIR(T->ptr[0],symboltable);
+            cout<<T->ptr[0]->Etrue<<":"<<endl;
             if(T->ptr[1]) genIR(T->ptr[1],symboltable);
             if(T->ptr[2]) genIR(T->ptr[2],symboltable);
             break;
         case EqExp://相等性表达式
-            if(T->ptr[0]) genIR(T->ptr[0],symboltable);
-            if(T->ptr[1]) genIR(T->ptr[1],symboltable);
-            if(T->ptr[2]) genIR(T->ptr[2],symboltable);
-            break;
         case RelExp://关系表达式
+            T->Etrue=(T->Etrue.empty())?newLabel():T->Etrue;
+            T->Efalse=(T->Efalse.empty())?newLabel():T->Efalse;
             if(T->ptr[0]) genIR(T->ptr[0],symboltable);
             if(T->ptr[1]) genIR(T->ptr[1],symboltable);
             if(T->ptr[2]) genIR(T->ptr[2],symboltable);
+            cout<<"if "<<symboltable.getSymbol(T->ptr[0]->place)->name<<" "+string(T->op)+" "
+                <<symboltable.getSymbol(T->ptr[1]->place)->name<<" goto "<<T->Etrue<<endl;
+            cout<<"goto "<<T->Efalse<<endl;
             break;
         case IF:
-            if(T->ptr[0]) genIR(T->ptr[0],symboltable);
-            if(T->ptr[1]) genIR(T->ptr[1],symboltable);
-            if(T->ptr[2]) genIR(T->ptr[2],symboltable);
+            T->Snext=(T->Snext.empty())?newLabel():T->Snext;
+            if(T->ptr[0]) 
+            {
+                T->ptr[0]->Etrue=newLabel();
+                T->ptr[0]->Efalse=T->Snext;
+                genIR(T->ptr[0],symboltable);
+                cout<<T->ptr[0]->Etrue<<":"<<endl;
+            }
+            if(T->ptr[1]) 
+            {
+                if(!T->Sbreak.empty())T->ptr[1]->Sbreak=T->Sbreak;
+                if(!T->Scontinue.empty())T->ptr[1]->Scontinue=T->Scontinue;
+                T->ptr[1]->Snext=T->Snext;
+                genIR(T->ptr[1],symboltable);
+            }
+            if(T->ptr[2]) 
+            {
+                if(!T->Sbreak.empty())T->ptr[2]->Sbreak=T->Sbreak;
+                if(!T->Scontinue.empty())T->ptr[2]->Scontinue=T->Scontinue;
+                cout<<"goto "<<T->Snext<<endl;
+                cout<<T->ptr[0]->Efalse<<":"<<endl;
+                T->ptr[2]->Snext=T->Snext;
+                genIR(T->ptr[2],symboltable);
+            }
+            cout<<T->Snext<<":"<<endl;
             break;
         case WHILE:
-            if(T->ptr[0]) genIR(T->ptr[0],symboltable);
-            if(T->ptr[1]) genIR(T->ptr[1],symboltable);
+            T->Snext=(T->Snext.empty())?newLabel():T->Snext;
+            T->ptr[0]->Etrue=newLabel();
+            T->ptr[0]->Efalse=T->Snext;
+            T->ptr[1]->Snext=newLabel();
+            T->Sbreak=T->Snext;
+            T->Scontinue=T->ptr[1]->Snext;
+            if(T->ptr[0]) 
+            {
+                cout<<T->ptr[1]->Snext<<":"<<endl;
+                genIR(T->ptr[0],symboltable);
+                cout<<T->ptr[0]->Etrue<<":"<<endl;
+            }
+            if(T->ptr[1]) 
+            {
+                T->ptr[1]->Sbreak=T->Sbreak;
+                T->ptr[1]->Scontinue=T->Scontinue;
+                genIR(T->ptr[1],symboltable);
+                cout<<"goto "<<T->ptr[1]->Snext<<endl;
+            }
+            cout<<T->Snext<<":"<<endl;
+
             break;
         case RETURN:
+            T->Snext=(T->Snext.empty())?newLabel():T->Snext;
             if(T->ptr[0]) genIR(T->ptr[0],symboltable);
             if(T->ptr[1]) genIR(T->ptr[1],symboltable);
             if(T->ptr[2]) genIR(T->ptr[2],symboltable);
@@ -409,11 +499,16 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
                 cout<<"return "<<endl;
             break;
         case CONTINUE:
-            
+            if(T->ptr[0]) genIR(T->ptr[0],symboltable);
+            if(T->ptr[1]) genIR(T->ptr[1],symboltable);
+            if(T->ptr[2]) genIR(T->ptr[2],symboltable);
+            cout<<"goto "<<T->Scontinue<<endl;
+            break;
         case BREAK:
             if(T->ptr[0]) genIR(T->ptr[0],symboltable);
             if(T->ptr[1]) genIR(T->ptr[1],symboltable);
             if(T->ptr[2]) genIR(T->ptr[2],symboltable);
+            cout<<"goto "<<T->Sbreak<<endl;
             break;
         }
         }

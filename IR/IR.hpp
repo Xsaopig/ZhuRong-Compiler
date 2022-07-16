@@ -73,7 +73,7 @@ public:
     void Build(struct node *T);
     
     int newtemp(Type *pretype,int level,int offset);
-    void newLabel(string& s);
+    string& newLabel();
 };
 
 
