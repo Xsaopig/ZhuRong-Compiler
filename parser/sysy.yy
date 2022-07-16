@@ -178,10 +178,10 @@ InitVal: Exp {
     $$=mknode(InitVal,$1,NULL,NULL,yylineno);
 }
     | LC InitVals RC {
-        $$=mknode(Block,$2,NULL,NULL,yylineno);
+        $$=mknode(InitVal,$2,NULL,NULL,yylineno);
     }
     | LC RC {
-        $$=mknode(Block,NULL,NULL,NULL,yylineno);
+        $$=mknode(InitVal,NULL,NULL,NULL,yylineno);
         $$->pretype=new BasicType("void");
     }
     ;

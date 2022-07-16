@@ -860,9 +860,14 @@ void AST::calAttr(struct node *T,Symboltable &symboltable){
             T->pretype=T->ptr[0]->pretype;
             break;
         case InitVal:
-            if(T->ptr[0]) T->ptr[0]->level=T->level;
-            if(T->ptr[0]) calAttr(T->ptr[0],symboltable);
-            T->pretype=T->ptr[0]->pretype;
+            if(T->ptr[0]) {
+                T->ptr[0]->level=T->level;
+                calAttr(T->ptr[0],symboltable);
+                T->pretype=T->ptr[0]->pretype;
+            }
+            else{
+                T->pretype=new BasicType("void");
+            }
             break;
         case ASSIGN:
             if(T->ptr[0]) T->ptr[0]->level=T->level;

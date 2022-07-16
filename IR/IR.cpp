@@ -80,6 +80,7 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
     Symbol *symbol;
     string opn_type;
     Opn *opn1,*opn2,*result;
+    vector<int> places;
         if(T) {
         switch(T->kind) {
         case Root:
@@ -244,7 +245,7 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
             break;
         case VarDef:
             if(T->ptr[0]) genIR(T->ptr[0],symboltable);
-
+            if(T->ptr[1]) genIR(T->ptr[1],symboltable);
             //符号入表
             mysymbol.name=string(T->ptr[0]->type_id);
             mysymbol.level=T->level;
@@ -283,6 +284,18 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
             cout<<"alloc "<<symboltable.getSymbol(T->place)->name
                 <<" : "<<offset-symboltable.getSymbol(T->place)->offset<<endl;
 
+            if(T->ptr[1])//变量赋初值了
+            {
+                cout<<symboltable.getSymbol(T->place)->name<<" = "
+                    <<symboltable.getSymbol(T->ptr[1]->place)->name<<endl;
+                
+            }
+            else if(T->level==0)//变量没有赋初值，但是是全局变量，要被初始化为0
+            {
+                cout<<symboltable.getSymbol(T->place)->name<<" = "<<0<<endl;
+            }
+
+
             break;
         case Idents:
             if(T->ptr[0]) genIR(T->ptr[0],symboltable);
@@ -293,9 +306,43 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
             if(T->ptr[1]) T->ptr[1]->level=T->level;
             if(T->ptr[0]) genIR(T->ptr[0],symboltable);
             if(T->ptr[1]) genIR(T->ptr[1],symboltable);
+
+
+            if(T->out==false) break;
+            T->place=newtemp(T->pretype,T->level,offset);
+            offset+=4;
+            
+            T0=T;
+            while(T0 && T0->ptr[1])
+            {
+                places.push_back(T0->ptr[1]->place);
+                T0=T0->ptr[0];
+            }
+            places.push_back(T0->ptr[0]->place);
+            if(places.size()==1){
+                cout<<symboltable.getSymbol(T->place)->name<<" = { "
+                    <<symboltable.getSymbol(places[0])->name<<" }"<<endl;
+            }
+            else{
+                cout<<symboltable.getSymbol(T->place)->name<<" = { ";
+                for(int i=places.size()-1;i>=0;i--)
+                    cout<<symboltable.getSymbol(places[i])->name<<" ";
+                cout<<"}"<<endl;
+            }
+
+
             break;
         case InitVal:
-            if(T->ptr[0]) genIR(T->ptr[0],symboltable);
+            if(T->ptr[0]) {
+                T->ptr[0]->out=true;
+                genIR(T->ptr[0],symboltable);
+                T->place=T->ptr[0]->place;
+            }
+            else{
+                T->place=newtemp(T->pretype,T->level,offset);
+                offset+=4;
+                cout<<symboltable.getSymbol(T->place)->name<<" = { }"<<endl;
+            }
             break;
         case ASSIGN:
             T->Snext=(T->Snext.empty())?newLabel():T->Snext;
