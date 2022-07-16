@@ -240,8 +240,14 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
             if(T->ptr[0]) genIR(T->ptr[0],symboltable);
             if(T->ptr[1]) genIR(T->ptr[1],symboltable);
 
-            cout<<symboltable.getSymbol(T->ptr[0]->place)->name<<" = "
-                <<symboltable.getSymbol(T->ptr[1]->place)->name<<endl;
+
+            if(T->ptr[0]->offset==-1)
+                cout<<symboltable.getSymbol(T->ptr[0]->place)->name<<" = "
+                    <<symboltable.getSymbol(T->ptr[1]->place)->name<<endl;
+            else    
+                cout<<symboltable.getSymbol(T->ptr[0]->base_addr)->name<<" [ "
+                    <<symboltable.getSymbol(T->ptr[0]->offset)->name<<" ] = " 
+                    <<symboltable.getSymbol(T->ptr[1]->place)->name<<endl;
 
 
             
@@ -274,9 +280,9 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
                     }
                     else//数组的最后一层
                     {
-                        int base_addr=newtemp(new BasicType("int"),T->level,offset);
+                        T->base_addr=newtemp(new BasicType("int"),T->level,offset);
                         offset+=4;
-                        cout<<symboltable.getSymbol(base_addr)->name<<" = "<<T->array->offset<<endl;
+                        cout<<symboltable.getSymbol(T->base_addr)->name<<" = "<<T->array->offset<<endl;
                         T->offset=newtemp(new BasicType("int"),T->level,offset);
                         offset+=4;
                         symbol=symboltable.getSymbol(T->offset);
@@ -284,7 +290,7 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
                         T->place=newtemp(new BasicType("int"),T->level,offset);
                         offset+=4;
                         cout<<symboltable.getSymbol(T->place)->name<<" = "
-                            <<symboltable.getSymbol(base_addr)->name<<" [ "
+                            <<symboltable.getSymbol(T->base_addr)->name<<" [ "
                             <<symboltable.getSymbol(T->offset)->name<<" ] "<<endl;
                         
                     }
@@ -365,8 +371,20 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
                 <<symboltable.getSymbol(T->ptr[1]->place)->name<<endl;
             break;
         case LOrExp://逻辑或表达式
+            if(T->ptr[0]) genIR(T->ptr[0],symboltable);
+            if(T->ptr[1]) genIR(T->ptr[1],symboltable);
+            if(T->ptr[2]) genIR(T->ptr[2],symboltable);
+            break;
         case LAndExp://逻辑与表达式
+            if(T->ptr[0]) genIR(T->ptr[0],symboltable);
+            if(T->ptr[1]) genIR(T->ptr[1],symboltable);
+            if(T->ptr[2]) genIR(T->ptr[2],symboltable);
+            break;
         case EqExp://相等性表达式
+            if(T->ptr[0]) genIR(T->ptr[0],symboltable);
+            if(T->ptr[1]) genIR(T->ptr[1],symboltable);
+            if(T->ptr[2]) genIR(T->ptr[2],symboltable);
+            break;
         case RelExp://关系表达式
             if(T->ptr[0]) genIR(T->ptr[0],symboltable);
             if(T->ptr[1]) genIR(T->ptr[1],symboltable);

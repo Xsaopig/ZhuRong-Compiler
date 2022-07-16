@@ -39,8 +39,10 @@ struct node {    //以下对结点属性定义没有考虑存储效率，只是�
     int pos;                     //语法单位所在位置行号
     int offset;                   //偏移量
     int width;                   //各种数据占用的字节数
-    Symbol *array;              
+    Symbol *array;
+    int base_addr;             
     int ndim;
+
 };
 
 class AST
