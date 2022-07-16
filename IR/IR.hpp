@@ -63,6 +63,7 @@ private:
     Symboltable symboltable;
     int no=0;//用来生成新的temp
     int offset=0;//用来计算变量定义时的offset
+    int label=0;
 public:
     void genIR(struct node *T,Symboltable &symboltable);
     
@@ -72,6 +73,7 @@ public:
     void Build(struct node *T);
     
     int newtemp(Type *pretype,int level,int offset);
+    string newLabel();
 };
 
 
