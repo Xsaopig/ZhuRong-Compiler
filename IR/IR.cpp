@@ -35,11 +35,10 @@ struct codenode *IRBuilder::codegen(enum op_kind kind,Opn& opn1,Opn& opn2,Opn& r
     return p;
 }
 
-string IRBuilder::newLabel()
+void IRBuilder::newLabel(string& s)
 {
-    string l("");
-    l="l"+to_string(label++);
-    return l;
+    s=string("L").append(to_string(label++)).append(string(":"));
+    return ;
 }
 
 //合并多个中间代码的双向循环链表，首尾相连
@@ -249,6 +248,7 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
                     <<symboltable.getSymbol(T->ptr[0]->offset)->name<<" ] = " 
                     <<symboltable.getSymbol(T->ptr[1]->place)->name<<endl;
 
+            newLabel(T->Snext);
 
             
             break;
