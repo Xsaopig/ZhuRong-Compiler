@@ -1027,10 +1027,10 @@ void AST::calAttr(struct node *T,Symboltable &symboltable){
             if(T->ptr[2]) calAttr(T->ptr[2],symboltable);
 
             if(T->ptr[0]->pretype->getvalue().compare("int")==0 && T->ptr[1]->pretype->getvalue().compare("int")==0){
-                T->pretype=new BasicType("bool");
+                T->pretype=new BasicType("int");
             }
             else if(T->ptr[0]->pretype->getvalue().compare("float")==0 && T->ptr[1]->pretype->getvalue().compare("float")==0){
-                T->pretype=new BasicType("bool");
+                T->pretype=new BasicType("int");
             }
             else {
                 yyerror("type error");
