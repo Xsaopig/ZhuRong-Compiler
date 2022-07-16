@@ -348,7 +348,24 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
             if(T->ptr[2]) genIR(T->ptr[2],symboltable);
             break;
         case AddExp:
+            if(T->ptr[0]) genIR(T->ptr[0],symboltable);
+            if(T->ptr[1]) genIR(T->ptr[1],symboltable);
+            if(T->ptr[2]) genIR(T->ptr[2],symboltable);
+            T->place=newtemp(T->pretype,T->level,offset);
+            offset+=4;
+            cout<<symboltable.getSymbol(T->place)->name<<" = "
+                <<symboltable.getSymbol(T->ptr[0]->place)->name<<" + "
+                <<symboltable.getSymbol(T->ptr[1]->place)->name<<endl;
+            break;
         case MulExp:
+            if(T->ptr[0]) genIR(T->ptr[0],symboltable);
+            if(T->ptr[1]) genIR(T->ptr[1],symboltable);
+            if(T->ptr[2]) genIR(T->ptr[2],symboltable);
+            T->place=newtemp(T->pretype,T->level,offset);
+            offset+=4;
+            cout<<symboltable.getSymbol(T->place)->name<<" = "
+                <<symboltable.getSymbol(T->ptr[0]->place)->name<<" + "
+                <<symboltable.getSymbol(T->ptr[1]->place)->name<<endl;
             break;
         case LOrExp://逻辑或表达式
         case LAndExp://逻辑与表达式

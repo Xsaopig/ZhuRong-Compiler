@@ -997,6 +997,12 @@ void AST::calAttr(struct node *T,Symboltable &symboltable){
             break;
         case AddExp:
         case MulExp:
+                if(T->ptr[0]) T->ptr[0]->level=T->level;
+                if(T->ptr[1]) T->ptr[1]->level=T->level;
+                if(T->ptr[2]) T->ptr[2]->level=T->level;
+                if(T->ptr[0]) calAttr(T->ptr[0],symboltable);
+                if(T->ptr[1]) calAttr(T->ptr[1],symboltable);
+                if(T->ptr[2]) calAttr(T->ptr[2],symboltable);
                 if(T->ptr[0]->pretype->is_BasicType()==false || T->ptr[1]->pretype->is_BasicType()==false)
                 {
                     yyerror("type error");
