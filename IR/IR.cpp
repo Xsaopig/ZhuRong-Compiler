@@ -212,6 +212,7 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
             mysymbol.flag='C';
             mysymbol.pretype=T->pretype;
             mysymbol.types=T->pretype->getvalue();
+            mysymbol.offset=offset;
             if(T->pretype->is_BasicType())
             {
                 if(!T->pretype->getvalue().compare("int"))
@@ -242,6 +243,10 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
 
             cout<<"alloc "<<symboltable.getSymbol(T->place)->name
                 <<" : "<<offset-symboltable.getSymbol(T->place)->offset<<endl;
+            //常量必须赋初值
+            cout<<symboltable.getSymbol(T->place)->name<<" = "
+                <<symboltable.getSymbol(T->ptr[1]->place)->name<<endl;
+
             break;
         case VarDef:
             if(T->ptr[0]) genIR(T->ptr[0],symboltable);

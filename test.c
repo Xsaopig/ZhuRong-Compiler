@@ -2,6 +2,6 @@
 
 int main(int c[])
 {
-    c={};
+    const int a=1;
     return 1;
 }
