@@ -1,6 +1,4 @@
 make all --print-data-base --no-builtin-variables --no-builtin-rules --question
-make: *** No rule to make target 'all'.  Stop.
-
 # GNU Make 4.3
 # Built for arm-unknown-linux-gnueabihf
 # Copyright (C) 1988-2020 Free Software Foundation, Inc.
@@ -8,7 +6,7 @@ make: *** No rule to make target 'all'.  Stop.
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Sun Jul 17 06:04:45 2022
+# Make data base, printed on Sun Jul 17 08:46:37 2022
 
 # Variables
 
@@ -127,7 +125,7 @@ _ = /home/pi/.vscode-server/bin/b06ae3b2d2dbfe28bca3134cc6be65935cdfea6a/node
 # environment
 XDG_RUNTIME_DIR = /run/user/1000
 # environment
-VSCODE_IPC_HOOK_CLI = /run/user/1000/vscode-ipc-900e0c5c-4a0d-40ee-9914-aeca4b096304.sock
+VSCODE_IPC_HOOK_CLI = /run/user/1000/vscode-ipc-ecd6df21-70da-409e-a330-8d2e726d028a.sock
 # environment
 XDG_SESSION_CLASS = user
 # environment
@@ -159,9 +157,9 @@ SSH_CONNECTION = 192.168.123.1 55662 192.168.123.55 22
 
 # Directories
 
-# . (device 2050, inode 384333): 20 files, no impossibilities.
+# . (device 2050, inode 384333): 16 files, no impossibilities.
 
-# 20 files, no impossibilities in 1 directories.
+# 16 files, no impossibilities in 1 directories.
 
 # Implicit Rules
 
@@ -263,12 +261,14 @@ parser/sysy.l:
 
 # No general ('VPATH' variable) search path.
 
-# strcache buffers: 1 (0) / strings = 30 / storage = 249 B / avg = 8 B
-# current buf: size = 8174 B / used = 249 B / count = 30 / avg = 8 B
+# strcache buffers: 1 (0) / strings = 29 / storage = 237 B / avg = 8 B
+# current buf: size = 8174 B / used = 237 B / count = 29 / avg = 8 B
 
-# strcache performance: lookups = 47 / hit rate = 36%
+# strcache performance: lookups = 43 / hit rate = 32%
 # hash-table stats:
-# Load=30/8192=0%, Rehash=0, Collisions=0/47=0%
-# Finished Make data base on Sun Jul 17 06:04:45 2022
+# Load=29/8192=0%, Rehash=0, Collisions=0/43=0%
+# Finished Make data base on Sun Jul 17 08:46:37 2022
 
  
+make: *** No rule to make target 'all'.  Stop.
+

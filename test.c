@@ -1,18 +1,12 @@
-int doubleWhile() {
-  int i;
-  i = 5;
-  int j;
-  j = 7;
-  while (i < 100) {
-    i = i + 30;
-    while(j < 100){
-      j = j + 6;
-    }
-    j = j - 100;
-  }
-  return (j);
-}
+//test domain of global var define and local define
+int a = 3;
+float b = 5;
 
-int main() {
-  return doubleWhile();
+int main(){
+    int a = 5;
+    if(a>5)
+      a=a+1;
+    else
+      b=b+1;
+    return a + b;
 }

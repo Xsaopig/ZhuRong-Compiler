@@ -1,5 +1,6 @@
 #ifndef HEADER_SYMBOLTABLE
 #define HEADER_SYMBOLTABLE
+
 #include <string>
 #include <vector>
 #include <stack>

@@ -1,9 +1,6 @@
 #ifndef    HEADER_IR
 #define    HEADER_IR  
  
-
-
-
 #include <string>
 #include <stdarg.h>
 #include <vector>
@@ -19,13 +16,20 @@ public:
         Label,  
         Func,   
         Array,  // opn[offset]
+        Block,  // {t1,t2,t3,t4,...}，主要是数组赋初值的时候有该操作数
         Null    // 无操作数
     };
     enum opn_kind kind;
     std::string name;
-    int imm_int;
-    float imm_float;
+
+    bool is_int;
+    int imm_int=0;
+    float imm_float=0;
+
     Opn *array_offset;          //当操作数为Array类型时，指向表示偏移量的操作数
+
+    vector<Opn*> Block_args;    //当操作数为Block类型时，指向{}内的各操作数
+
     int level;                  //变量的层号，0表示是全局变量，数据保存在静态数据区
     int offset;                 //变量单元偏移量，目标代码生成时用
     int place;                  //变量在符号表中的位置

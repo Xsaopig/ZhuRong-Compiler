@@ -24,51 +24,12 @@ int IRBuilder::newtemp(Type *pretype,int level,int offset)//不知道就填0
     return place;
 }
 
-// struct codenode *IRBuilder::codegen(enum op_kind kind,Opn& opn1,Opn& opn2,Opn& result)
-// {
-//     struct codenode *p = new struct codenode();
-//     p->op = kind;
-//     p->opn1=opn1;
-//     p->opn2=opn2;
-//     p->result=p->result;
-//     p->pre = p->next = p;
-//     return p;
-// }
-
 string& IRBuilder::newLabel()
 {
-    auto s=new string("L");
+    auto s=new string(".L");
     s->append(to_string(label++));
     return *s;
 }
-
-//合并多个中间代码的双向循环链表，首尾相连
-// struct codenode *IRBuilder::merge(int num, ...)
-// {
-//     struct codenode *h1, *h2, *p, *t1, *t2;
-//     va_list ap;
-//     va_start(ap, num);
-//     h1 = va_arg(ap, struct codenode *);
-//     while (--num > 0)
-//     {
-//         h2 = va_arg(ap, struct codenode *);
-//         if (h1 == NULL)
-//             h1 = h2;
-//         else if (h2)
-//         {
-//             t1 = h1->pre;
-//             t2 = h2->pre;
-//             t1->next = h2;
-//             t2->next = h1;
-//             h1->pre = t2;
-//             h2->pre = t1;
-//         }
-//     }
-//     va_end(ap);
-//     return h1;
-// }
-
-
 
 void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
     Symbol mysymbol;
@@ -80,6 +41,7 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
     Symbol *symbol;
     string opn_type;
     Opn *opn1,*opn2,*result;
+    IR ir;
     vector<int> places;
         if(T) {
         switch(T->kind) {
@@ -102,7 +64,15 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
             offset=0;//offset是相对地址
             T->place=index;
 
-            cout<<symboltable.getSymbol(T->place)->name<<":"<<endl;
+            symbol=symboltable.getSymbol(T->place);
+            ir.op=IR::_LABEL;
+            opn1=new Opn(Opn::Func,symbol->name);
+            opn1->level=0;
+            opn1->offset=symbol->level;
+            opn1->place=T->place;
+            ir.opn1=*opn1;
+            
+            cout<<symbol->name<<":"<<endl;
 
             symboltable.Push_index();
             if(T->ptr[0]) genIR(T->ptr[0],symboltable);
