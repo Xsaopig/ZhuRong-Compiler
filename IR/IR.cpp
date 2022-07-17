@@ -497,7 +497,7 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
             T->place=newtemp(T->pretype,T->level,offset);
             offset+=4;
             cout<<symboltable.getSymbol(T->place)->name<<" = "
-                <<symboltable.getSymbol(T->ptr[0]->place)->name<<" + "
+                <<symboltable.getSymbol(T->ptr[0]->place)->name<<" "+string(T->op)+" "
                 <<symboltable.getSymbol(T->ptr[1]->place)->name<<endl;
             break;
         case MulExp:
@@ -507,7 +507,7 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
             T->place=newtemp(T->pretype,T->level,offset);
             offset+=4;
             cout<<symboltable.getSymbol(T->place)->name<<" = "
-                <<symboltable.getSymbol(T->ptr[0]->place)->name<<" + "
+                <<symboltable.getSymbol(T->ptr[0]->place)->name<<" "+string(T->op)+" "
                 <<symboltable.getSymbol(T->ptr[1]->place)->name<<endl;
             break;
         case LOrExp://逻辑或表达式
