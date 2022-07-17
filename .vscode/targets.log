@@ -8,7 +8,7 @@ make: *** No rule to make target 'all'.  Stop.
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Wed Jul 13 06:08:17 2022
+# Make data base, printed on Sun Jul 17 06:04:45 2022
 
 # Variables
 
@@ -73,7 +73,7 @@ DBUS_SESSION_BUS_ADDRESS = unix:path=/run/user/1000/bus
 # automatic
 <D = $(patsubst %/,%,$(dir $<))
 # environment
-VSCODE_NLS_CONFIG = {"locale":"zh-cn","availableLanguages":{"*":"zh-cn"},"_languagePackId":"c9280508cf500dcd9c4c87fe2a1b08e9.zh-cn","_translationsConfigFile":"/home/pi/.vscode-server/data/clp/c9280508cf500dcd9c4c87fe2a1b08e9.zh-cn/tcf.json","_cacheRoot":"/home/pi/.vscode-server/data/clp/c9280508cf500dcd9c4c87fe2a1b08e9.zh-cn","_resolvedLanguagePackCoreLocation":"/home/pi/.vscode-server/data/clp/c9280508cf500dcd9c4c87fe2a1b08e9.zh-cn/92d25e35d9bf1a6b16f7d0758f25d48ace11e5b9","_corruptedFile":"/home/pi/.vscode-server/data/clp/c9280508cf500dcd9c4c87fe2a1b08e9.zh-cn/corrupted.info","_languagePackSupport":true}
+VSCODE_NLS_CONFIG = {"locale":"zh-cn","availableLanguages":{"*":"zh-cn"},"_languagePackId":"1d735750dbb1b9066c7513078396ba0f.zh-cn","_translationsConfigFile":"/home/pi/.vscode-server/data/clp/1d735750dbb1b9066c7513078396ba0f.zh-cn/tcf.json","_cacheRoot":"/home/pi/.vscode-server/data/clp/1d735750dbb1b9066c7513078396ba0f.zh-cn","_resolvedLanguagePackCoreLocation":"/home/pi/.vscode-server/data/clp/1d735750dbb1b9066c7513078396ba0f.zh-cn/b06ae3b2d2dbfe28bca3134cc6be65935cdfea6a","_corruptedFile":"/home/pi/.vscode-server/data/clp/1d735750dbb1b9066c7513078396ba0f.zh-cn/corrupted.info","_languagePackSupport":true}
 # default
 MAKE_HOST := arm-unknown-linux-gnueabihf
 # makefile
@@ -89,7 +89,7 @@ MAKELEVEL := 0
 # default
 MAKE = $(MAKE_COMMAND)
 # environment
-PATH = /home/pi/.vscode-server/bin/92d25e35d9bf1a6b16f7d0758f25d48ace11e5b9/bin/remote-cli:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/games:/usr/games
+PATH = /home/pi/.vscode-server/bin/b06ae3b2d2dbfe28bca3134cc6be65935cdfea6a/bin/remote-cli:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/games:/usr/games
 # default
 MAKEFILES := 
 # environment
@@ -97,7 +97,7 @@ MOTD_SHOWN = pam
 # automatic
 ^F = $(notdir $^)
 # environment
-SSH_CLIENT = 192.168.123.1 55209 22
+SSH_CLIENT = 192.168.123.1 55662 22
 # automatic
 ?F = $(notdir $?)
 # environment
@@ -109,11 +109,11 @@ LS_COLORS =
 # 'override' directive
 GNUMAKEFLAGS := 
 # environment
-BROWSER = /home/pi/.vscode-server/bin/92d25e35d9bf1a6b16f7d0758f25d48ace11e5b9/bin/helpers/browser.sh
+BROWSER = /home/pi/.vscode-server/bin/b06ae3b2d2dbfe28bca3134cc6be65935cdfea6a/bin/helpers/browser.sh
 # environment
 LOGNAME = pi
 # environment
-PLATFORMIO_PATH = /home/pi/.platformio/python3/bin:/home/pi/.vscode-server/bin/92d25e35d9bf1a6b16f7d0758f25d48ace11e5b9/bin/remote-cli:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/games:/usr/games
+PLATFORMIO_PATH = /home/pi/.platformio/python3/bin:/home/pi/.vscode-server/bin/b06ae3b2d2dbfe28bca3134cc6be65935cdfea6a/bin/remote-cli:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/games:/usr/games
 # makefile
 .DEFAULT_GOAL := run
 # environment
@@ -123,11 +123,11 @@ MAKE_VERSION := 4.3
 # environment
 VSCODE_AGENT_FOLDER = /home/pi/.vscode-server
 # environment
-_ = /home/pi/.vscode-server/bin/92d25e35d9bf1a6b16f7d0758f25d48ace11e5b9/node
+_ = /home/pi/.vscode-server/bin/b06ae3b2d2dbfe28bca3134cc6be65935cdfea6a/node
 # environment
 XDG_RUNTIME_DIR = /run/user/1000
 # environment
-VSCODE_IPC_HOOK_CLI = /run/user/1000/vscode-ipc-e6845ac2-ff1b-4374-a786-c0c8a9d6e2ec.sock
+VSCODE_IPC_HOOK_CLI = /run/user/1000/vscode-ipc-900e0c5c-4a0d-40ee-9914-aeca4b096304.sock
 # environment
 XDG_SESSION_CLASS = user
 # environment
@@ -139,7 +139,7 @@ HOME = /home/pi
 # environment
 ELECTRON_RUN_AS_NODE = 1
 # environment
-XDG_SESSION_ID = 38
+XDG_SESSION_ID = 35
 # default
 .RECIPEPREFIX := 
 # automatic
@@ -149,7 +149,7 @@ SUFFIXES :=
 # default
 .FEATURES := target-specific order-only second-expansion else-if shortest-stem undefine oneshell nocomment grouped-target extra-prereqs archives jobserver output-sync check-symlink load
 # environment
-SSH_CONNECTION = 192.168.123.1 55209 192.168.123.55 22
+SSH_CONNECTION = 192.168.123.1 55662 192.168.123.55 22
 # variable set hash-table stats:
 # Load=69/1024=7%, Rehash=0, Collisions=1/99=1%
 
@@ -159,9 +159,9 @@ SSH_CONNECTION = 192.168.123.1 55209 192.168.123.55 22
 
 # Directories
 
-# . (device 2050, inode 384333): 15 files, no impossibilities.
+# . (device 2050, inode 384333): 20 files, no impossibilities.
 
-# 15 files, no impossibilities in 1 directories.
+# 20 files, no impossibilities in 1 directories.
 
 # Implicit Rules
 
@@ -173,28 +173,38 @@ lex.yy.cc: parser/sysy.l
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
-#  recipe to execute (from 'makefile', line 9):
+#  recipe to execute (from 'makefile', line 8):
 	flex -+ ./parser/sysy.l
+
+debug:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'makefile', line 10):
+	flex -+ ./parser/sysy.l
+	bison -d ./parser/sysy.yy 
+	g++ -std=c++11 -g *.cc *.cpp ./AST/*.cpp ./IR/*.cpp ./Type/*.cpp ./Symboltable/*.cpp -o complier -DDEBUG
+	./complier test.c
 
 sysy.tab.cc: parser/sysy.yy
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
-#  recipe to execute (from 'makefile', line 7):
+#  recipe to execute (from 'makefile', line 6):
 	bison -d ./parser/sysy.yy  
 
 complier: sysy.tab.cc lex.yy.cc
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
-#  recipe to execute (from 'makefile', line 5):
-	g++ -g *.cc *.cpp ./AST/*.cpp ./IR/*.cpp ./Type/*.cpp ./Symboltable/*.cpp -o complier
+#  recipe to execute (from 'makefile', line 4):
+	g++ -std=c++11 -g *.cc *.cpp ./AST/*.cpp ./IR/*.cpp ./Type/*.cpp ./Symboltable/*.cpp -o complier
 
 clean:
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
-#  recipe to execute (from 'makefile', line 11):
+#  recipe to execute (from 'makefile', line 15):
 	rm -f complier;
 	rm -f lex.yy.cc;
 	rm -f sysy.tab.cc;
@@ -223,7 +233,7 @@ run: complier test.c
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
-#  recipe to execute (from 'makefile', line 3):
+#  recipe to execute (from 'makefile', line 2):
 	./complier test.c
 
 # Not a target:
@@ -235,7 +245,7 @@ parser/sysy.yy:
 # Not a target:
 makefile:
 #  Implicit rule search has been done.
-#  Last modified 2022-07-12 16:28:19.722942085
+#  Last modified 2022-07-16 06:58:23.698843449
 #  File has been updated.
 #  Successfully updated.
 
@@ -246,19 +256,19 @@ parser/sysy.l:
 #  File has not been updated.
 
 # files hash-table stats:
-# Load=12/1024=1%, Rehash=0, Collisions=0/31=0%
+# Load=13/1024=1%, Rehash=0, Collisions=0/32=0%
 # VPATH Search Paths
 
 # No 'vpath' search paths.
 
 # No general ('VPATH' variable) search path.
 
-# strcache buffers: 1 (0) / strings = 27 / storage = 227 B / avg = 8 B
-# current buf: size = 8174 B / used = 227 B / count = 27 / avg = 8 B
+# strcache buffers: 1 (0) / strings = 30 / storage = 249 B / avg = 8 B
+# current buf: size = 8174 B / used = 249 B / count = 30 / avg = 8 B
 
-# strcache performance: lookups = 40 / hit rate = 32%
+# strcache performance: lookups = 47 / hit rate = 36%
 # hash-table stats:
-# Load=27/8192=0%, Rehash=0, Collisions=0/40=0%
-# Finished Make data base on Wed Jul 13 06:08:17 2022
+# Load=30/8192=0%, Rehash=0, Collisions=0/47=0%
+# Finished Make data base on Sun Jul 17 06:04:45 2022
 
  

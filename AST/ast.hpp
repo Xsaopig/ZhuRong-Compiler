@@ -32,7 +32,7 @@ struct node {    //以下对结点属性定义没有考虑存储效率，只是�
     int place;                    //表示结点对应的变量或运算结果临时变量在符号表的位置序号
     string Etrue,Efalse;      //对布尔表达式的翻译时，真假转移目标的标号
     string Snext;               //该结点对应语句执行后的下一条语句位置标号
-    struct codenode *code;        //该结点中间代码链表头指针
+    // struct codenode *code;        //该结点中间代码链表头指针
     char op[10];
     Type* pretype;
     int type;                    //结点对应值的类型

@@ -1034,7 +1034,7 @@ void AST::calAttr(struct node *T,Symboltable &symboltable){
             if(T->ptr[0]->pretype->getvalue().compare("int")==0 && T->ptr[1]->pretype->getvalue().compare("int")==0){
                 T->pretype=new BasicType("int");
             }
-            else if(T->ptr[0]->pretype->getvalue().compare("float")==0 && T->ptr[1]->pretype->getvalue().compare("float")==0){
+            else if(T->ptr[0]->pretype->getvalue().compare("float")==0 || T->ptr[1]->pretype->getvalue().compare("float")==0){
                 T->pretype=new BasicType("int");
             }
             else {

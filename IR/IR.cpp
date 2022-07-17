@@ -24,16 +24,16 @@ int IRBuilder::newtemp(Type *pretype,int level,int offset)//不知道就填0
     return place;
 }
 
-struct codenode *IRBuilder::codegen(enum op_kind kind,Opn& opn1,Opn& opn2,Opn& result)
-{
-    struct codenode *p = new struct codenode();
-    p->op = kind;
-    p->opn1=opn1;
-    p->opn2=opn2;
-    p->result=p->result;
-    p->pre = p->next = p;
-    return p;
-}
+// struct codenode *IRBuilder::codegen(enum op_kind kind,Opn& opn1,Opn& opn2,Opn& result)
+// {
+//     struct codenode *p = new struct codenode();
+//     p->op = kind;
+//     p->opn1=opn1;
+//     p->opn2=opn2;
+//     p->result=p->result;
+//     p->pre = p->next = p;
+//     return p;
+// }
 
 string& IRBuilder::newLabel()
 {
@@ -43,30 +43,30 @@ string& IRBuilder::newLabel()
 }
 
 //合并多个中间代码的双向循环链表，首尾相连
-struct codenode *IRBuilder::merge(int num, ...)
-{
-    struct codenode *h1, *h2, *p, *t1, *t2;
-    va_list ap;
-    va_start(ap, num);
-    h1 = va_arg(ap, struct codenode *);
-    while (--num > 0)
-    {
-        h2 = va_arg(ap, struct codenode *);
-        if (h1 == NULL)
-            h1 = h2;
-        else if (h2)
-        {
-            t1 = h1->pre;
-            t2 = h2->pre;
-            t1->next = h2;
-            t2->next = h1;
-            h1->pre = t2;
-            h2->pre = t1;
-        }
-    }
-    va_end(ap);
-    return h1;
-}
+// struct codenode *IRBuilder::merge(int num, ...)
+// {
+//     struct codenode *h1, *h2, *p, *t1, *t2;
+//     va_list ap;
+//     va_start(ap, num);
+//     h1 = va_arg(ap, struct codenode *);
+//     while (--num > 0)
+//     {
+//         h2 = va_arg(ap, struct codenode *);
+//         if (h1 == NULL)
+//             h1 = h2;
+//         else if (h2)
+//         {
+//             t1 = h1->pre;
+//             t2 = h2->pre;
+//             t1->next = h2;
+//             t2->next = h1;
+//             h1->pre = t2;
+//             h2->pre = t1;
+//         }
+//     }
+//     va_end(ap);
+//     return h1;
+// }
 
 
 
@@ -200,7 +200,6 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
         case VarDecl:
             if(T->ptr[0]) genIR(T->ptr[0],symboltable);
             if(T->ptr[1]) genIR(T->ptr[1],symboltable);
-            T->code=merge(2,T->ptr[0]->code,T->ptr[1]->code);
             break;
         case ConstDef:
             if(T->ptr[0]) genIR(T->ptr[0],symboltable);
@@ -371,7 +370,6 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
             {//LVal: IDENT
                 index=symboltable.Search(string(T->type_id));
                 T->place=index;
-                T->code=nullptr;
                 T->offset=-1;//不是数组，不需要offset
             }
             else
@@ -552,10 +550,12 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
             break;
         case IF:
             T->Snext=(T->Snext.empty())?newLabel():T->Snext;
+            if(!T->ptr[2]) T->ptr[1]->Snext=T->Snext;
+            else T->ptr[1]->Snext=newLabel();
+            T->ptr[0]->Efalse=T->ptr[1]->Snext;
             if(T->ptr[0]) 
             {
                 T->ptr[0]->Etrue=newLabel();
-                T->ptr[0]->Efalse=T->Snext;
                 genIR(T->ptr[0],symboltable);
                 cout<<T->ptr[0]->Etrue<<":"<<endl;
             }
@@ -563,7 +563,6 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
             {
                 if(!T->Sbreak.empty())T->ptr[1]->Sbreak=T->Sbreak;
                 if(!T->Scontinue.empty())T->ptr[1]->Scontinue=T->Scontinue;
-                T->ptr[1]->Snext=T->Snext;
                 genIR(T->ptr[1],symboltable);
             }
             if(T->ptr[2]) 

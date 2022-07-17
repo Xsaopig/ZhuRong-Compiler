@@ -49,12 +49,12 @@ enum op_kind {//指令类型，后面用到再加
     _MUL
 };
 
-struct codenode//中间代码结点
-{
-    enum op_kind op;
-    Opn opn1,opn2,result;
-    struct codenode *pre,*next;//双向链表
-};
+// struct codenode//中间代码结点
+// {
+//     enum op_kind op;
+//     Opn opn1,opn2,result;
+//     struct codenode *pre,*next;//双向链表
+// };
 
 class IRBuilder
 {
