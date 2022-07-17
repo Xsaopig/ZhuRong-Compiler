@@ -64,6 +64,7 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
             offset=0;//offset是相对地址
             T->place=index;
 
+            //添加中间代码到IRList
             symbol=symboltable.getSymbol(T->place);
             ir.op=IR::_LABEL;
             opn1=new Opn(Opn::Func,symbol->name);
@@ -71,7 +72,8 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable) {
             opn1->offset=symbol->level;
             opn1->place=T->place;
             ir.opn1=*opn1;
-            
+            IRList.push_back(ir);
+
             cout<<symbol->name<<":"<<endl;
 
             symboltable.Push_index();
