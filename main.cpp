@@ -6,9 +6,11 @@
 #include "sysy.tab.hh"
 #include "./AST/ast.hpp"
 #include "./IR/IR.hpp"
+#include "./optimizer/Optimizer.h"
 using namespace std;
 ASTBuilder ASTbuilder;
 IRBuilder IRbuilder;
+OptimizerBuilder optbuilder;
 string filename;
 ifstream in;
 ofstream out;
@@ -25,6 +27,7 @@ int main(int argc, char *argv[]) {
 
 	ASTbuilder.Build();
 	IRbuilder.Build(ASTbuilder.getroot());
+	optbuilder.build(IRbuilder.getIRList());
 	return 0;
 }
 

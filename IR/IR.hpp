@@ -53,6 +53,7 @@ public:
         _VOID,  // 无用指令
         _LABEL, // opn1 :
         _ALLOC, // alloc opn1(变量名) : opn2(字节数)
+        _ADDR,  // result = &opn1
         _ADD,   // result = opn1 + opn2
         _SUB,   // result = opn1 - opn2
         _MUL,   // result = opn1 * opn2
@@ -87,6 +88,7 @@ public:
     void IRprint();
 };
 
+
 class IRBuilder
 {
 private:
@@ -97,6 +99,7 @@ private:
     int label=0;//用来生成新的label
     vector<IR*> IRList;  //中间代码列表
 public:
+    vector<IR*>& getIRList() {return this->IRList;}
     void genIR(struct node *T,Symboltable &symboltable);
     void Build(struct node *T);
     int newtemp(Type *pretype,int level,int offset);
