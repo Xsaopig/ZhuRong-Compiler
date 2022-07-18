@@ -472,7 +472,7 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
             //这一部分得看龙书313页，数组元素寻址的翻译模式
             {//LVal: LVal LB Exp RB
                 if(!T->ptr[0]->ptr[0]){         //LVal: (IDENT) LB Exp RB
-                    T->array=symboltable.getSymbol(symboltable.Search(string(T->ptr[0]->type_id)));
+                    T->array=symboltable.getSymbol(symboltable.Search(string(T->type_id)));
                     T->ndim=1;
                     T->width=4;//int和float都占用4个字节
                     //暂时先不链接codenode，直接printf输出
@@ -559,7 +559,7 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
                     T->width=T->ptr[0]->width;
                     T->offset=newtemp(new BasicType("int"),T->level,offset);
                     offset+=4;
-                    T->array=T->ptr[0]->array;
+                    T->array=symboltable.getSymbol(symboltable.Search(string(T->type_id)));
     
                     symbol=symboltable.getSymbol(T->ptr[0]->offset);
 

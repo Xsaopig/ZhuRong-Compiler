@@ -34,13 +34,13 @@ public:
     int offset;                 //变量单元偏移量，目标代码生成时用
     int place;                  //变量在符号表中的位置
     Opn():kind(Null),name("-"){}
-    Opn(enum opn_kind k,string& n):kind(k),name(n) {}
+    Opn(enum opn_kind k,string n):kind(k),name(n) {}
 
     Opn(enum opn_kind k,int n):kind(k),imm_int(n) {}
     Opn(enum opn_kind k,float n):kind(k),imm_float(n) {}
     Opn(enum opn_kind k,vector<Opn*> m):kind(k),Block_args(m) {}
 
-    Opn(enum opn_kind k,string& n,int l,int o,int p):kind(k),name(n),level(l),offset(o),place(p){}
+    Opn(enum opn_kind k,string n,int l,int o,int p):kind(k),name(n),level(l),offset(o),place(p){}
 };
 
 
