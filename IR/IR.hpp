@@ -53,6 +53,7 @@ public:
         _VOID,  // 无用指令
         _LABEL, // opn1 :
         _ALLOC, // alloc opn1(变量名) : opn2(字节数)
+        _ADDR,
         _ADD,   // result = opn1 + opn2
         _SUB,   // result = opn1 - opn2
         _MUL,   // result = opn1 * opn2
