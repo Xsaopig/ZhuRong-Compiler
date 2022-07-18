@@ -8,6 +8,7 @@ void IRBuilder::Build(struct node *T)
     MIRprint();
 }
 
+
 int IRBuilder::newtemp(Type *pretype,int level,int offset)//不知道就填0
 {
     Symbol x;
