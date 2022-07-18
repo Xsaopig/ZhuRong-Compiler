@@ -6,7 +6,7 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Sun Jul 17 08:46:37 2022
+# Make data base, printed on Mon Jul 18 07:09:52 2022
 
 # Variables
 
@@ -95,7 +95,7 @@ MOTD_SHOWN = pam
 # automatic
 ^F = $(notdir $^)
 # environment
-SSH_CLIENT = 192.168.123.1 55662 22
+SSH_CLIENT = 192.168.123.1 51235 22
 # automatic
 ?F = $(notdir $?)
 # environment
@@ -125,7 +125,7 @@ _ = /home/pi/.vscode-server/bin/b06ae3b2d2dbfe28bca3134cc6be65935cdfea6a/node
 # environment
 XDG_RUNTIME_DIR = /run/user/1000
 # environment
-VSCODE_IPC_HOOK_CLI = /run/user/1000/vscode-ipc-ecd6df21-70da-409e-a330-8d2e726d028a.sock
+VSCODE_IPC_HOOK_CLI = /run/user/1000/vscode-ipc-de47cd64-0448-4289-afdd-d7273b5e56c8.sock
 # environment
 XDG_SESSION_CLASS = user
 # environment
@@ -137,7 +137,7 @@ HOME = /home/pi
 # environment
 ELECTRON_RUN_AS_NODE = 1
 # environment
-XDG_SESSION_ID = 35
+XDG_SESSION_ID = 69
 # default
 .RECIPEPREFIX := 
 # automatic
@@ -147,7 +147,7 @@ SUFFIXES :=
 # default
 .FEATURES := target-specific order-only second-expansion else-if shortest-stem undefine oneshell nocomment grouped-target extra-prereqs archives jobserver output-sync check-symlink load
 # environment
-SSH_CONNECTION = 192.168.123.1 55662 192.168.123.55 22
+SSH_CONNECTION = 192.168.123.1 51235 192.168.123.55 22
 # variable set hash-table stats:
 # Load=69/1024=7%, Rehash=0, Collisions=1/99=1%
 
@@ -157,9 +157,9 @@ SSH_CONNECTION = 192.168.123.1 55662 192.168.123.55 22
 
 # Directories
 
-# . (device 2050, inode 384333): 16 files, no impossibilities.
+# . (device 2050, inode 384333): 20 files, no impossibilities.
 
-# 16 files, no impossibilities in 1 directories.
+# 20 files, no impossibilities in 1 directories.
 
 # Implicit Rules
 
@@ -261,13 +261,13 @@ parser/sysy.l:
 
 # No general ('VPATH' variable) search path.
 
-# strcache buffers: 1 (0) / strings = 29 / storage = 237 B / avg = 8 B
-# current buf: size = 8174 B / used = 237 B / count = 29 / avg = 8 B
+# strcache buffers: 1 (0) / strings = 30 / storage = 249 B / avg = 8 B
+# current buf: size = 8174 B / used = 249 B / count = 30 / avg = 8 B
 
-# strcache performance: lookups = 43 / hit rate = 32%
+# strcache performance: lookups = 47 / hit rate = 36%
 # hash-table stats:
-# Load=29/8192=0%, Rehash=0, Collisions=0/43=0%
-# Finished Make data base on Sun Jul 17 08:46:37 2022
+# Load=30/8192=0%, Rehash=0, Collisions=0/47=0%
+# Finished Make data base on Mon Jul 18 07:09:52 2022
 
  
 make: *** No rule to make target 'all'.  Stop.

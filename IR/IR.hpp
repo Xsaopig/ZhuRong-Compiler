@@ -22,9 +22,9 @@ public:
     enum opn_kind kind;
     std::string name;
 
-    bool is_int;
-    int imm_int=0;
-    float imm_float=0;
+    bool is_int=0;
+    int imm_int=-1;
+    float imm_float=-2;
 
     Opn *array_offset;          //当操作数为Array类型时，指向表示偏移量的操作数
 
@@ -35,6 +35,11 @@ public:
     int place;                  //变量在符号表中的位置
     Opn():kind(Null),name("-"){}
     Opn(enum opn_kind k,string& n):kind(k),name(n) {}
+
+    Opn(enum opn_kind k,int n):kind(k),imm_int(n) {}
+    Opn(enum opn_kind k,float n):kind(k),imm_float(n) {}
+    Opn(enum opn_kind k,vector<Opn*> m):kind(k),Block_args(m) {}
+
     Opn(enum opn_kind k,string& n,int l,int o,int p):kind(k),name(n),level(l),offset(o),place(p){}
 };
 
@@ -54,6 +59,8 @@ public:
         _DIV,   // result = opn1 / opn2
         _MOD,   // result = opn1 % opn2
         _ASSIGN,// result = opn1
+        _Arr_ASSIGN,//opn1[opn2]=opn3 
+        _ASSIGN_Arr,  //opn3=opn1[opn2]
         _NOT,   // result = ! opn1
         _POSI,  // result = + opn1
         _NEGA,  // result = - opn1
@@ -64,16 +71,20 @@ public:
         _JGT,   // if opn1 > opn2 goto result
         _JLE,   // if opn1 <= opn2 goto result
         _JGE,   // if opn1 >= opn2 goto result
+        _FUNC,  // define function opn1
         _PARAM, // param opn1
         _CALL,  // [result =] call opn1(函数) , opn2(参数个数)
         _RET    // return [opn1]
-    };      
+    };
+
     enum op_kind op;
     Opn opn1,opn2,result;
     IR():op(_VOID){}
     IR(enum op_kind k):op(k){}
+    IR(enum op_kind k,const Opn& o1):op(k),opn1(o1){}
+    IR(enum op_kind k,const Opn& o1,const Opn& r):op(k),opn1(o1),result(r){}
     IR(enum op_kind k,const Opn& o1,const Opn& o2,const Opn& r):op(k),opn1(o1),opn2(o2),result(r){}
-    void print();
+    void IRprint();
 };
 
 class IRBuilder
@@ -84,12 +95,13 @@ private:
     int no=0;//用来生成新的temp
     int offset=0;//用来计算变量定义时的offset
     int label=0;//用来生成新的label
-    vector<IR> IRList;  //中间代码列表
+    vector<IR*> IRList;  //中间代码列表
 public:
     void genIR(struct node *T,Symboltable &symboltable);
     void Build(struct node *T);
     int newtemp(Type *pretype,int level,int offset);
     string& newLabel();
+    void MIRprint();
 };
 
 
