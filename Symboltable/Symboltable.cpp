@@ -90,6 +90,8 @@ int Symboltable::Pop_until(int index)
 int Symboltable::Search(string name)   
 {
     for(int i=index-1;i>=0;i--)
+        if(!name.compare(symbols[i].alias)) return i;
+    for(int i=index-1;i>=0;i--)
         if(!name.compare(symbols[i].name)) return i;
     return -1;
 }

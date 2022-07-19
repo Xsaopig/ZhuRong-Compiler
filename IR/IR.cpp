@@ -665,7 +665,7 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
                     opn1->level=symbol->level;
                     opn1->offset=symbol->offset;
                     opn2=new Opn(Opn::Imm,T->type_int);
-                    opn2->is_int=1;
+                    opn2->is_int=true;
                     ir=new IR(IR::_ASSIGN,*opn2,*opn1);
                     IRList.push_back(ir);
             }
@@ -676,6 +676,7 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
                     opn1->level=symbol->level;
                     opn1->offset=symbol->offset;
                     opn2=new Opn(Opn::Imm,T->type_float);
+                    opn2->is_int=false;
                     ir=new IR(IR::_ASSIGN,*opn2,*opn1);
                     IRList.push_back(ir);
             }
@@ -981,7 +982,7 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
             if(T->ptr[2]) genIR(T->ptr[2],symboltable);
             if(T->ptr[0]){
                 symbol=symboltable.getSymbol(T->ptr[0]->place);
-                opn3=new Opn(Opn::Label,symbol->name);
+                opn3=new Opn(Opn::Var,symbol->name);
                 ir=new IR(IR::_RET,*opn3);
                 IRList.push_back(ir);
             }

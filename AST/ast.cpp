@@ -725,6 +725,11 @@ void AST::calAttr(struct node *T,Symboltable &symboltable){
             T->pretype=new Fun_Type(*(static_cast<BasicType*>(T->pretype)),args);
             
             //符号入表
+            mysymbol.alias=string(T->type_id);
+            while(symboltable.Search(string(T->type_id))!=-1)
+            {
+                strcat(T->type_id,"_");
+            }
             mysymbol.name=string(T->type_id);
             mysymbol.level=T->level;
             mysymbol.pretype=T->pretype;
@@ -752,7 +757,11 @@ void AST::calAttr(struct node *T,Symboltable &symboltable){
             if(T->ptr[1]) T->ptr[1]->level=1;
             if(T->ptr[0]) calAttr(T->ptr[0],symboltable);
             if(T->ptr[1]) calAttr(T->ptr[1],symboltable);
-
+            mysymbol.alias=string(T->type_id);
+            while(symboltable.Search(string(T->type_id))!=-1)
+            {
+                strcat(T->type_id,"_");
+            }
             mysymbol.name=string(T->type_id);
             mysymbol.level=T->level;
             mysymbol.pretype=T->pretype;
@@ -814,6 +823,11 @@ void AST::calAttr(struct node *T,Symboltable &symboltable){
             // cout<<T->pretype->getvalue()<<endl;
 
             //符号入表
+            mysymbol.alias=string(T->ptr[0]->type_id);
+            while(symboltable.Search(string(T->ptr[0]->type_id))!=-1)
+            {
+                strcat(T->ptr[0]->type_id,"_");
+            }
             mysymbol.name=string(T->ptr[0]->type_id);
             mysymbol.level=T->level;
             mysymbol.flag='V';
@@ -836,6 +850,11 @@ void AST::calAttr(struct node *T,Symboltable &symboltable){
             // cout<<T->pretype->getvalue()<<endl;
 
             //符号入表
+            mysymbol.alias=string(T->ptr[0]->type_id);
+            while(symboltable.Search(string(T->ptr[0]->type_id))!=-1)
+            {
+                strcat(T->ptr[0]->type_id,"_");
+            }
             mysymbol.name=string(T->ptr[0]->type_id);
             mysymbol.level=T->level;
             mysymbol.flag='V';
@@ -905,6 +924,8 @@ void AST::calAttr(struct node *T,Symboltable &symboltable){
                     exit(101);
                 }
                 symbol=symboltable.getSymbol(index);
+                if(symbol->alias.compare(string(T->type_id))==0)
+                    strcpy(T->type_id,symbol->name.c_str());
                 T->pretype=symbol->pretype;
             }
             else{//LVal: LVal LB Exp RB
@@ -940,6 +961,8 @@ void AST::calAttr(struct node *T,Symboltable &symboltable){
                 exit(102);
             }
             symbol=symboltable.getSymbol(index);
+            if(symbol->alias.compare(string(T->type_id))==0)
+                strcpy(T->type_id,symbol->name.c_str());
             T->pretype=symbol->pretype;
             
             if(!T->pretype->is_Fun_Type()){//符号表中的符号并非函数
