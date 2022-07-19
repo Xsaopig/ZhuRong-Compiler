@@ -75,7 +75,9 @@ public:
         _FUNC,  // define function opn1
         _PARAM, // param opn1
         _CALL,  // [result =] call opn1(函数) , opn2(参数个数)
-        _RET    // return [opn1]
+        _RET,    // return [opn1]
+        _DATA_BEGIN,    //.data(全局变量alloc前一条指令)
+        _DATA_END   //全局变量结束后的一条指令，没有其他含义
     };
 
     enum op_kind op;

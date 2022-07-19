@@ -134,7 +134,7 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
             opn1->offset=symbol->offset;
             i=offset-symbol->offset;
             opn2=new Opn(Opn::Imm,i);
-            
+            opn2->is_int=true;
             ir=new IR(IR::_ALLOC,*opn1,*opn2);
             IRList.push_back(ir);
 
@@ -238,7 +238,11 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
             opn1->offset=symbol->offset;
             i=offset-symbol->offset;
             opn2=new Opn(Opn::Imm,i);
-            opn2->is_int=1;
+            opn2->is_int=true;
+
+            if(T->level==0)
+                IRList.push_back(new IR(IR::_DATA_BEGIN));
+
             ir=new IR(IR::_ALLOC,*opn1,*opn2);
             IRList.push_back(ir);
 
@@ -255,11 +259,13 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
             /*     opn1=opn3
             cout<<symboltable.getSymbol(T->place)->name<<" = "
                 <<symboltable.getSymbol(T->ptr[1]->place)->name<<endl;*/
-
+            
+            if(T->level==0)
+                IRList.push_back(new IR(IR::_DATA_END));
             break;
         case VarDef:
             if(T->ptr[0]) genIR(T->ptr[0],symboltable);
-
+            
             //符号入表
             mysymbol.name=string(T->ptr[0]->type_id);
             mysymbol.level=T->level;
@@ -305,7 +311,10 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
             opn1->offset=symbol->offset;
             i=offset-symbol->offset;
             opn2=new Opn(Opn::Imm,i);
-            opn2->is_int=1;
+            opn2->is_int=true;
+
+            if(T->level==0)
+                IRList.push_back(new IR(IR::_DATA_BEGIN));
 
             ir=new IR(IR::_ALLOC,*opn1,*opn2);
             IRList.push_back(ir);
@@ -334,7 +343,8 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
                 //cout<<symboltable.getSymbol(T->place)->name<<" = "<<0<<endl;
             }
 
-
+            if(T->level==0)
+                IRList.push_back(new IR(IR::_DATA_END));
             break;
         case Idents:
             if(T->ptr[0]) genIR(T->ptr[0],symboltable);
@@ -488,11 +498,13 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
                         opn1->level=symbol->level;
                         opn1->offset=symbol->offset;
                         symbo2=symboltable.getSymbol(T->ptr[1]->place);
-                        symbo2->name+=" * "+to_string(limit);
+                        // symbo2->name+=" * "+to_string(limit);
                         opn2=new Opn(Opn::Var,symbo2->name);
                         opn2->level=symbo2->level;
-                        opn2->offset=symbo2->offset;                        
-                        ir=new IR(IR::_ASSIGN,*opn2,*opn1);
+                        opn2->offset=symbo2->offset;
+                        opn3=new Opn(Opn::Imm,limit);
+                        opn3->is_int=1;
+                        ir=new IR(IR::_MUL,*opn2,*opn3,*opn1);
                         IRList.push_back(ir);
                         
                         //cout<<symbol->name<<" = "<<symboltable.getSymbol(T->ptr[1]->place)->name<<" * "<<limit<<endl;
@@ -579,15 +591,17 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
                         int limit=static_cast<Array_Type*>(T->array->pretype)->elements_nums[T->ndim];
 
                         symbo2=symboltable.getSymbol(T->offset);
-                        opn2=new Opn(Opn::Var,symbo2->name);
-                        opn2->level=symbo2->level;
-                        opn2->offset=symbo2->offset;  
+                        result=new Opn(Opn::Var,symbo2->name);
+                        result->level=symbo2->level;
+                        result->offset=symbo2->offset;  
 
-                        symbol->name+=" * "+to_string(limit);
+                        // symbol->name+=" * "+to_string(limit);
                         opn1=new Opn(Opn::Var,symbol->name);
                         opn1->level=symbol->level;
                         opn1->offset=symbol->offset; 
-                        ir=new IR(IR::_ASSIGN,*result,*opn1,*opn2);
+                        opn2=new Opn(Opn::Imm,limit);
+                        opn2->is_int=true;
+                        ir=new IR(IR::_MUL,*opn1,*opn2,*result);
                         IRList.push_back(ir);
                         //cout<<symboltable.getSymbol(T->offset)->name<<" = "<<symbol->name<<" * "<<limit<<endl;
                         T->place=T->offset;
@@ -663,6 +677,7 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
                     symbol=symboltable.getSymbol(T->place);
                     opn1=new Opn(Opn::Var,symbol->name);
                     opn1->level=symbol->level;
+                    opn1->is_int=true;
                     opn1->offset=symbol->offset;
                     opn2=new Opn(Opn::Imm,T->type_int);
                     opn2->is_int=true;
@@ -675,6 +690,7 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
                     opn1=new Opn(Opn::Var,symbol->name);
                     opn1->level=symbol->level;
                     opn1->offset=symbol->offset;
+                    opn1->is_int=false;
                     opn2=new Opn(Opn::Imm,T->type_float);
                     opn2->is_int=false;
                     ir=new IR(IR::_ASSIGN,*opn2,*opn1);
@@ -701,6 +717,8 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
                 opn1=new Opn(Opn::Var,symbol->name);
                 opn1->level=symbol->level;
                 opn1->offset=symbol->offset;
+                if(static_cast<Fun_Type*>(symbol->pretype)->basictype.getvalue().compare("int")==0)
+                opn1->is_int=true;
                 opn2=new Opn(Opn::Imm,symbol->paramnum);
 
                 ir=new IR(IR::_CALL,*opn1,*opn2,*opn3);
@@ -784,6 +802,9 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
             opn1=new Opn(Opn::Var,symbol->name);
             opn1->level=symbol->level;
             opn1->offset=symbol->offset;
+            if(T->pretype->getvalue().compare("int")==0)
+                opn1->is_int=true;
+                
             symbo2=symboltable.getSymbol(T->ptr[1]->place);
             opn2=new Opn(Opn::Var,symbo2->name);
             opn2->level=symbo2->level;
@@ -813,6 +834,8 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
             opn1=new Opn(Opn::Var,symbol->name);
             opn1->level=symbol->level;
             opn1->offset=symbol->offset;
+            if(T->pretype->getvalue().compare("int")==0)
+                opn1->is_int=true;
             symbo2=symboltable.getSymbol(T->ptr[1]->place);
             opn2=new Opn(Opn::Var,symbo2->name);
             opn2->level=symbo2->level;
@@ -1017,119 +1040,303 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
         return;
     }
 void IRBuilder::MIRprint()
+{
+    IR *ir;
+    Opn *opn;
+    int i;
+    for (i = 0; i < IRList.size(); i++)
     {
-        IR *ir;
-        Opn *opn;
-        int i;
-        for (i = 0; i < IRList.size(); i++)
+        ir = IRList[i];
+        switch (ir->op)
         {
-            ir = IRList[i];
-            switch (ir->op)
-            {
-            case IR::_VOID:       // 无用指令
-                    break;
-            case IR::_FUNC:      // opn1 :
-                    cout<<"define function "<<ir->opn1.name<<endl;   
-            case IR::_LABEL:      // opn1 :
-                    cout<<ir->opn1.name<<": "<<endl;
-                    break;
-            case IR::_ALLOC:      // alloc opn1(变量名) : result(字节数)
-                    cout<<"\talloc "<<ir->opn1.name<<": "<<ir->result.imm_int<<endl;
-                    break;
-            case IR::_ADD:        // result = opn1 + opn2
-                    cout<<"\t"<<ir->result.name<<" = "<<ir->opn1.name<<" + "<<ir->opn2.name<<endl;
-                    break;
-            case IR::_SUB:        // result = opn1 - opn2
-                    cout<<"\t"<<ir->result.name<<" = "<<ir->opn1.name<<" - "<<ir->opn2.name<<endl;
-                    break;
-            case IR::_MUL:        // result = opn1 * opn2
-                    cout<<"\t"<<ir->result.name<<" = "<<ir->opn1.name<<" * "<<ir->opn2.name<<endl; 
-                    break;           
-            case IR::_DIV:        // result = opn1 / opn2
-                    cout<<"\t"<<ir->result.name<<" = "<<ir->opn1.name<<" / "<<ir->opn2.name<<endl;
-                    break; 
-            case IR::_MOD:        // result = opn1 % opn2
-                    cout<<"\t"<<ir->result.name<<" = "<<ir->opn1.name<<" % "<<ir->opn2.name<<endl;
-                    break; 
-            case IR::_ADDR:
-                    cout<<"\t"<<ir->result.name<<" = &"<<ir->opn1.name<<endl;
-                    break;
-            case IR::_ASSIGN:     // result = opn1
-                    if(ir->opn1.kind==Opn::Imm){
-                        if(ir->opn1.is_int==1){
-                            cout<<"\t"<<ir->result.name<<" = "<<ir->opn1.imm_int<<endl;;
-                        }
-                        else{
-                            cout<<"\t"<<ir->result.name<<" = "<<ir->opn1.imm_float<<endl;
-                        }
+        case IR::_VOID:       // 无用指令
+                break;
+        case IR::_FUNC:      // opn1 :
+                cout<<"define function "<<ir->opn1.name<<endl;   
+        case IR::_LABEL:      // opn1 :
+                cout<<ir->opn1.name<<": "<<endl;
+                break;
+        case IR::_ALLOC:      // alloc opn1(变量名) : result(字节数)
+                cout<<"\talloc "<<ir->opn1.name<<": "<<ir->result.imm_int<<endl;
+                break;
+        case IR::_ADD:        // result = opn1 + opn2
+                cout<<"\t"<<ir->result.name<<" = ";
+                if(ir->opn1.kind==Opn::Var)
+                    cout<<ir->opn1.name;
+                else if(ir->opn1.kind==Opn::Imm)
+                    ir->opn1.is_int?(cout<<ir->opn1.imm_int):(cout<<ir->opn1.imm_float);
+                cout<<" + ";
+                if(ir->opn2.kind==Opn::Var)
+                    cout<<ir->opn2.name;
+                else if(ir->opn2.kind==Opn::Imm)
+                    ir->opn2.is_int?(cout<<ir->opn2.imm_int):(cout<<ir->opn2.imm_float);
+                cout<<endl;
+                break;
+        case IR::_SUB:        // result = opn1 - opn2
+                cout<<"\t"<<ir->result.name<<" = ";
+                if(ir->opn1.kind==Opn::Var)
+                    cout<<ir->opn1.name;
+                else if(ir->opn1.kind==Opn::Imm)
+                    ir->opn1.is_int?(cout<<ir->opn1.imm_int):(cout<<ir->opn1.imm_float);
+                cout<<" - ";
+                if(ir->opn2.kind==Opn::Var)
+                    cout<<ir->opn2.name;
+                else if(ir->opn2.kind==Opn::Imm)
+                    ir->opn2.is_int?(cout<<ir->opn2.imm_int):(cout<<ir->opn2.imm_float);
+                cout<<endl;
+                break;
+        case IR::_MUL:        // result = opn1 * opn2
+                cout<<"\t"<<ir->result.name<<" = ";
+                if(ir->opn1.kind==Opn::Var)
+                    cout<<ir->opn1.name;
+                else if(ir->opn1.kind==Opn::Imm)
+                    ir->opn1.is_int?(cout<<ir->opn1.imm_int):(cout<<ir->opn1.imm_float);
+                cout<<" * ";
+                if(ir->opn2.kind==Opn::Var)
+                    cout<<ir->opn2.name;
+                else if(ir->opn2.kind==Opn::Imm)
+                    ir->opn2.is_int?(cout<<ir->opn2.imm_int):(cout<<ir->opn2.imm_float);
+                cout<<endl;
+                break;           
+        case IR::_DIV:        // result = opn1 / opn2
+                cout<<"\t"<<ir->result.name<<" = ";
+                if(ir->opn1.kind==Opn::Var)
+                    cout<<ir->opn1.name;
+                else if(ir->opn1.kind==Opn::Imm)
+                    ir->opn1.is_int?(cout<<ir->opn1.imm_int):(cout<<ir->opn1.imm_float);
+                cout<<" / ";
+                if(ir->opn2.kind==Opn::Var)
+                    cout<<ir->opn2.name;
+                else if(ir->opn2.kind==Opn::Imm)
+                    ir->opn2.is_int?(cout<<ir->opn2.imm_int):(cout<<ir->opn2.imm_float);
+                cout<<endl;
+                break; 
+        case IR::_MOD:        // result = opn1 % opn2
+                cout<<"\t"<<ir->result.name<<" = ";
+                if(ir->opn1.kind==Opn::Var)
+                    cout<<ir->opn1.name;
+                else if(ir->opn1.kind==Opn::Imm)
+                    ir->opn1.is_int?(cout<<ir->opn1.imm_int):(cout<<ir->opn1.imm_float);
+                cout<<" % ";
+                if(ir->opn2.kind==Opn::Var)
+                    cout<<ir->opn2.name;
+                else if(ir->opn2.kind==Opn::Imm)
+                    ir->opn2.is_int?(cout<<ir->opn2.imm_int):(cout<<ir->opn2.imm_float);
+                cout<<endl;
+                break; 
+        case IR::_ADDR:
+                cout<<"\t"<<ir->result.name<<" = &"<<ir->opn1.name<<endl;
+                break;
+        case IR::_ASSIGN:     // result = opn1
+                if(ir->opn1.kind==Opn::Imm){
+                    if(ir->opn1.is_int==1){
+                        cout<<"\t"<<ir->result.name<<" = "<<ir->opn1.imm_int<<endl;;
                     }
-                    else if(ir->opn1.kind==Opn::Var){
-                            cout<<"\t"<<ir->result.name<<" = "<<ir->opn1.name<<endl;
+                    else{
+                        cout<<"\t"<<ir->result.name<<" = "<<ir->opn1.imm_float<<endl;
                     }
-                    else if(ir->opn1.kind==Opn::Block){
-                            cout<<"\t"<<ir->result.name<<" ={ ";
-                            for(int i=0;i<ir->opn1.Block_args.size();i++){
-                                opn=ir->opn1.Block_args[i];
+                }
+                else if(ir->opn1.kind==Opn::Var){
+                        cout<<"\t"<<ir->result.name<<" = "<<ir->opn1.name<<endl;
+                }
+                else if(ir->opn1.kind==Opn::Block){
+                        cout<<"\t"<<ir->result.name<<" ={ ";
+                        for(int i=0;i<ir->opn1.Block_args.size();i++){
+                            opn=ir->opn1.Block_args[i];
+                            if(opn->kind==Opn::Var)
                                 cout<<opn->name<<" ";
-                            }  
-                            cout<<"}"<<endl;                    
-                    }
-                    break;
-            case IR::_Arr_ASSIGN: // opn1[opn2]=result
-                    cout<<"\t"<<ir->opn1.name<<"["<<ir->opn2.name<<"]"<<" = "<<ir->result.name<<endl;
-                    break;
-            case IR::_ASSIGN_Arr: // op1=opn2[result]
+                            else if(opn->kind==Opn::Imm){
+                                if(opn->is_int) cout<<opn->imm_int<<" ";
+                                else cout<<opn->imm_float<<" ";
+                            }
+                        }  
+                        cout<<"}"<<endl;                    
+                }
+                break;
+        case IR::_Arr_ASSIGN: // opn1[opn2]=result
+
+                cout<<"\t"<<ir->opn1.name<<"[";
+                if(ir->opn2.kind==Opn::Var)
+                    cout<<ir->opn2.name;
+                else if(ir->opn2.kind==Opn::Imm)
+                    if(ir->opn2.is_int) cout<<ir->opn2.imm_int;
+                    else cout<<ir->opn2.imm_float;
+                cout<<"] = ";
+                if(ir->result.kind==Opn::Var)
+                    cout<<ir->result.name;
+                else if(ir->result.kind==Opn::Imm)
+                    if(ir->result.is_int) cout<<ir->result.imm_int;
+                    else cout<<ir->result.imm_float;
+                cout<<endl;
+                break;
+        case IR::_ASSIGN_Arr: // opn1=opn2[result]
+                if(ir->result.kind==Opn::Var)
                     cout<<"\t"<<ir->opn1.name<<" = "<<ir->opn2.name<<"["<<ir->result.name<<"]"<<endl;
-                    break;
-            case IR::_NOT:        // result = ! opn1
+                else if(ir->result.kind==Opn::Imm && ir->result.is_int)
+                    cout<<"\t"<<ir->opn1.name<<" = "<<ir->opn2.name<<"["<<ir->result.imm_int<<"]"<<endl;
+                else if(ir->result.kind==Opn::Imm && !ir->result.is_int)
+                    cout<<"\t"<<ir->opn1.name<<" = "<<ir->opn2.name<<"["<<ir->result.imm_float<<"]"<<endl;
+                break;
+        case IR::_NOT:        // result = ! opn1
+                if(ir->opn1.kind==Opn::Var)
                     cout<<"\t"<<ir->result.name<<"= !"<<ir->opn1.name<<endl;
-                    break;
-            case IR::_POSI:       // result = + opn1
+                else if(ir->opn1.kind==Opn::Imm && ir->opn1.is_int)
+                    cout<<"\t"<<ir->result.name<<"= !"<<ir->opn1.imm_int<<endl;
+                else if(ir->opn1.kind==Opn::Imm && !ir->opn1.is_int)
+                    cout<<"\t"<<ir->result.name<<"= !"<<ir->opn1.imm_float<<endl;
+                break;
+        case IR::_POSI:       // result = + opn1
+                if(ir->opn1.kind==Opn::Var)
                     cout<<"\t"<<ir->result.name<<"= +"<<ir->opn1.name<<endl;
-                    break;
-            case IR::_NEGA:       // result = - opn1
+                else if(ir->opn1.kind==Opn::Imm && ir->opn1.is_int)
+                    cout<<"\t"<<ir->result.name<<"= +"<<ir->opn1.imm_int<<endl;
+                else if(ir->opn1.kind==Opn::Imm && !ir->opn1.is_int)
+                    cout<<"\t"<<ir->result.name<<"= +"<<ir->opn1.imm_float<<endl;
+                break;
+        case IR::_NEGA:       // result = - opn1
+                if(ir->opn1.kind==Opn::Var)
                     cout<<"\t"<<ir->result.name<<"= -"<<ir->opn1.name<<endl;
-                    break;
-            case IR::_GOTO:       // goto opn1
-                    cout<<"\t"<<"goto "<<ir->opn1.name<<endl;
-                    break;           
-            case IR::_JEQ:        // if opn1 == opn2 goto result
-                    cout<<"\t"<<"if "<<ir->opn1.name<<" == "<<ir->opn2.name<<" goto "<<ir->result.name<<endl;
-                    break;
-            case IR::_JNE:        // if opn1 != opn2 goto result
-                    cout<<"\t"<<"if "<<ir->opn1.name<<" != "<<ir->opn2.name<<" goto "<<ir->result.name<<endl;
-                    break;
-            case IR::_JLT:        // if opn1 < opn2 goto result
-                    cout<<"\t"<<"if "<<ir->opn1.name<<" < "<<ir->opn2.name<<" goto "<<ir->result.name<<endl;
-                    break;
-            case IR::_JGT:        // if opn1 > opn2 goto result
-                    cout<<"\t"<<"if "<<ir->opn1.name<<" > "<<ir->opn2.name<<" goto "<<ir->result.name<<endl;
-                    break;
-            case IR::_JLE:        // if opn1 <= opn2 goto result
-                    cout<<"\t"<<"if "<<ir->opn1.name<<" <= "<<ir->opn2.name<<" goto "<<ir->result.name<<endl;
-                    break;
-            case IR::_JGE:        // if opn1 >= opn2 goto result
-                    cout<<"\t"<<"if "<<ir->opn1.name<<" >= "<<ir->opn2.name<<" goto "<<ir->result.name<<endl;
-                    break;
-            case IR::_PARAM:      // param opn1
+                else if(ir->opn1.kind==Opn::Imm && ir->opn1.is_int)
+                    cout<<"\t"<<ir->result.name<<"= -"<<ir->opn1.imm_int<<endl;
+                else if(ir->opn1.kind==Opn::Imm && !ir->opn1.is_int)
+                    cout<<"\t"<<ir->result.name<<"= -"<<ir->opn1.imm_float<<endl;
+                break;
+        case IR::_GOTO:       // goto opn1
+                cout<<"\t"<<"goto "<<ir->opn1.name<<endl;
+                break;           
+        case IR::_JEQ:        // if opn1 == opn2 goto result
+                cout<<"\t"<<"if ";
+                if(ir->opn1.kind==Opn::Var)
+                    cout<<ir->opn1.name;
+                else if(ir->opn1.kind==Opn::Imm && ir->opn1.is_int)
+                    cout<<ir->opn1.imm_int;
+                else if(ir->opn1.kind==Opn::Imm && !ir->opn1.is_int)
+                    cout<<ir->opn1.imm_float;
+                cout<<" == ";
+                if(ir->opn2.kind==Opn::Var)
+                    cout<<ir->opn2.name;
+                else if(ir->opn2.kind==Opn::Imm && ir->opn2.is_int)
+                    cout<<ir->opn2.imm_int;
+                else if(ir->opn2.kind==Opn::Imm && !ir->opn2.is_int)
+                    cout<<ir->opn2.imm_float;
+                cout<<" goto "<<ir->result.name<<endl;
+                break;
+        case IR::_JNE:        // if opn1 != opn2 goto result
+                cout<<"\t"<<"if ";
+                if(ir->opn1.kind==Opn::Var)
+                    cout<<ir->opn1.name;
+                else if(ir->opn1.kind==Opn::Imm && ir->opn1.is_int)
+                    cout<<ir->opn1.imm_int;
+                else if(ir->opn1.kind==Opn::Imm && !ir->opn1.is_int)
+                    cout<<ir->opn1.imm_float;
+                cout<<" != ";
+                if(ir->opn2.kind==Opn::Var)
+                    cout<<ir->opn2.name;
+                else if(ir->opn2.kind==Opn::Imm && ir->opn2.is_int)
+                    cout<<ir->opn2.imm_int;
+                else if(ir->opn2.kind==Opn::Imm && !ir->opn2.is_int)
+                    cout<<ir->opn2.imm_float;
+                cout<<" goto "<<ir->result.name<<endl;
+                break;
+        case IR::_JLT:        // if opn1 < opn2 goto result
+                cout<<"\t"<<"if ";
+                if(ir->opn1.kind==Opn::Var)
+                    cout<<ir->opn1.name;
+                else if(ir->opn1.kind==Opn::Imm && ir->opn1.is_int)
+                    cout<<ir->opn1.imm_int;
+                else if(ir->opn1.kind==Opn::Imm && !ir->opn1.is_int)
+                    cout<<ir->opn1.imm_float;
+                cout<<" < ";
+                if(ir->opn2.kind==Opn::Var)
+                    cout<<ir->opn2.name;
+                else if(ir->opn2.kind==Opn::Imm && ir->opn2.is_int)
+                    cout<<ir->opn2.imm_int;
+                else if(ir->opn2.kind==Opn::Imm && !ir->opn2.is_int)
+                    cout<<ir->opn2.imm_float;
+                cout<<" goto "<<ir->result.name<<endl;
+                break;
+        case IR::_JGT:        // if opn1 > opn2 goto result
+                cout<<"\t"<<"if ";
+                if(ir->opn1.kind==Opn::Var)
+                    cout<<ir->opn1.name;
+                else if(ir->opn1.kind==Opn::Imm && ir->opn1.is_int)
+                    cout<<ir->opn1.imm_int;
+                else if(ir->opn1.kind==Opn::Imm && !ir->opn1.is_int)
+                    cout<<ir->opn1.imm_float;
+                cout<<" > ";
+                if(ir->opn2.kind==Opn::Var)
+                    cout<<ir->opn2.name;
+                else if(ir->opn2.kind==Opn::Imm && ir->opn2.is_int)
+                    cout<<ir->opn2.imm_int;
+                else if(ir->opn2.kind==Opn::Imm && !ir->opn2.is_int)
+                    cout<<ir->opn2.imm_float;
+                cout<<" goto "<<ir->result.name<<endl;
+                break;
+        case IR::_JLE:        // if opn1 <= opn2 goto result
+                cout<<"\t"<<"if ";
+                if(ir->opn1.kind==Opn::Var)
+                    cout<<ir->opn1.name;
+                else if(ir->opn1.kind==Opn::Imm && ir->opn1.is_int)
+                    cout<<ir->opn1.imm_int;
+                else if(ir->opn1.kind==Opn::Imm && !ir->opn1.is_int)
+                    cout<<ir->opn1.imm_float;
+                cout<<" <= ";
+                if(ir->opn2.kind==Opn::Var)
+                    cout<<ir->opn2.name;
+                else if(ir->opn2.kind==Opn::Imm && ir->opn2.is_int)
+                    cout<<ir->opn2.imm_int;
+                else if(ir->opn2.kind==Opn::Imm && !ir->opn2.is_int)
+                    cout<<ir->opn2.imm_float;
+                cout<<" goto "<<ir->result.name<<endl;
+                break;
+        case IR::_JGE:        // if opn1 >= opn2 goto result
+                cout<<"\t"<<"if ";
+                if(ir->opn1.kind==Opn::Var)
+                    cout<<ir->opn1.name;
+                else if(ir->opn1.kind==Opn::Imm && ir->opn1.is_int)
+                    cout<<ir->opn1.imm_int;
+                else if(ir->opn1.kind==Opn::Imm && !ir->opn1.is_int)
+                    cout<<ir->opn1.imm_float;
+                cout<<" >= ";
+                if(ir->opn2.kind==Opn::Var)
+                    cout<<ir->opn2.name;
+                else if(ir->opn2.kind==Opn::Imm && ir->opn2.is_int)
+                    cout<<ir->opn2.imm_int;
+                else if(ir->opn2.kind==Opn::Imm && !ir->opn2.is_int)
+                    cout<<ir->opn2.imm_float;
+                cout<<" goto "<<ir->result.name<<endl;
+                break;
+        case IR::_PARAM:      // param opn1
+                if(ir->opn1.kind==Opn::Var)
                     cout<<"\t"<<"param "<<ir->opn1.name<<endl;
-                    break;
-            case IR::_CALL:       // [result =] call opn1(函数) , opn2(参数个数)
-                    if(ir->result.kind==Opn::Null){
-                        cout<<"\t"<<"call "<<ir->opn1.name<<", "<<ir->opn2.imm_int<<endl;
-                    }
-                    else{
-                        cout<<"\t"<<ir->result.name<<" =call "<<ir->opn1.name<<", "<<ir->opn2.imm_int<<endl;
-                    }
-                    break;
-            case IR::_RET:        // return [opn1]
-                    if(ir->opn1.kind==Opn::Null){
-                        cout<<"\t"<<"return "<<ir->opn1.name<<endl;
-                    }
-                    else{
-                        cout<<"\t"<<"return "<<ir->opn1.name<<endl;
-                    }
-                    break;
-            }
+                else if(ir->opn1.kind==Opn::Imm && ir->opn1.is_int)
+                    cout<<"\t"<<"param "<<ir->opn1.imm_int<<endl;
+                else if(ir->opn1.kind==Opn::Imm && !ir->opn1.is_int)
+                    cout<<"\t"<<"param "<<ir->opn1.imm_float<<endl;
+                break;
+        case IR::_CALL:       // [result =] call opn1(函数) , opn2(参数个数)
+                if(ir->result.kind==Opn::Null){
+                    cout<<"\t"<<"call "<<ir->opn1.name<<", "<<ir->opn2.imm_int<<endl;
+                }
+                else{
+                    cout<<"\t"<<ir->result.name<<" =call "<<ir->opn1.name<<", "<<ir->opn2.imm_int<<endl;
+                }
+                break;
+        case IR::_RET:        // return [opn1]
+                if(ir->opn1.kind==Opn::Null){
+                    cout<<"\t"<<"return "<<endl;
+                }
+                else if(ir->opn1.kind==Opn::Var){
+                    cout<<"\t"<<"return "<<ir->opn1.name<<endl;
+                }
+                else if(ir->opn1.kind==Opn::Imm){
+                    if(ir->opn1.is_int)
+                    cout<<"\t"<<"return "<<ir->opn1.imm_int<<endl;
+                    else
+                    cout<<"\t"<<"return "<<ir->opn1.imm_float<<endl;
+                }
+                break;
         }
     }
+}
+

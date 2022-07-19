@@ -7,6 +7,7 @@
 #include "./AST/ast.hpp"
 #include "./IR/IR.hpp"
 #include "./optimizer/Optimizer.h"
+#include "./arm/arm.h"
 using namespace std;
 ASTBuilder ASTbuilder;
 IRBuilder IRbuilder;
@@ -28,6 +29,10 @@ int main(int argc, char *argv[]) {
 	ASTbuilder.Build();
 	IRbuilder.Build(ASTbuilder.getroot());
 	optbuilder.build(IRbuilder.getIRList());
+
+	ofstream Sfile;
+	Sfile.open("arm.s");
+	generate_arm(optbuilder.getIRList(),Sfile);//生成目标代码
 	return 0;
 }
 

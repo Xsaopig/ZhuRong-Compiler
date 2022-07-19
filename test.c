@@ -1,13 +1,11 @@
 // #include <iostream>
 // using namespace std;
-int x=2;
-int main() {
-  int p=1;
-  int x=1;
-  while(x>1){
-    int x=2;
-    x=x+1;
-  }
-  x=x+4;
-  return x+p;
-}
+const float not[2][2]={{0,2},3};
+// int a=2;
+// const int b=5;
+float c=not[0][1];
+// const float d=1.5;
+// int e[3]={1,2,3};
+// int main() {
+//   return 0;
+// }

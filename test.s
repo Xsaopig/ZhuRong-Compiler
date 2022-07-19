@@ -11,11 +11,51 @@
 	.eabi_attribute 18, 4
 	.file	"test.c"
 	.text
+	.global	not
 	.section	.rodata
 	.align	2
-.LC0:
-	.word	1
+	.type	not, %object
+	.size	not, 16
+not:
+	.word	0
+	.word	1073741824
+	.word	1077936128
+	.space	4
+	.global	a
+	.data
+	.align	2
+	.type	a, %object
+	.size	a, 4
+a:
 	.word	2
+	.global	b
+	.section	.rodata
+	.align	2
+	.type	b, %object
+	.size	b, 4
+b:
+	.word	5
+	.global	c
+	.data
+	.align	2
+	.type	c, %object
+	.size	c, 4
+c:
+	.word	1073741824
+	.global	d
+	.section	.rodata
+	.align	2
+	.type	d, %object
+	.size	d, 4
+d:
+	.word	1069547520
+	.global	e
+	.data
+	.align	2
+	.type	e, %object
+	.size	e, 12
+e:
+	.word	1
 	.word	2
 	.word	3
 	.text
@@ -28,23 +68,16 @@
 	.fpu vfp
 	.type	main, %function
 main:
-	@ args = 0, pretend = 0, frame = 16
+	@ args = 0, pretend = 0, frame = 0
 	@ frame_needed = 1, uses_anonymous_args = 0
 	@ link register save eliminated.
-	push	{r4, r7}
-	sub	sp, sp, #16
+	push	{r7}
 	add	r7, sp, #0
-	movw	r3, #:lower16:.LC0
-	movt	r3, #:upper16:.LC0
-	mov	r4, r7
-	ldm	r3, {r0, r1, r2, r3}
-	stm	r4, {r0, r1, r2, r3}
 	movs	r3, #0
 	mov	r0, r3
-	adds	r7, r7, #16
 	mov	sp, r7
 	@ sp needed
-	pop	{r4, r7}
+	ldr	r7, [sp], #4
 	bx	lr
 	.size	main, .-main
 	.ident	"GCC: (Raspbian 10.2.1-6+rpi1) 10.2.1 20210110"
