@@ -642,8 +642,9 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
                         opn3->level=symbo3->level;
                         opn3->offset=symbo3->offset;
 
-                        temp_str=to_string(T->ptr[0]->width);
-                        result=new Opn(Opn::Var,temp_str);
+                        // temp_str=to_string(T->ptr[0]->width);
+                        result=new Opn(Opn::Imm,T->ptr[0]->width);
+                        result->is_int=true;
                         ir=new IR(IR::_MUL,*opn3,*result,*opn2);
                         IRList.push_back(ir);
                         //cout<<symboltable.getSymbol(T->offset)->name<<" = "<<T->ptr[0]->width<<" * "<<symboltable.getSymbol(T->ptr[0]->offset)->name<<endl;

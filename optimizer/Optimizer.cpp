@@ -29,28 +29,28 @@ bool OptimizerBuilder::Constant_Folding(vector<IR*>& irlist)//常量折叠
         switch (ptr->op)
         {
         case IR::_NOT:
-            if(ptr->opn1.kind!=Opn::Imm || ptr->opn2.kind==Opn::Imm) break;
+            if(ptr->opn1.kind!=Opn::Imm || ptr->opn2.kind!=Opn::Imm) break;
             res=true;
             ptr->op=IR::_ASSIGN;
             ptr->opn1.imm_int=(ptr->opn1.imm_int==0)?1:0;
             ptr->opn1.imm_float=(ptr->opn1.imm_int==0)?1:0;
             break;
         case IR::_POSI:
-            if(ptr->opn1.kind!=Opn::Imm || ptr->opn2.kind==Opn::Imm) break;
+            if(ptr->opn1.kind!=Opn::Imm || ptr->opn2.kind!=Opn::Imm) break;
             res=true;
             ptr->op=IR::_ASSIGN;
             ptr->opn1.imm_int=(+ptr->opn1.imm_int);
             ptr->opn1.imm_float=(+ptr->opn1.imm_int);
             break;
         case IR::_NEGA:
-            if(ptr->opn1.kind!=Opn::Imm || ptr->opn2.kind==Opn::Imm) break;
+            if(ptr->opn1.kind!=Opn::Imm || ptr->opn2.kind!=Opn::Imm) break;
             res=true;
             ptr->op=IR::_ASSIGN;
             ptr->opn1.imm_int=(-ptr->opn1.imm_int);
             ptr->opn1.imm_float=(-ptr->opn1.imm_int);
             break;
         case IR::_ADD:
-            if(ptr->opn1.kind!=Opn::Imm || ptr->opn2.kind==Opn::Imm) break;
+            if(ptr->opn1.kind!=Opn::Imm || ptr->opn2.kind!=Opn::Imm) break;
             res=true;
             ptr->op=IR::_ASSIGN;
             ptr->opn1.imm_int+=ptr->opn2.imm_int;
@@ -58,7 +58,7 @@ bool OptimizerBuilder::Constant_Folding(vector<IR*>& irlist)//常量折叠
             ptr->opn2.kind=Opn::Null;
             break;
         case IR::_SUB:
-            if(ptr->opn1.kind!=Opn::Imm || ptr->opn2.kind==Opn::Imm) break;
+            if(ptr->opn1.kind!=Opn::Imm || ptr->opn2.kind!=Opn::Imm) break;
             res=true;
             ptr->op=IR::_ASSIGN;
             ptr->opn1.imm_int-=ptr->opn2.imm_int;
@@ -66,7 +66,7 @@ bool OptimizerBuilder::Constant_Folding(vector<IR*>& irlist)//常量折叠
             ptr->opn2.kind=Opn::Null;
             break;
         case IR::_MUL:
-            if(ptr->opn1.kind!=Opn::Imm || ptr->opn2.kind==Opn::Imm) break;
+            if(ptr->opn1.kind!=Opn::Imm || ptr->opn2.kind!=Opn::Imm) break;
             res=true;
             ptr->op=IR::_ASSIGN;
             ptr->opn1.imm_int*=ptr->opn2.imm_int;
@@ -74,7 +74,7 @@ bool OptimizerBuilder::Constant_Folding(vector<IR*>& irlist)//常量折叠
             ptr->opn2.kind=Opn::Null;
             break;
         case IR::_DIV:
-            if(ptr->opn1.kind!=Opn::Imm || ptr->opn2.kind==Opn::Imm) break;
+            if(ptr->opn1.kind!=Opn::Imm || ptr->opn2.kind!=Opn::Imm) break;
             res=true;
             ptr->op=IR::_ASSIGN;
             ptr->opn1.imm_int/=ptr->opn2.imm_int;
@@ -82,7 +82,7 @@ bool OptimizerBuilder::Constant_Folding(vector<IR*>& irlist)//常量折叠
             ptr->opn2.kind=Opn::Null;
             break;
         case IR::_MOD:
-            if(ptr->opn1.kind!=Opn::Imm || ptr->opn2.kind==Opn::Imm) break;
+            if(ptr->opn1.kind!=Opn::Imm || ptr->opn2.kind!=Opn::Imm) break;
             res=true;
             ptr->op=IR::_ASSIGN;//C语言规定取余操作只能作用于int类型
             ptr->opn1.imm_int%=ptr->opn2.imm_int;
@@ -104,11 +104,13 @@ bool OptimizerBuilder::Constant_Propagation(vector<IR*>& irlist)//常量传播
         else if(ptr->opn1.kind!=Opn::Imm)
             continue;
         else{
+            bool exit=false;
             for(int j=i+1;j<irlist.size();j++){
                 auto ptr1=irlist[j];
-                if( ptr1->op==IR::_ALLOC    ||  ptr1->op==IR::_LABEL    ||
+                if(exit) break;
+                else if( ptr1->op==IR::_ALLOC    ||  ptr1->op==IR::_LABEL    ||
                     ptr1->op==IR::_VOID     ||  ptr1->op==IR::_ADDR     ) continue;
-                else if(ptr1->op==IR::_ASSIGN && ptr1->result.name.compare(ptr->result.name)==0) break;
+                else if(ptr1->op==IR::_ASSIGN && ptr1->result.name.compare(ptr->result.name)==0) exit=true;
                 if(ptr1->op!=IR::_ASSIGN_Arr && ptr1->op!=IR::_Arr_ASSIGN)
                 {
                     if(ptr1->opn1.kind==Opn::Var && ptr1->opn1.name.compare(ptr->result.name)==0 ){
