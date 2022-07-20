@@ -41,6 +41,13 @@ public:
     Opn(enum opn_kind k,vector<Opn*> m):kind(k),Block_args(m) {}
 
     Opn(enum opn_kind k,string n,int l,int o,int p):kind(k),name(n),level(l),offset(o),place(p){}
+    bool operator==(const Opn& a)
+    {
+        // if(a.kind!=kind) return false;
+        if(kind==Var || kind==Label || kind==Array || kind==Func) return !name.compare(a.name);
+        else if(kind==Imm) return (is_int!=a.is_int)?false:((is_int)?imm_int==a.imm_int:imm_float==a.imm_float);
+        else return false;
+    };
 };
 
 
@@ -60,8 +67,8 @@ public:
         _DIV,   // result = opn1 / opn2
         _MOD,   // result = opn1 % opn2
         _ASSIGN,// result = opn1
-        _Arr_ASSIGN,//opn1[opn2]=opn3 
-        _ASSIGN_Arr,  //opn3=opn1[opn2]
+        _Arr_ASSIGN,//opn1[opn2]=result
+        _ASSIGN_Arr,  //result=opn1[opn2]
         _NOT,   // result = ! opn1
         _POSI,  // result = + opn1
         _NEGA,  // result = - opn1
@@ -73,6 +80,7 @@ public:
         _JLE,   // if opn1 <= opn2 goto result
         _JGE,   // if opn1 >= opn2 goto result
         _FUNC,  // define function opn1
+        _FUNC_END,//函数结束后的一条指令，没有其他含义
         _PARAM, // param opn1
         _CALL,  // [result =] call opn1(函数) , opn2(参数个数)
         _RET,    // return [opn1]

@@ -1,5 +1,16 @@
 #include "Type.hpp"
-
+bool Type::is_int() {
+    if(is_BasicType()) return value.compare("int")==0?true:false;
+    else if(is_Array_Type()) return ((static_cast<Array_Type *>(this))->basictype.value.compare("int")==0)?true:false;
+    else if(is_Fun_Type()) return ((static_cast<Fun_Type *>(this))->basictype.value.compare("int")==0)?true:false;
+    else return false;
+};
+bool Type::is_float() {
+    if(is_BasicType()) return value.compare("float")==0?true:false;
+    else if(is_Array_Type()) return ((static_cast<Array_Type *>(this))->basictype.value.compare("float")==0)?true:false;
+    else if(is_Fun_Type()) return ((static_cast<Fun_Type *>(this))->basictype.value.compare("float")==0)?true:false;
+    else return false;
+};
 Product_Type::Product_Type(Type* T1,Type* T2)
 {
     NameofClass=string("Product_Type");

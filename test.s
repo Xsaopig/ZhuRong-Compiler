@@ -11,53 +11,29 @@
 	.eabi_attribute 18, 4
 	.file	"test.c"
 	.text
-	.global	not
-	.section	.rodata
-	.align	2
-	.type	not, %object
-	.size	not, 16
-not:
-	.word	0
-	.word	1073741824
-	.word	1077936128
-	.space	4
 	.global	a
-	.data
+	.section	.rodata
 	.align	2
 	.type	a, %object
-	.size	a, 4
+	.size	a, 8
 a:
+	.word	1
 	.word	2
-	.global	b
-	.section	.rodata
-	.align	2
-	.type	b, %object
-	.size	b, 4
-b:
-	.word	5
-	.global	c
-	.data
-	.align	2
-	.type	c, %object
-	.size	c, 4
-c:
-	.word	1073741824
-	.global	d
-	.section	.rodata
-	.align	2
-	.type	d, %object
-	.size	d, 4
-d:
-	.word	1069547520
 	.global	e
 	.data
 	.align	2
 	.type	e, %object
-	.size	e, 12
+	.size	e, 32
 e:
-	.word	1
 	.word	2
-	.word	3
+	.word	7
+	.space	24
+	.global	c
+	.align	2
+	.type	c, %object
+	.size	c, 4
+c:
+	.word	1056964608
 	.text
 	.align	1
 	.global	main
@@ -73,7 +49,9 @@ main:
 	@ link register save eliminated.
 	push	{r7}
 	add	r7, sp, #0
-	movs	r3, #0
+	movw	r3, #:lower16:e
+	movt	r3, #:upper16:e
+	ldr	r3, [r3, #28]
 	mov	r0, r3
 	mov	sp, r7
 	@ sp needed

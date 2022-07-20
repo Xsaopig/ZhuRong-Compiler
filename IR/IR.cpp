@@ -84,6 +84,7 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
             if(T->ptr[2]) genIR(T->ptr[2],symboltable);
             symboltable.Pop_until(symboltable.Pop_index());
             
+            IRList.push_back(new IR(IR::_FUNC_END));
            
             break;
         case FuncFParams:
@@ -105,21 +106,24 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
             symbol=symboltable.getSymbol(T->place);
             //区分操作数是 var还是array
             if(T->pretype->is_BasicType()){
+                opn1=new Opn(Opn::Var,symbol->name);
                 if(!T->pretype->getvalue().compare("int"))
                 {
                     mysymbol.type=INT;
                     offset+=4;
+                    opn1->is_int=true;
                 }
                 else if(!T->pretype->getvalue().compare("float"))
                 {
                     mysymbol.type=FLOAT;
                     offset+=4;
+                    opn1->is_int=false;
                 }
                 else
                 {
                     mysymbol.type=VOID;
+                    opn1->is_int=false;
                 }
-                opn1=new Opn(Opn::Var,symbol->name);
                 //IR_kind=Opn::Var;
             }
             else if(T->pretype->is_Array_Type())
@@ -127,6 +131,7 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
                 //形参中的数组得用指针来表示
                 offset+=4;
                 opn1=new Opn(Opn::Array,symbol->name);
+                opn1->is_int=T->pretype->is_int();
                 //IR_kind=Opn::Array;
             }
                   
@@ -336,8 +341,11 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
             }
             else if(T->level==0)//变量没有赋初值，但是是全局变量，要被初始化为0
             {
-                opn3=new Opn(Opn::Imm,0);
-                opn3->is_int=1;
+                if(T->pretype->is_BasicType())
+                    opn3=new Opn(Opn::Imm,0);
+                else
+                    opn3=new Opn(Opn::Block,arr_opns);
+                opn3->is_int=T->pretype->is_int();
                 ir=new IR(IR::_ASSIGN,*opn3,*opn1);
                 IRList.push_back(ir);
                 //cout<<symboltable.getSymbol(T->place)->name<<" = "<<0<<endl;
@@ -558,7 +566,7 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
                         opn3->level=symbo3->level;
                         opn3->offset=symbo3->offset;
 
-                        ir=new IR(IR::_ASSIGN_Arr,*opn3,*opn1,*opn2);
+                        ir=new IR(IR::_ASSIGN_Arr,*opn1,*opn2,*opn3);
                         IRList.push_back(ir);
                         /*cout<<symboltable.getSymbol(T->place)->name<<" = "
                             <<T->array->name<<" [ " 
@@ -662,7 +670,7 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
                         opn3->level=symbo3->level;
                         opn3->offset=symbo3->offset;
 
-                        ir=new IR(IR::_ASSIGN_Arr,*opn3,*opn1,*opn2);
+                        ir=new IR(IR::_ASSIGN_Arr,*opn1,*opn2,*opn3);
                         IRList.push_back(ir);
                        /* cout<<symboltable.getSymbol(T->place)->name<<" = "
                             <<T->array->name<<" [ "
@@ -1170,13 +1178,13 @@ void IRBuilder::MIRprint()
                     else cout<<ir->result.imm_float;
                 cout<<endl;
                 break;
-        case IR::_ASSIGN_Arr: // opn1=opn2[result]
-                if(ir->result.kind==Opn::Var)
-                    cout<<"\t"<<ir->opn1.name<<" = "<<ir->opn2.name<<"["<<ir->result.name<<"]"<<endl;
-                else if(ir->result.kind==Opn::Imm && ir->result.is_int)
-                    cout<<"\t"<<ir->opn1.name<<" = "<<ir->opn2.name<<"["<<ir->result.imm_int<<"]"<<endl;
-                else if(ir->result.kind==Opn::Imm && !ir->result.is_int)
-                    cout<<"\t"<<ir->opn1.name<<" = "<<ir->opn2.name<<"["<<ir->result.imm_float<<"]"<<endl;
+        case IR::_ASSIGN_Arr: // result=opn1[opn2]
+                if(ir->opn2.kind==Opn::Var)
+                    cout<<"\t"<<ir->result.name<<" = "<<ir->opn1.name<<"["<<ir->opn2.name<<"]"<<endl;
+                else if(ir->opn2.kind==Opn::Imm && ir->opn2.is_int)
+                    cout<<"\t"<<ir->result.name<<" = "<<ir->opn1.name<<"["<<ir->opn2.imm_int<<"]"<<endl;
+                else if(ir->opn2.kind==Opn::Imm && !ir->opn2.is_int)
+                    cout<<"\t"<<ir->result.name<<" = "<<ir->opn1.name<<"["<<ir->opn2.imm_float<<"]"<<endl;
                 break;
         case IR::_NOT:        // result = ! opn1
                 if(ir->opn1.kind==Opn::Var)

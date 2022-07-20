@@ -4,7 +4,6 @@
 #include <vector>
 #include <iostream>
 using namespace std;
-
 //基类
 class Type
 {
@@ -17,6 +16,8 @@ public:
     bool is_Product_Type() {return NameofClass.compare("Product_Type")==0?true:false;}
     bool is_Array_Type() {return NameofClass.compare("Array_Type")==0?true:false;}
     bool is_Fun_Type() {return NameofClass.compare("Fun_Type")==0?true:false;}
+    bool is_int();
+    bool is_float();
 protected:
     string NameofClass;
     string value;

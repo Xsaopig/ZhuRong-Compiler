@@ -1,12 +1,9 @@
 	.arch armv7
 	.file	"test.c"
 
-	.global not
+	.global e
+	.type e,%object
 	.data
-	.size not, 16
-not:
+	.size e, 32
+e:
 
-	.global c
-	.data
-	.size c, 4
-c:

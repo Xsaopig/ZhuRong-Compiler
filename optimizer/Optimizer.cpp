@@ -6,20 +6,65 @@ void OptimizerBuilder::build(vector<IR*>& IRList)
     this->IRList=IRList;
     uniqueLable(this->IRList);
     Constant(this->IRList);
+    while(Del_DeadCode(this->IRList));
     MIRprint();
 
 }
 
-void OptimizerBuilder::Constant(vector<IR*>& irlist)
+bool OptimizerBuilder::Del_DeadCode(vector<IR*>& irlist)
 {
+    bool res=false;
+    for(int i=0;i<irlist.size();i++){
+        auto ptr=irlist[i];
+        auto op=ptr->op;
+        if(op!=IR::_ASSIGN && op!=IR::_NOT && op!=IR::_POSI && op!=IR::_NEGA && op!=IR::_ASSIGN_Arr && op!=IR::_ADDR && op!=IR::_ALLOC)
+            continue;
+        else{
+            bool used=false;
+            Opn* opn=&ptr->result;
+            if(op==IR::_ALLOC)
+                opn=&ptr->opn1;
+            for(int j=i+1;j<irlist.size();j++){
+                auto ptr1=irlist[j];
+                if(ptr1->opn1.kind==Opn::Block){
+                    for(auto& block_opn:ptr1->opn1.Block_args){
+                        if(*opn==*block_opn){
+                            used=true;
+                            break;
+                        }
+                    }
+                }
+                else if(ptr1->opn1==*opn || ptr1->opn2==*opn || ptr1->result==*opn) {
+                    used=true;
+                    break;
+                }
+            }
+            if(used==false){
+                irlist.erase(irlist.begin()+i);
+                i--;
+                res=true;
+            }
+        }
+    }
+    return res;
+}
+
+bool OptimizerBuilder::Constant(vector<IR*>& irlist)
+{
+    bool neverchange=true;
     bool change=false;
     do{
         change=false;
-        if(Constant_Propagation(irlist)==true)
+        if(Constant_Propagation(irlist)==true){
             change=true;
-        if(Constant_Folding(irlist)==true)
+            neverchange=false;
+        }
+        if(Constant_Folding(irlist)==true){
             change=true;
+            neverchange=false;
+        }
     }while(change==true);
+    return neverchange;
 }
 
 bool OptimizerBuilder::Constant_Folding(vector<IR*>& irlist)//常量折叠
@@ -99,7 +144,7 @@ bool OptimizerBuilder::Constant_Propagation(vector<IR*>& irlist)//常量传播
     bool res=false;
     for(int i=0;i<irlist.size();i++){
         auto ptr=irlist[i];
-        if(ptr->op!=IR::_ASSIGN && ptr->op!=IR::_Arr_ASSIGN && ptr->op!=IR::_NOT && ptr->op!=IR::_POSI && ptr->op!=IR::_NEGA)
+        if(ptr->op!=IR::_ASSIGN && ptr->op!=IR::_Arr_ASSIGN && ptr->op!=IR::_ASSIGN_Arr && ptr->op!=IR::_NOT && ptr->op!=IR::_POSI && ptr->op!=IR::_NEGA)
             continue;
         else if(ptr->opn1.kind!=Opn::Imm)
             continue;
@@ -110,7 +155,7 @@ bool OptimizerBuilder::Constant_Propagation(vector<IR*>& irlist)//常量传播
                 if(exit) break;
                 else if( ptr1->op==IR::_ALLOC    ||  ptr1->op==IR::_LABEL    ||
                     ptr1->op==IR::_VOID     ||  ptr1->op==IR::_ADDR     ) continue;
-                else if(ptr1->op==IR::_ASSIGN && ptr1->result.name.compare(ptr->result.name)==0) exit=true;
+                else if(ptr1->result==ptr->result) exit=true;
                 if(ptr1->op!=IR::_ASSIGN_Arr && ptr1->op!=IR::_Arr_ASSIGN)
                 {
                     if(ptr1->opn1.kind==Opn::Var && ptr1->opn1.name.compare(ptr->result.name)==0 ){
@@ -134,6 +179,7 @@ bool OptimizerBuilder::Constant_Propagation(vector<IR*>& irlist)//常量传播
                         ptr1->opn2=ptr->opn1;
                         res=true;
                     }
+                    if(ptr1->op==IR::_ASSIGN_Arr) continue;
                     if(ptr1->result.kind==Opn::Var && ptr1->result.name.compare(ptr->result.name)==0 ){
                         ptr1->result=ptr->opn1;
                         res=true;
@@ -291,13 +337,13 @@ void OptimizerBuilder::MIRprint()
                     else cout<<ir->result.imm_float;
                 cout<<endl;
                 break;
-        case IR::_ASSIGN_Arr: // opn1=opn2[result]
-                if(ir->result.kind==Opn::Var)
-                    cout<<"\t"<<ir->opn1.name<<" = "<<ir->opn2.name<<"["<<ir->result.name<<"]"<<endl;
-                else if(ir->result.kind==Opn::Imm && ir->result.is_int)
-                    cout<<"\t"<<ir->opn1.name<<" = "<<ir->opn2.name<<"["<<ir->result.imm_int<<"]"<<endl;
-                else if(ir->result.kind==Opn::Imm && !ir->result.is_int)
-                    cout<<"\t"<<ir->opn1.name<<" = "<<ir->opn2.name<<"["<<ir->result.imm_float<<"]"<<endl;
+        case IR::_ASSIGN_Arr: // result=opn1[opn2]
+                if(ir->opn2.kind==Opn::Var)
+                    cout<<"\t"<<ir->result.name<<" = "<<ir->opn1.name<<"["<<ir->opn2.name<<"]"<<endl;
+                else if(ir->opn2.kind==Opn::Imm && ir->opn2.is_int)
+                    cout<<"\t"<<ir->result.name<<" = "<<ir->opn1.name<<"["<<ir->opn2.imm_int<<"]"<<endl;
+                else if(ir->opn2.kind==Opn::Imm && !ir->opn2.is_int)
+                    cout<<"\t"<<ir->result.name<<" = "<<ir->opn1.name<<"["<<ir->opn2.imm_float<<"]"<<endl;
                 break;
         case IR::_NOT:        // result = ! opn1
                 if(ir->opn1.kind==Opn::Var)
