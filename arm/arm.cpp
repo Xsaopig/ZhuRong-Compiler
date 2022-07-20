@@ -94,9 +94,15 @@ string out_opn(vector<IR*> IRList,vector<IR*>::iterator begin,vector<IR*>::itera
         out=out_opn(IRList,IRList.begin(),end,ptr->opn1);
     }
     else if(ptr->op==IR::_ADD){
+        int i,j;
         string buf1=out_opn(IRList,IRList.begin(),end,ptr->opn1);
-
+        j=buf1.find(' ');
+        i=buf1.find('\n');
+        buf1=buf1.substr(j+1,i-j-1);
         string buf2=out_opn(IRList,IRList.begin(),end,ptr->opn2);
+        j=buf2.find(' ');
+        i=buf2.find('\n');
+        buf2=buf2.substr(j+1,i-j-1);
     }
     return out;
 }

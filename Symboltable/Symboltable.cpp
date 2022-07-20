@@ -132,3 +132,13 @@ void Symboltable::reset()
 {
     Pop_until(0);
 }
+bool Symboltable::last_func_return_int()
+{
+    for(int i=symbols.size()-1;i>=0;i--){
+        auto& symbol=symbols[i];
+        if(symbol.pretype->is_Fun_Type()){
+            return symbol.pretype->is_int();
+        }
+    }
+    return true;
+}

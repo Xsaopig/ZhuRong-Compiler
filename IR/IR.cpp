@@ -325,7 +325,7 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
                 opn1=new Opn(Opn::Array,symbol->name);
                 //IR_kind=Opn::Array;
             }
-
+            opn1->is_int=T->pretype->is_int();
             opn1->level=symbol->level;
             opn1->offset=symbol->offset;
             i=offset-symbol->offset;
@@ -560,10 +560,10 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
                         int limit=static_cast<Array_Type*>(T->array->pretype)->elements_nums[T->ndim];//ndim-1维数组的元素个数
 
                         opn1=new Opn(Opn::Var,symbol->name);
+                        opn1->is_int=T->array->pretype->is_int();
                         opn1->level=symbol->level;
                         opn1->offset=symbol->offset;
                         symbo2=symboltable.getSymbol(T->ptr[1]->place);
-                        // symbo2->name+=" * "+to_string(limit);
                         opn2=new Opn(Opn::Var,symbo2->name);
                         opn2->level=symbo2->level;
                         opn2->offset=symbo2->offset;
@@ -729,6 +729,7 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
 
                         symbo3=symboltable.getSymbol(T->place);
                         opn3=new Opn(Opn::Var,symbo3->name);
+                        opn3->is_int=T->array->pretype->is_int();
                         opn3->level=symbo3->level;
                         opn3->offset=symbo3->offset;
 
@@ -873,18 +874,18 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
             opn1=new Opn(Opn::Var,symbol->name);
             opn1->level=symbol->level;
             opn1->offset=symbol->offset;
-            if(T->pretype->getvalue().compare("int")==0)
-                opn1->is_int=true;
+            opn1->is_int=T->ptr[0]->pretype->is_int();
                 
             symbo2=symboltable.getSymbol(T->ptr[1]->place);
             opn2=new Opn(Opn::Var,symbo2->name);
             opn2->level=symbo2->level;
             opn2->offset=symbo2->offset;
+
             symbo3=symboltable.getSymbol(T->place);
             opn3=new Opn(Opn::Var,symbo3->name);
             opn3->level=symbo3->level;
             opn3->offset=symbo3->offset;
-            
+            opn3->is_int=T->pretype->is_int();
             temp_str=string(T->op);
             if(!temp_str.compare("+")) ir=new IR(IR::_ADD,*opn1,*opn2,*opn3);
             if(!temp_str.compare("-")) ir=new IR(IR::_SUB,*opn1,*opn2,*opn3);
@@ -1077,6 +1078,7 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
             if(T->ptr[0]){
                 symbol=symboltable.getSymbol(T->ptr[0]->place);
                 opn3=new Opn(Opn::Var,symbol->name);
+                opn3->is_int=symboltable.last_func_return_int();
                 ir=new IR(IR::_RET,*opn3);
                 IRList.push_back(ir);
             }

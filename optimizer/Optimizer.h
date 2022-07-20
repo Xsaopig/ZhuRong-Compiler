@@ -22,6 +22,8 @@ public:
 
     bool Del_DeadCode(vector<IR*>& irlist);//死代码删除
 
+    void ASSIGN_type_conversion(vector<IR*>& irlist);//将所有赋值语句的右边操作数类型保证与左边对齐
+
 
 };
 

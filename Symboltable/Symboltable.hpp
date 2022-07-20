@@ -62,6 +62,8 @@ public:
 
     void print();//打印符号表
     void reset();//重置符号表
+
+    bool last_func_return_int();
 };
 
 #endif

@@ -6,7 +6,7 @@ void OptimizerBuilder::build(vector<IR*>& IRList)
     this->IRList=IRList;
     uniqueLable(this->IRList);
     Constant(this->IRList);
-    while(Del_DeadCode(this->IRList));
+    // while(Del_DeadCode(this->IRList));
     MIRprint();
 
 }
@@ -17,7 +17,9 @@ bool OptimizerBuilder::Del_DeadCode(vector<IR*>& irlist)
     for(int i=0;i<irlist.size();i++){
         auto ptr=irlist[i];
         auto op=ptr->op;
-        if(op!=IR::_ASSIGN && op!=IR::_NOT && op!=IR::_POSI && op!=IR::_NEGA && op!=IR::_ASSIGN_Arr && op!=IR::_ADDR && op!=IR::_ALLOC)
+        if(op!=IR::_ASSIGN && op!=IR::_NOT && op!=IR::_POSI && op!=IR::_NEGA  
+            && op!=IR::_ADD && op!=IR::_SUB && op!=IR::_MUL && op!=IR::_DIV && op!=IR::_MOD
+            && op!=IR::_ASSIGN_Arr && op!=IR::_ADDR && op!=IR::_ALLOC)
             continue;
         else{
             bool used=false;
@@ -98,32 +100,76 @@ bool OptimizerBuilder::Constant_Folding(vector<IR*>& irlist)//常量折叠
             if(ptr->opn1.kind!=Opn::Imm || ptr->opn2.kind!=Opn::Imm) break;
             res=true;
             ptr->op=IR::_ASSIGN;
-            ptr->opn1.imm_int+=ptr->opn2.imm_int;
-            ptr->opn1.imm_float+=ptr->opn2.imm_float;
+            if(ptr->opn1.is_int==ptr->opn2.is_int){
+                ptr->opn1.imm_int+=ptr->opn2.imm_int;
+                ptr->opn1.imm_float+=ptr->opn2.imm_float;
+            }
+            else{
+                if(ptr->opn1.is_int){
+                    ptr->opn1.imm_float=ptr->opn1.imm_int+ptr->opn2.imm_float;
+                    ptr->opn1.is_int=false;
+                }else{
+                    ptr->opn1.imm_float=ptr->opn1.imm_float+ptr->opn2.imm_int;
+                    ptr->opn1.is_int=false;
+                }
+            }
             ptr->opn2.kind=Opn::Null;
             break;
         case IR::_SUB:
             if(ptr->opn1.kind!=Opn::Imm || ptr->opn2.kind!=Opn::Imm) break;
             res=true;
             ptr->op=IR::_ASSIGN;
-            ptr->opn1.imm_int-=ptr->opn2.imm_int;
-            ptr->opn1.imm_float-=ptr->opn2.imm_float;
+            if(ptr->opn1.is_int==ptr->opn2.is_int){
+                ptr->opn1.imm_int-=ptr->opn2.imm_int;
+                ptr->opn1.imm_float-=ptr->opn2.imm_float;
+            }
+            else{
+                if(ptr->opn1.is_int){
+                    ptr->opn1.imm_float=ptr->opn1.imm_int-ptr->opn2.imm_float;
+                    ptr->opn1.is_int=false;
+                }else{
+                    ptr->opn1.imm_float=ptr->opn1.imm_float-ptr->opn2.imm_int;
+                    ptr->opn1.is_int=false;
+                }
+            }
             ptr->opn2.kind=Opn::Null;
             break;
         case IR::_MUL:
             if(ptr->opn1.kind!=Opn::Imm || ptr->opn2.kind!=Opn::Imm) break;
             res=true;
             ptr->op=IR::_ASSIGN;
-            ptr->opn1.imm_int*=ptr->opn2.imm_int;
-            ptr->opn1.imm_float*=ptr->opn2.imm_float;
+            if(ptr->opn1.is_int==ptr->opn2.is_int){
+                ptr->opn1.imm_int*=ptr->opn2.imm_int;
+                ptr->opn1.imm_float*=ptr->opn2.imm_float;
+            }
+            else{
+                if(ptr->opn1.is_int){
+                    ptr->opn1.imm_float=ptr->opn1.imm_int*ptr->opn2.imm_float;
+                    ptr->opn1.is_int=false;
+                }else{
+                    ptr->opn1.imm_float=ptr->opn1.imm_float*ptr->opn2.imm_int;
+                    ptr->opn1.is_int=false;
+                }
+            }
             ptr->opn2.kind=Opn::Null;
             break;
         case IR::_DIV:
             if(ptr->opn1.kind!=Opn::Imm || ptr->opn2.kind!=Opn::Imm) break;
             res=true;
             ptr->op=IR::_ASSIGN;
-            ptr->opn1.imm_int/=ptr->opn2.imm_int;
-            ptr->opn1.imm_float/=ptr->opn2.imm_float;
+            if(ptr->opn1.is_int==ptr->opn2.is_int){
+                ptr->opn1.imm_int/=ptr->opn2.imm_int;
+                ptr->opn1.imm_float/=ptr->opn2.imm_float;
+            }
+            else{
+                if(ptr->opn1.is_int){
+                    ptr->opn1.imm_float=ptr->opn1.imm_int/ptr->opn2.imm_float;
+                    ptr->opn1.is_int=false;
+                }else{
+                    ptr->opn1.imm_float=ptr->opn1.imm_float/ptr->opn2.imm_int;
+                    ptr->opn1.is_int=false;
+                }
+            }
             ptr->opn2.kind=Opn::Null;
             break;
         case IR::_MOD:
@@ -137,6 +183,7 @@ bool OptimizerBuilder::Constant_Folding(vector<IR*>& irlist)//常量折叠
             break;
         }
     }
+    ASSIGN_type_conversion(irlist);
     return res;
 }
 bool OptimizerBuilder::Constant_Propagation(vector<IR*>& irlist)//常量传播
@@ -150,7 +197,7 @@ bool OptimizerBuilder::Constant_Propagation(vector<IR*>& irlist)//常量传播
             continue;
         else{
             bool exit=false;
-            for(int j=i+1;j<irlist.size();j++){
+            for(int j=i+1;j<irlist.size();j++){//查找下一条使用了操作数ptr->result语句来进行替换
                 auto ptr1=irlist[j];
                 if(exit) break;
                 else if(ptr1->op==IR::_LABEL    ||
@@ -159,7 +206,15 @@ bool OptimizerBuilder::Constant_Propagation(vector<IR*>& irlist)//常量传播
                 if(ptr1->op!=IR::_ASSIGN_Arr && ptr1->op!=IR::_Arr_ASSIGN && ptr1->op!=IR::_ALLOC)
                 {
                     if(ptr1->opn1.kind==Opn::Var && ptr1->opn1.name.compare(ptr->result.name)==0 ){
-                        ptr1->opn1=ptr->opn1;
+                        if(ptr->opn1.is_int==ptr1->opn1.is_int)
+                            ptr1->opn1=ptr->opn1;
+                        else{//替换双方类型不同，需要转换
+                            ptr1->opn1=ptr->opn1;
+                            (ptr1->opn1.is_int==true)
+                                ?ptr1->opn1.imm_float=ptr1->opn1.imm_int
+                                :ptr1->opn1.imm_int=ptr1->opn1.imm_float;
+                            ptr1->opn1.is_int=!ptr1->opn1.is_int;
+                        }
                         res=true;
                     }
                     else if(ptr1->opn1.kind==Opn::Block)
@@ -170,6 +225,15 @@ bool OptimizerBuilder::Constant_Propagation(vector<IR*>& irlist)//常量传播
                         }
                     }
                     if(ptr1->opn2.kind==Opn::Var && ptr1->opn2.name.compare(ptr->result.name)==0 ){
+                        if(ptr->opn1.is_int==ptr1->opn2.is_int)
+                            ptr1->opn2=ptr->opn1;
+                        else{//替换双方类型不同，需要转换
+                            ptr1->opn2=ptr->opn1;
+                            (ptr1->opn2.is_int==true)
+                                ?ptr1->opn2.imm_float=ptr1->opn2.imm_int
+                                :ptr1->opn2.imm_int=ptr1->opn2.imm_float;
+                            ptr1->opn2.is_int=!ptr1->opn2.is_int;
+                        }
                         ptr1->opn2=ptr->opn1;
                         res=true;
                     }
@@ -211,6 +275,20 @@ void OptimizerBuilder::uniqueLable(vector<IR*>& irlist)
         }
     }
     irlist=newList;
+}
+
+void OptimizerBuilder::ASSIGN_type_conversion(vector<IR*>& irlist)
+{
+    for(auto ptr:irlist){
+        if(ptr->op==IR::_ASSIGN){
+            if(ptr->opn1.is_int==ptr->result.is_int) continue;
+            if(ptr->opn1.is_int)
+                ptr->opn1.imm_float=ptr->opn1.imm_int;
+            else
+                ptr->opn1.imm_int=ptr->opn1.imm_float;
+            ptr->opn1.is_int=!ptr->opn1.is_int;
+        }
+    }
 }
 
 void OptimizerBuilder::MIRprint()
