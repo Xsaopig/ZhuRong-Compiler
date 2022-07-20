@@ -153,10 +153,10 @@ bool OptimizerBuilder::Constant_Propagation(vector<IR*>& irlist)//常量传播
             for(int j=i+1;j<irlist.size();j++){
                 auto ptr1=irlist[j];
                 if(exit) break;
-                else if( ptr1->op==IR::_ALLOC    ||  ptr1->op==IR::_LABEL    ||
+                else if(ptr1->op==IR::_LABEL    ||
                     ptr1->op==IR::_VOID     ||  ptr1->op==IR::_ADDR     ) continue;
                 else if(ptr1->result==ptr->result) exit=true;
-                if(ptr1->op!=IR::_ASSIGN_Arr && ptr1->op!=IR::_Arr_ASSIGN)
+                if(ptr1->op!=IR::_ASSIGN_Arr && ptr1->op!=IR::_Arr_ASSIGN && ptr1->op!=IR::_ALLOC)
                 {
                     if(ptr1->opn1.kind==Opn::Var && ptr1->opn1.name.compare(ptr->result.name)==0 ){
                         ptr1->opn1=ptr->opn1;
@@ -171,6 +171,12 @@ bool OptimizerBuilder::Constant_Propagation(vector<IR*>& irlist)//常量传播
                     }
                     if(ptr1->opn2.kind==Opn::Var && ptr1->opn2.name.compare(ptr->result.name)==0 ){
                         ptr1->opn2=ptr->opn1;
+                        res=true;
+                    }
+                }
+                else if(ptr1->op==IR::_ALLOC){
+                    if(ptr1->result.kind==Opn::Var && ptr1->result.name.compare(ptr->result.name)==0){
+                        ptr1->result=ptr->opn1;
                         res=true;
                     }
                 }
@@ -225,7 +231,10 @@ void OptimizerBuilder::MIRprint()
                 cout<<ir->opn1.name<<": "<<endl;
                 break;
         case IR::_ALLOC:      // alloc opn1(变量名) : result(字节数)
-                cout<<"\talloc "<<ir->opn1.name<<": "<<ir->result.imm_int<<endl;
+                if(ir->result.kind==Opn::Imm)
+                    cout<<"\talloc "<<ir->opn1.name<<": "<<ir->result.imm_int<<endl;
+                else
+                    cout<<"\talloc "<<ir->opn1.name<<": "<<ir->result.name<<endl;
                 break;
         case IR::_ADD:        // result = opn1 + opn2
                 cout<<"\t"<<ir->result.name<<" = ";

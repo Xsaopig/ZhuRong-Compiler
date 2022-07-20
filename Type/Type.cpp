@@ -97,6 +97,7 @@ void Array_Type::setBasicType(BasicType& t)
     basictype=t;
 }
 
+
 Type* Array_Type::Lower_one_level()
 {
     if(lev==1) return new BasicType(basictype);

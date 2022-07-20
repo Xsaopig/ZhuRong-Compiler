@@ -50,7 +50,7 @@ string out_opn(vector<IR*> IRList,vector<IR*>::iterator begin,vector<IR*>::itera
     auto ptr=(*iter);
     for(;iter!=begin;iter--){
         ptr=(*iter);
-        if(ptr->result==opn) break; 
+        if(ptr->result==opn && ptr->op!=IR::_ALLOC) break; 
     }
     if(ptr->op==IR::_ASSIGN) {
         if(ptr->opn1.kind==Opn::Imm){
@@ -87,10 +87,16 @@ string out_opn(vector<IR*> IRList,vector<IR*>::iterator begin,vector<IR*>::itera
         }
         int j=out.find("\n");
         out=out.substr(0,j+1);
-        
+        if(out.empty())
+            out="\t.word 0\n";
     }
     else if(ptr->op==IR::_ADDR){
         out=out_opn(IRList,IRList.begin(),end,ptr->opn1);
+    }
+    else if(ptr->op==IR::_ADD){
+        string buf1=out_opn(IRList,IRList.begin(),end,ptr->opn1);
+
+        string buf2=out_opn(IRList,IRList.begin(),end,ptr->opn2);
     }
     return out;
 }
@@ -107,7 +113,15 @@ void generate_data_arm(vector<IR*> IRList,vector<IR*>::iterator data_begin,vecto
     for(;iter!=data_end;iter++)//找到ALLOC语句
         if((*iter)->op==IR::_ALLOC) break;
     name=(*iter)->opn1.name;
-    size=(*iter)->result.imm_int;
+    if((*iter)->result.kind==Opn::Imm)
+        size=(*iter)->result.imm_int;
+    else{
+        string buffer=out_opn(IRList,IRList.begin(),data_end,(*iter)->result);
+        int j=buffer.find("\n");
+        buffer=buffer.substr(j+1,buffer.size()-j-1);
+        j=buffer.find("\n");
+        buffer=buffer.substr(0,j+1);
+    }
     is_int=(*iter)->opn1.is_int;
     out<<"\t.global "<<name<<endl;
     out<<"\t.type "<<name<<",\%object"<<endl;
@@ -120,13 +134,24 @@ void generate_data_arm(vector<IR*> IRList,vector<IR*>::iterator data_begin,vecto
 	// .word	1077936128
 	// .space	4
     out<<name<<":"<<endl;
+    // out<<out_opn(IRList,data_begin,data_end,(*iter)->opn1)<<endl;
     auto ptr=find_opn_ASSIGN(data_begin,data_end,(*iter)->opn1);
-    if (ptr==nullptr){//没有初始化的全局变量
-        for(int i=0;i<size/4;i++){
-            out<<"\t.word 0"<<endl;
-        }
+    if (ptr==nullptr || (ptr->opn1.kind==Opn::Block && ptr->opn1.Block_args.size()==0) ){//没有初始化的全局变量
+        out<<"\t.space "<<size<<endl;
     }else{
-        out<<out_opn(IRList,data_begin,data_end,ptr->opn1)<<endl;
+        string buffer=out_opn(IRList,data_begin,data_end,ptr->opn1);
+        int n=count(buffer.begin(),buffer.end(),'\n');
+        if(n>size/4){
+            while(n*4>size){
+                int j=buffer.find_last_of("\t");
+                buffer=buffer.substr(0,j);
+                n--;
+            }
+        }
+        else if(n<size/4){
+            buffer+="\t.space "+to_string(size-4*n)+"\n";
+        }
+        out<<buffer<<endl;
     }
     
 }

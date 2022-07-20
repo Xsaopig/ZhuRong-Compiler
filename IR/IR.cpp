@@ -232,6 +232,10 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
                 int cal=1;//数组元素的个数,如int[4][5]有20个元素
                 for(int i=0;i<static_cast<Array_Type*>(T->pretype)->lev;i++)
                 {
+                    if(static_cast<Array_Type*>(T->pretype)->elements_nums[i]==-1){
+                        cal=-1;
+                        break;
+                    }
                     cal=cal*static_cast<Array_Type*>(T->pretype)->elements_nums[i];
                 }
                 offset+=4*cal;
@@ -242,8 +246,14 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
             opn1->level=symbol->level;
             opn1->offset=symbol->offset;
             i=offset-symbol->offset;
-            opn2=new Opn(Opn::Imm,i);
-            opn2->is_int=true;
+            if(i>0){
+                opn2=new Opn(Opn::Imm,i);
+                opn2->is_int=true;
+            }
+            else{
+                opn2=new Opn(Opn::Var,symboltable.getSymbol(T->ptr[0]->place)->name);
+                opn2->is_int=true;
+            }
 
             if(T->level==0)
                 IRList.push_back(new IR(IR::_DATA_BEGIN));
@@ -305,7 +315,11 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
                 int cal=1;//数组元素的个数,如int[4][5]有20个元素
                 for(int i=0;i<static_cast<Array_Type*>(T->pretype)->lev;i++)
                 {
-                    cal=cal*static_cast<Array_Type*>(T->pretype)->elements_nums[i];
+                    if(static_cast<Array_Type*>(T->pretype)->elements_nums[i]==-1){
+                        cal=-1;
+                        break;
+                    }
+                    else cal=cal*static_cast<Array_Type*>(T->pretype)->elements_nums[i];
                 }
                 offset+=4*cal;
                 opn1=new Opn(Opn::Array,symbol->name);
@@ -315,9 +329,14 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
             opn1->level=symbol->level;
             opn1->offset=symbol->offset;
             i=offset-symbol->offset;
-            opn2=new Opn(Opn::Imm,i);
-            opn2->is_int=true;
-
+            if(i>0){
+                opn2=new Opn(Opn::Imm,i);
+                opn2->is_int=true;
+            }
+            else{
+                opn2=new Opn(Opn::Var,symboltable.getSymbol(T->ptr[0]->place)->name);
+                opn2->is_int=true;
+            }
             if(T->level==0)
                 IRList.push_back(new IR(IR::_DATA_BEGIN));
 
@@ -343,8 +362,10 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
             {
                 if(T->pretype->is_BasicType())
                     opn3=new Opn(Opn::Imm,0);
-                else
+                else{
                     opn3=new Opn(Opn::Block,arr_opns);
+                    
+                }
                 opn3->is_int=T->pretype->is_int();
                 ir=new IR(IR::_ASSIGN,*opn3,*opn1);
                 IRList.push_back(ir);
@@ -357,6 +378,42 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
         case Idents:
             if(T->ptr[0]) genIR(T->ptr[0],symboltable);
             if(T->ptr[1]) genIR(T->ptr[1],symboltable);
+            if(T->ptr[0]) {
+                if(T->ptr[0]->place!=-1){
+                    T->place=newtemp(new BasicType("int"),T->level,offset);
+                    offset+=4;
+                    result=new Opn(Opn::Var,symboltable.getSymbol(T->place)->name);
+                    result->is_int=true;
+
+                    opn1=new Opn(Opn::Var,symboltable.getSymbol(T->ptr[0]->place)->name);
+                    opn1->is_int=true;
+
+                    opn2=new Opn(Opn::Var,symboltable.getSymbol(T->ptr[1]->place)->name);
+                    opn2->is_int=true;
+
+                    ir=new IR(IR::_MUL,*opn1,*opn2,*result);
+                    IRList.push_back(ir);
+                }
+                else{
+                    T->place=newtemp(new BasicType("int"),T->level,offset);
+                    offset+=4;
+                    result=new Opn(Opn::Var,symboltable.getSymbol(T->place)->name);
+                    result->is_int=true;
+
+                    opn1=new Opn(Opn::Var,symboltable.getSymbol(T->ptr[1]->place)->name);
+                    opn1->is_int=true;
+
+                    i=4;
+                    opn2=new Opn(Opn::Imm,i);
+                    opn2->is_int=true;
+
+                    ir=new IR(IR::_MUL,*opn1,*opn2,*result);
+                    IRList.push_back(ir);
+                }
+            }
+            else{
+                T->place=-1;
+            }
             break;
         case InitVals:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
@@ -525,6 +582,7 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
                         opn1=new Opn(Opn::Var,symbol->name);
                         opn1->level=symbol->level;
                         opn1->offset=symbol->offset;
+                        opn1->is_int=1;
                         opn2=new Opn(Opn::Var,T->array->name);
                         if(T->array->flag!='P'){
 
@@ -560,11 +618,13 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
                         opn2=new Opn(Opn::Var,symbo2->name);
                         opn2->level=symbo2->level;
                         opn2->offset=symbo2->offset;
+                        opn2->is_int=1;
 
                         symbo3=symboltable.getSymbol(T->place);
                         opn3=new Opn(Opn::Var,symbo3->name);
                         opn3->level=symbo3->level;
                         opn3->offset=symbo3->offset;
+                        opn3->is_int=T->pretype->is_int();
 
                         ir=new IR(IR::_ASSIGN_Arr,*opn1,*opn2,*opn3);
                         IRList.push_back(ir);
@@ -602,9 +662,11 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
                         result=new Opn(Opn::Var,symbo2->name);
                         result->level=symbo2->level;
                         result->offset=symbo2->offset;  
+                        result->is_int=true;
 
                         // symbol->name+=" * "+to_string(limit);
                         opn1=new Opn(Opn::Var,symbol->name);
+                        opn1->is_int=true;
                         opn1->level=symbol->level;
                         opn1->offset=symbol->offset; 
                         opn2=new Opn(Opn::Imm,limit);
@@ -1066,7 +1128,10 @@ void IRBuilder::MIRprint()
                 cout<<ir->opn1.name<<": "<<endl;
                 break;
         case IR::_ALLOC:      // alloc opn1(变量名) : result(字节数)
-                cout<<"\talloc "<<ir->opn1.name<<": "<<ir->result.imm_int<<endl;
+                if(ir->result.kind==Opn::Imm)
+                    cout<<"\talloc "<<ir->opn1.name<<": "<<ir->result.imm_int<<endl;
+                else
+                    cout<<"\talloc "<<ir->opn1.name<<": "<<ir->result.name<<endl;
                 break;
         case IR::_ADD:        // result = opn1 + opn2
                 cout<<"\t"<<ir->result.name<<" = ";

@@ -5,6 +5,7 @@
 #include <stdarg.h>
 #include <vector>
 #include "../AST/ast.hpp"
+#include "../Type/Type.hpp"
 using namespace std;
 
 class Opn//操作数
@@ -29,6 +30,7 @@ public:
     Opn *array_offset;          //当操作数为Array类型时，指向表示偏移量的操作数
 
     vector<Opn*> Block_args;    //当操作数为Block类型时，指向{}内的各操作数
+    int zero_nums;              //当操作数为空的Block类型时，即为{}时，Block中应包含的0个数
 
     int level;                  //变量的层号，0表示是全局变量，数据保存在静态数据区
     int offset;                 //变量单元偏移量，目标代码生成时用
@@ -59,7 +61,7 @@ public:
     {//指令类型，后面用到再加
         _VOID,  // 无用指令
         _LABEL, // opn1 :
-        _ALLOC, // alloc opn1(变量名) : opn2(字节数)
+        _ALLOC, // alloc opn1(变量名) : result(字节数)
         _ADDR,  // result = &opn1
         _ADD,   // result = opn1 + opn2
         _SUB,   // result = opn1 - opn2
