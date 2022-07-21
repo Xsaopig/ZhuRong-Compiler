@@ -97,6 +97,14 @@ void Array_Type::setBasicType(BasicType& t)
     basictype=t;
 }
 
+void Array_Type::set_elements_nums(int index,int value){
+    elements_nums[index]=value;
+    this->value=basictype.getvalue();
+    for(int i=0;i<elements_nums.size();i++){
+        this->value=this->value+"["+to_string(elements_nums[i])+"]";
+    }
+}
+
 
 Type* Array_Type::Lower_one_level()
 {
@@ -128,6 +136,16 @@ Fun_Type::Fun_Type(BasicType& R,vector<Type *> T)
     value+=")";
 }
 
+void Fun_Type::updatevalue()
+{
+    value=basictype.getvalue()+"(";
+    for(auto &ptr:args){
+        num_args++;
+        value+=ptr->getvalue()+",";
+    }
+    if(value[value.size()-1]==',') value.pop_back();
+    value+=")";
+}
 
 
 

@@ -817,8 +817,15 @@ void AST::calAttr(struct node *T,Symboltable &symboltable){
             if(T->ptr[0]->pretype->is_BasicType()){
                 *T->ptr[0]->pretype=*T->pretype;
             }
-            else if(T->ptr[0]->pretype->is_Array_Type())
+            else if(T->ptr[0]->pretype->is_Array_Type()){
                 static_cast<Array_Type*>(T->ptr[0]->pretype)->setBasicType(*static_cast<BasicType*>(T->pretype));
+                T0=T->ptr[0];
+                while(T0->ptr[0]->pretype->is_Array_Type()){
+                    static_cast<Array_Type*>(T0->ptr[0]->pretype)->setBasicType(static_cast<Array_Type*>(T0->pretype)->basictype);
+                    T0=T0->ptr[0];
+                }
+                *T0->ptr[0]->pretype=static_cast<Array_Type*>(T0->pretype)->basictype;
+            }
             T->pretype=T->ptr[0]->pretype;
             // cout<<T->pretype->getvalue()<<endl;
 
@@ -844,8 +851,16 @@ void AST::calAttr(struct node *T,Symboltable &symboltable){
             if(T->ptr[0]->pretype->is_BasicType()){
                 *T->ptr[0]->pretype=*T->pretype;
             }
-            else if(T->ptr[0]->pretype->is_Array_Type())
+            else if(T->ptr[0]->pretype->is_Array_Type()){
                 static_cast<Array_Type*>(T->ptr[0]->pretype)->setBasicType(*static_cast<BasicType*>(T->pretype));
+                T0=T->ptr[0];
+                while(T0->ptr[0]->pretype->is_Array_Type()){
+                    static_cast<Array_Type*>(T0->ptr[0]->pretype)->setBasicType(static_cast<Array_Type*>(T0->pretype)->basictype);
+                    T0=T0->ptr[0];
+                }
+                *T0->ptr[0]->pretype=static_cast<Array_Type*>(T0->pretype)->basictype;
+            }
+            
             T->pretype=T->ptr[0]->pretype;
             // cout<<T->pretype->getvalue()<<endl;
 

@@ -56,6 +56,7 @@ public:
     Array_Type(int i,Array_Type& t);
     ~Array_Type() {};
     void setBasicType(BasicType& t);//设置basictype
+    void set_elements_nums(int index,int value);
     Type* Lower_one_level();      //数组降低一层
     int lev=0;                    //数组的层数
     vector<int> elements_nums;  //数组每层元素的个数，最里层元素在第一个
@@ -72,6 +73,7 @@ public:
     Fun_Type(BasicType& R,vector<Type *> T);
     ~Fun_Type() {};
     string getvalue() {return value;}
+    void updatevalue();
     int num_args=0;     //参数的个数    
     BasicType basictype;//函数的返回值类型
     vector<Type *> args;//参数的类型

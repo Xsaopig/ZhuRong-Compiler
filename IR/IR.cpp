@@ -81,6 +81,12 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
             symboltable.Push_index();
             if(T->ptr[0]) genIR(T->ptr[0],symboltable);
             if(T->ptr[1]) genIR(T->ptr[1],symboltable);
+            if(T->ptr[1]){
+                auto functype=static_cast<Fun_Type*>(T->pretype);
+                functype->updatevalue();
+                symboltable.getSymbol(T->place)->types=functype->getvalue();
+            }
+            
             if(T->ptr[2]) genIR(T->ptr[2],symboltable);
             symboltable.Pop_until(symboltable.Pop_index());
             
@@ -150,6 +156,23 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
         case FuncFParamArray:
             if(T->ptr[0]) genIR(T->ptr[0],symboltable);
             if(T->ptr[1]) genIR(T->ptr[1],symboltable);
+            if(T->ptr[1]){
+                auto arrtype=static_cast<Array_Type*>(T->pretype);//如果数组的维度中有表达式需要提前计算出来
+                i=arrtype->elements_nums.size();
+                if(i>1){//需要检查T->pretype和T0->pretype的数组维度是否一致
+                    auto son_arrtype=static_cast<Array_Type*>(T->ptr[0]->pretype);
+                    for(int j=0;j<son_arrtype->elements_nums.size();j++)
+                        if(arrtype->elements_nums[j]!=son_arrtype->elements_nums[j])
+                            arrtype->set_elements_nums(j,son_arrtype->elements_nums[j]);
+
+                }
+                result=new Opn(Opn::Var,symboltable.getSymbol(T->ptr[1]->place)->name);
+                if(arrtype->elements_nums[i-1]==-1){
+                    arrtype->set_elements_nums(i-1,
+                        PreCal_opn_int(IRList.begin(),IRList.begin()+IRList.size()-1,*result)[0]
+                    );
+                }
+            }
             break;
         case BType:
             break;
@@ -400,15 +423,34 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
                     result=new Opn(Opn::Var,symboltable.getSymbol(T->place)->name);
                     result->is_int=true;
 
-                    opn1=new Opn(Opn::Var,symboltable.getSymbol(T->ptr[1]->place)->name);
+                    i=4;
+                    opn1=new Opn(Opn::Imm,i);
                     opn1->is_int=true;
 
-                    i=4;
-                    opn2=new Opn(Opn::Imm,i);
+                    opn2=new Opn(Opn::Var,symboltable.getSymbol(T->ptr[1]->place)->name);
                     opn2->is_int=true;
+
 
                     ir=new IR(IR::_MUL,*opn1,*opn2,*result);
                     IRList.push_back(ir);
+                }
+                auto arrtype=static_cast<Array_Type*>(T->pretype);//如果数组的维度中有表达式需要提前计算出来
+                i=arrtype->elements_nums.size();
+                if(i>1){//需要检查T->pretype和T0->pretype的数组维度是否一致
+                    auto son_arrtype=static_cast<Array_Type*>(T->ptr[0]->pretype);
+                    for(int j=0;j<son_arrtype->elements_nums.size();j++)
+                        if(arrtype->elements_nums[j]!=son_arrtype->elements_nums[j])
+                            arrtype->set_elements_nums(j,son_arrtype->elements_nums[j]);
+
+                }
+                if(arrtype->elements_nums[i-1]==-1){
+                    int sum=4;
+                    for(int j=0;j<i-1;j++){
+                        sum*=arrtype->elements_nums[j];
+                    }
+                    arrtype->set_elements_nums(i-1,
+                        PreCal_opn_int(IRList.begin(),IRList.begin()+IRList.size()-1,*result)[0]/sum
+                    );
                 }
             }
             else{
@@ -601,16 +643,21 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
 
                         symbo2=symboltable.getSymbol(T->offset);
                         opn2=new Opn(Opn::Var,symbo2->name);
+                        opn2->is_int=1;
                         opn2->level=symbo2->level;
                         opn2->offset=symbo2->offset;
 
                         symbo3=symboltable.getSymbol(T->ptr[1]->place);
                         opn3=new Opn(Opn::Var,symbo3->name);
+                        opn3->is_int=1;
                         opn3->level=symbo3->level;
                         opn3->offset=symbo3->offset; 
-                        ir=new IR(IR::_ASSIGN,*opn3,*opn2);
+                        
+                        result=new Opn(Opn::Imm,T->width);
+                        result->is_int=1;
+                        ir=new IR(IR::_MUL,*result,*opn3,*opn2);
                         IRList.push_back(ir);
-                        //cout<<symbol->name<<" = "<<symboltable.getSymbol(T->ptr[1]->place)->name<<endl;
+                        //cout<<symbol->name<<" = "<<T->width<<" * "<<symboltable.getSymbol(T->ptr[1]->place)->name<<endl;
 
                         T->place=newtemp(new BasicType("int"),T->level,offset);
                         offset+=4;
@@ -1112,6 +1159,108 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
         }
         return;
     }
+
+vector<int> PreCal_opn_int(vector<IR*>::iterator begin,vector<IR*>::iterator end,Opn& opn)
+{
+    int out,index;
+    vector<int> res;
+    if(end==begin) return res;
+
+    if(opn.kind==Opn::Imm){
+        out=(opn.is_int)?opn.imm_int:opn.imm_float;
+        res.push_back(out);
+        return res;
+    }
+    auto iter=end;
+    auto ptr=(*iter);
+    for(;iter!=begin;iter--){
+        ptr=(*iter);
+        if(ptr->result==opn && ptr->op!=IR::_ALLOC) break; 
+    }
+    if(ptr->result==opn){
+        iter--;
+        end=iter;
+    }
+    else {
+        iter=begin;
+        end=begin;
+        ptr=*begin;
+    }
+
+    //这时ptr->result已经就是opn了
+    //ptr指向opn被最后赋值的一条语句
+    switch (ptr->op)
+    {
+    case IR::_ASSIGN:
+        if(ptr->opn1.kind==Opn::Imm){
+            out=(ptr->opn1.is_int)?ptr->opn1.imm_int:ptr->opn1.imm_float;
+            res.push_back(out);
+            return res;
+        }
+        else if(ptr->opn1.kind==Opn::Var)
+            return PreCal_opn_int(begin,end,ptr->opn1);
+        else if(ptr->opn1.kind==Opn::Block){
+            for(int i=0;i<ptr->opn1.Block_args.size();i++){
+                out=PreCal_opn_int(begin,end,*ptr->opn1.Block_args[i])[0];
+                res.push_back(out);
+            }
+            return res;
+        }
+        break;
+    case IR::_ADD:
+        out=PreCal_opn_int(begin,end,ptr->opn1)[0]+PreCal_opn_int(begin,end,ptr->opn2)[0];
+        res.push_back(out);
+        return res;
+        break;
+    case IR::_SUB:
+        out=PreCal_opn_int(begin,end,ptr->opn1)[0]-PreCal_opn_int(begin,end,ptr->opn2)[0];
+        res.push_back(out);
+        return res;
+        break;
+    case IR::_MUL:
+        out=PreCal_opn_int(begin,end,ptr->opn1)[0]*PreCal_opn_int(begin,end,ptr->opn2)[0];
+        res.push_back(out);
+        return res;
+        break;
+    case IR::_DIV:
+        out=PreCal_opn_int(begin,end,ptr->opn1)[0]/PreCal_opn_int(begin,end,ptr->opn2)[0];
+        res.push_back(out);
+        return res;
+        break;
+    case IR::_MOD:
+        out=PreCal_opn_int(begin,end,ptr->opn1)[0]%PreCal_opn_int(begin,end,ptr->opn2)[0];
+        res.push_back(out);
+        return res;
+        break;
+    case IR::_NOT:
+        out=PreCal_opn_int(begin,end,ptr->opn1)[0]==0?1:0;
+        res.push_back(out);
+        return res;
+        break;
+    case IR::_POSI:
+        out=+PreCal_opn_int(begin,end,ptr->opn1)[0];
+        res.push_back(out);
+        return res;
+        break;
+    case IR::_NEGA:
+        out=-PreCal_opn_int(begin,end,ptr->opn1)[0];
+        res.push_back(out);
+        return res;
+    case IR::_ASSIGN_Arr:
+        index=PreCal_opn_int(begin,end,ptr->opn2)[0]/4;
+        out=PreCal_opn_int(begin,end,ptr->opn1)[index];
+        res.push_back(out);
+        return res;
+        break;
+    case IR::_ADDR:
+        return PreCal_opn_int(begin,end,ptr->opn1);
+    default:
+        return res;
+        break;
+    }
+    return res;
+}
+
 void IRBuilder::MIRprint()
 {
     IR *ir;

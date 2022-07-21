@@ -1,6 +1,5 @@
-//test array define
+const float a[2]={1,2,3,4};
+int b[a[1]+1]={a[0]+1,3};
 int main(){
-    int a=5+1.5;
-    a=5+0.5;
-    return a;
+    return b[0]+b[1];
 }

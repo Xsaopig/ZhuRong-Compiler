@@ -6,7 +6,7 @@ void OptimizerBuilder::build(vector<IR*>& IRList)
     this->IRList=IRList;
     uniqueLable(this->IRList);
     Constant(this->IRList);
-    // while(Del_DeadCode(this->IRList));
+    while(Del_DeadCode(this->IRList));
     MIRprint();
 
 }

@@ -118,6 +118,6 @@ public:
     string& newLabel();
     void MIRprint();
 };
-
+vector<int> PreCal_opn_int(vector<IR*>::iterator begin,vector<IR*>::iterator end,Opn& opn);
 
 #endif   
