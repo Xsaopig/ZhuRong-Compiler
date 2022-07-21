@@ -56,8 +56,10 @@ public:
     Array_Type(int i,Array_Type& t);
     ~Array_Type() {};
     void setBasicType(BasicType& t);//设置basictype
-    void set_elements_nums(int index,int value);
+    void set_elements_nums(int index,int value);//设置elements_nums[index]=value，同时更新value
+    int bytes_occupied();          //数组占用的字节数
     Type* Lower_one_level();      //数组降低一层
+    Type* Lower_one_level_forward();//数组降低一层，但是是elements_num从前往后降低一层
     int lev=0;                    //数组的层数
     vector<int> elements_nums;  //数组每层元素的个数，最里层元素在第一个
     BasicType basictype;        //数组的基本类型    

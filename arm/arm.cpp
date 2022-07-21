@@ -29,21 +29,26 @@ IR* find_opn_ASSIGN(vector<IR*>::iterator data_begin,vector<IR*>::iterator data_
     return nullptr;
 }
 
+string floattostring(float x){
+    string out;
+    string hex_float;
+    unsigned char* cc = (unsigned char*)&x;
+    char temp_str[3];
+    for (int j = 3; j >=0 ; j--){
+        sprintf(temp_str,"%02x",*(cc + j));
+        hex_float=hex_float+string(temp_str);
+    }
+    out=to_string(stoi(hex_float,0,16));
+    return out;
+}
+
 string out_opn(vector<IR*> IRList,vector<IR*>::iterator begin,vector<IR*>::iterator end,Opn& opn){
     string out;
     if(opn.kind==Opn::Imm){
         if(opn.is_int)
             out="\t.word "+to_string(opn.imm_int)+"\n";
-        else{
-            string hex_float;
-            unsigned char* cc = (unsigned char*)&opn.imm_float;
-            char temp_str[3];
-            for (int j = 3; j >=0 ; j--){
-                sprintf(temp_str,"%02x",*(cc + j));
-                hex_float=hex_float+string(temp_str);
-            }
-            out="\t.word "+to_string(stoi(hex_float,0,16))+"\n";
-        }
+        else
+            out="\t.word "+floattostring(opn.imm_float)+"\n";
         return out;
     }
     auto iter=end;
@@ -52,61 +57,63 @@ string out_opn(vector<IR*> IRList,vector<IR*>::iterator begin,vector<IR*>::itera
         ptr=(*iter);
         if(ptr->result==opn && ptr->op!=IR::_ALLOC) break; 
     }
-    if(ptr->op==IR::_ASSIGN) {
+    int j,offset;
+    string int_str;
+    vector<int> int_ret;
+    vector<float> float_ret;
+    switch(ptr->op)
+    {
+    case IR::_ASSIGN:
         if(ptr->opn1.kind==Opn::Imm){
             if(ptr->opn1.is_int)
                 out="\t.word "+to_string(ptr->opn1.imm_int)+"\n";
-            else{
-                string hex_float;
-                unsigned char* cc = (unsigned char*)&ptr->opn1.imm_float;
-                char temp_str[3];
-                for (int j = 3; j >=0 ; j--){
-                    sprintf(temp_str,"%02x",*(cc + j));
-                    hex_float=hex_float+string(temp_str);
-                }
-                out="\t.word "+to_string(stoi(hex_float,0,16))+"\n";
-            }
+            else
+                out="\t.word "+floattostring(opn.imm_float)+"\n";
         } 
         else if(ptr->opn1.kind==Opn::Block){
             for(int i=0;i<ptr->opn1.Block_args.size();i++){
-                out=out+out_opn(IRList,IRList.begin(),end,*ptr->opn1.Block_args[i]);
+                if(ptr->opn1.Block_args[i]->is_int){
+                    int_ret=PreCal_opn_int(IRList.begin(),end,*ptr->opn1.Block_args[i]);
+                    for(auto x:int_ret)
+                        out=out+"\t.word "+to_string(x)+"\n";
+                }
+                else{
+                    float_ret=PreCal_opn_float(IRList.begin(),end,*ptr->opn1.Block_args[i]);
+                    for(auto x:float_ret){
+                        out=out+"\t.word "+floattostring(x)+"\n";
+                    }
+                }
             }
         }
         else if(ptr->opn1.kind==Opn::Var)
             out=out_opn(IRList,IRList.begin(),end,ptr->opn1);
-    }
-    else if(ptr->op==IR::_ASSIGN_Arr){
+        break;
+    case IR::_ASSIGN_Arr:
         out=out_opn(IRList,IRList.begin(),end,ptr->opn1);
-        string int_str=out_opn(IRList,IRList.begin(),end,ptr->opn2);
+        int_str=out_opn(IRList,IRList.begin(),end,ptr->opn2);
         int_str.erase(int_str.begin(),int_str.begin()+7);
         int_str.erase(int_str.find("\n"),1);
-        int offset=atoi(int_str.c_str());
+        offset=atoi(int_str.c_str());
         for(int i=0;i<offset;i++){
-            int j=out.find("\n");
+            j=out.find("\n");
             out=out.substr(j+1,out.size()-j-1);
         }
-        int j=out.find("\n");
+        j=out.find("\n");
         out=out.substr(0,j+1);
         if(out.empty())
             out="\t.word 0\n";
-    }
-    else if(ptr->op==IR::_ADDR){
+        break;
+    case IR::_ADDR:
         out=out_opn(IRList,IRList.begin(),end,ptr->opn1);
-    }
-    else if(ptr->op==IR::_ADD){
-        int i,j;
-        string buf1=out_opn(IRList,IRList.begin(),end,ptr->opn1);
-        j=buf1.find(' ');
-        i=buf1.find('\n');
-        buf1=buf1.substr(j+1,i-j-1);
-        string buf2=out_opn(IRList,IRList.begin(),end,ptr->opn2);
-        j=buf2.find(' ');
-        i=buf2.find('\n');
-        buf2=buf2.substr(j+1,i-j-1);
+        break;
+    case IR::_NOT:
+        if(ptr->opn1.is_int)
+        break;
+    default:
+        break;
     }
     return out;
 }
-
 void generate_data_arm(vector<IR*> IRList,vector<IR*>::iterator data_begin,vector<IR*>::iterator data_end,std::ostream& out)
 {
     if(data_begin+1==data_end)

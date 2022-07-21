@@ -210,18 +210,21 @@ bool OptimizerBuilder::Constant_Propagation(vector<IR*>& irlist)//常量传播
                             ptr1->opn1=ptr->opn1;
                         else{//替换双方类型不同，需要转换
                             ptr1->opn1=ptr->opn1;
-                            (ptr1->opn1.is_int==true)
-                                ?ptr1->opn1.imm_float=ptr1->opn1.imm_int
-                                :ptr1->opn1.imm_int=ptr1->opn1.imm_float;
-                            ptr1->opn1.is_int=!ptr1->opn1.is_int;
+                            ptr1->opn1.int_float_convert();
                         }
                         res=true;
                     }
                     else if(ptr1->opn1.kind==Opn::Block)
                     {
                         for(int i=0;i<ptr1->opn1.Block_args.size();i++){
-                            if(ptr1->opn1.Block_args[i]->kind==Opn::Var && ptr1->opn1.Block_args[i]->name.compare(ptr->result.name)==0)
-                                *ptr1->opn1.Block_args[i]=ptr->opn1;
+                            if(ptr1->opn1.Block_args[i]->kind==Opn::Var && ptr1->opn1.Block_args[i]->name.compare(ptr->result.name)==0){
+                                if(ptr->opn1.is_int==ptr1->opn1.Block_args[i]->is_int)
+                                    *ptr1->opn1.Block_args[i]=ptr->opn1;
+                                else{//替换双方类型不同，需要转换
+                                    *ptr1->opn1.Block_args[i]=ptr->opn1;
+                                    ptr1->opn1.Block_args[i]->int_float_convert();
+                                }
+                            }
                         }
                     }
                     if(ptr1->opn2.kind==Opn::Var && ptr1->opn2.name.compare(ptr->result.name)==0 ){
@@ -229,12 +232,8 @@ bool OptimizerBuilder::Constant_Propagation(vector<IR*>& irlist)//常量传播
                             ptr1->opn2=ptr->opn1;
                         else{//替换双方类型不同，需要转换
                             ptr1->opn2=ptr->opn1;
-                            (ptr1->opn2.is_int==true)
-                                ?ptr1->opn2.imm_float=ptr1->opn2.imm_int
-                                :ptr1->opn2.imm_int=ptr1->opn2.imm_float;
-                            ptr1->opn2.is_int=!ptr1->opn2.is_int;
+                            ptr1->opn2.int_float_convert();
                         }
-                        ptr1->opn2=ptr->opn1;
                         res=true;
                     }
                 }

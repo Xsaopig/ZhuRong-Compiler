@@ -105,6 +105,14 @@ void Array_Type::set_elements_nums(int index,int value){
     }
 }
 
+int Array_Type::bytes_occupied()
+{
+    int res=4;
+    for(int i=0;i<elements_nums.size();i++){
+        res*=elements_nums[i];
+    }
+    return res;
+}
 
 Type* Array_Type::Lower_one_level()
 {
@@ -114,6 +122,22 @@ Type* Array_Type::Lower_one_level()
         ptr->basictype=basictype;
         ptr->elements_nums=elements_nums;
         ptr->elements_nums.pop_back();
+        ptr->lev=lev-1;
+        ptr->value=basictype.getvalue();
+        for(int i=0;i<ptr->lev;i++)
+            ptr->value+="["+to_string(ptr->elements_nums[i])+"]";
+        return ptr;
+    }
+}
+
+Type* Array_Type::Lower_one_level_forward()
+{
+    if(lev==1) return new BasicType(basictype);
+    else{
+        auto ptr=new Array_Type();
+        ptr->basictype=basictype;
+        ptr->elements_nums=elements_nums;
+        ptr->elements_nums.erase(ptr->elements_nums.begin());
         ptr->lev=lev-1;
         ptr->value=basictype.getvalue();
         for(int i=0;i<ptr->lev;i++)

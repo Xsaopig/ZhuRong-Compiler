@@ -286,6 +286,7 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
 
             /*cout<<"alloc "<<symboltable.getSymbol(T->place)->name
                 <<" : "<<offset-symboltable.getSymbol(T->place)->offset<<endl;*/
+            if(T->ptr[1]) T->ptr[1]->pretype=T->pretype;
             if(T->ptr[1]) genIR(T->ptr[1],symboltable);
             
             //常量必须赋初值
@@ -368,6 +369,7 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
             
             /*cout<<"alloc "<<symboltable.getSymbol(T->place)->name
                 <<" : "<<offset-symboltable.getSymbol(T->place)->offset<<endl;*/
+            if(T->ptr[1]) T->ptr[1]->pretype=T->pretype;
             if(T->ptr[1]) genIR(T->ptr[1],symboltable);
             
             if(T->ptr[1])//变量赋初值了
@@ -387,7 +389,7 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
                     opn3=new Opn(Opn::Imm,0);
                 else{
                     opn3=new Opn(Opn::Block,arr_opns);
-                    
+                    opn3->bytes_occupied=static_cast<Array_Type*>(T->pretype)->bytes_occupied();
                 }
                 opn3->is_int=T->pretype->is_int();
                 ir=new IR(IR::_ASSIGN,*opn3,*opn1);
@@ -460,6 +462,15 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
         case InitVals:
             if(T->ptr[0]) T->ptr[0]->level=T->level;
             if(T->ptr[1]) T->ptr[1]->level=T->level;
+
+            if(T->ptr[1]){
+                T->ptr[0]->pretype=T->pretype;
+                T->ptr[1]->pretype=static_cast<Array_Type*>(T->pretype)->Lower_one_level_forward();
+            }
+            else{
+                T->ptr[0]->pretype=static_cast<Array_Type*>(T->pretype)->Lower_one_level_forward();
+            }
+
             if(T->ptr[0]) genIR(T->ptr[0],symboltable);
             if(T->ptr[1]) genIR(T->ptr[1],symboltable);
 
@@ -482,11 +493,14 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
                 opn1=new Opn(Opn::Var,symbol->name);
                 opn1->level=symbol->level;
                 opn1->offset=symbol->offset;
+                opn1->is_int=T->pretype->is_int();
                 symbo2=symboltable.getSymbol(places[0]);
                 opn2=new Opn(Opn::Var,symbo2->name);
+                opn2->is_int=symbo2->pretype->is_int();
                 arr_opns.push_back(opn2);
                 opn3=new Opn(Opn::Block,arr_opns);
-
+                opn3->is_int=T->pretype->is_int();
+                opn3->bytes_occupied=static_cast<Array_Type*>(T->pretype)->bytes_occupied();
                 ir=new IR(IR::_ASSIGN,*opn3,*opn1);
                 IRList.push_back(ir);
                 /*cout<<symboltable.getSymbol(T->place)->name<<" = { "
@@ -496,13 +510,19 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
                 opn1=new Opn(Opn::Array,symbol->name);
                 opn1->level=symbol->level;
                 opn1->offset=symbol->offset;
+                opn1->is_int=T->pretype->is_int();
                 for(int i=places.size()-1;i>=0;i--){
                     symbo3=symboltable.getSymbol(places[i]);
                     opn3=new Opn(Opn::Var,symbo3->name);
+                    opn3->is_int=symbo3->pretype->is_int();
+                    if(opn3->is_int!=T->pretype->is_int())
+                        opn3->int_float_convert();
                     arr_opns.push_back(opn3);
                 }
 
                 opn2=new Opn(Opn::Block,arr_opns);
+                opn2->bytes_occupied=static_cast<Array_Type*>(T->pretype)->bytes_occupied();
+                opn2->is_int=T->pretype->is_int();
                 ir=new IR(IR::_ASSIGN,*opn2,*opn1);
                 IRList.push_back(ir);
 
@@ -516,10 +536,12 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
         case InitVal:
             if(T->ptr[0]) {
                 T->ptr[0]->out=true;
+                if(T->ptr[0]->kind==InitVals)
+                    T->ptr[0]->pretype=T->pretype;
                 genIR(T->ptr[0],symboltable);
                 T->place=T->ptr[0]->place;
             }
-            else{
+            else{// InitVal: {}
                 T->place=newtemp(T->pretype,T->level,offset);
                 offset+=4;
 
@@ -527,8 +549,10 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
                 opn1=new Opn(Opn::Array,symbol->name);
                 opn1->level=symbol->level;
                 opn1->offset=symbol->offset;
-
+                opn1->is_int=T->pretype->is_int();
                 opn2=new Opn(Opn::Block,arr_opns);
+                opn2->bytes_occupied=static_cast<Array_Type*>(T->pretype)->bytes_occupied();
+                opn2->is_int=T->pretype->is_int();
                 ir=new IR(IR::_ASSIGN,*opn2,*opn1);
                 IRList.push_back(ir);
                 //cout<<symboltable.getSymbol(T->place)->name<<" = { }"<<endl;
@@ -766,6 +790,7 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
                         IRList.push_back(ir);
                         //cout<<symboltable.getSymbol(T->offset)->name<<" = "<<T->ptr[0]->width<<" * "<<symboltable.getSymbol(T->ptr[0]->offset)->name<<endl;
 
+                        
                         T->place=newtemp(new BasicType("int"),T->level,offset);
                         offset+=4;
 
@@ -776,6 +801,7 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
 
                         symbo3=symboltable.getSymbol(T->place);
                         opn3=new Opn(Opn::Var,symbo3->name);
+                        T->array=symboltable.getSymbol(symboltable.Search(string(T->type_id)));
                         opn3->is_int=T->array->pretype->is_int();
                         opn3->level=symbo3->level;
                         opn3->offset=symbo3->offset;
@@ -1201,8 +1227,14 @@ vector<int> PreCal_opn_int(vector<IR*>::iterator begin,vector<IR*>::iterator end
             return PreCal_opn_int(begin,end,ptr->opn1);
         else if(ptr->opn1.kind==Opn::Block){
             for(int i=0;i<ptr->opn1.Block_args.size();i++){
-                out=PreCal_opn_int(begin,end,*ptr->opn1.Block_args[i])[0];
-                res.push_back(out);
+                auto block_res=PreCal_opn_int(begin,end,*ptr->opn1.Block_args[i]);
+                for(auto x:block_res) res.push_back(x);
+            }
+            while(res.size()*4<ptr->opn1.bytes_occupied){
+                res.push_back(0);
+            }
+            while(res.size()*4>ptr->opn1.bytes_occupied){
+                res.pop_back();
             }
             return res;
         }
@@ -1260,6 +1292,133 @@ vector<int> PreCal_opn_int(vector<IR*>::iterator begin,vector<IR*>::iterator end
     }
     return res;
 }
+
+vector<float> PreCal_opn_float(vector<IR*>::iterator begin,vector<IR*>::iterator end,Opn& opn)
+{
+    float out;
+    int index;
+    vector<float> res;
+    if(end==begin) return res;
+
+    if(opn.kind==Opn::Imm){
+
+        out=(opn.is_int)?opn.imm_int:opn.imm_float;
+        res.push_back(out);
+        return res;
+    }
+    auto iter=end;
+    auto ptr=(*iter);
+    for(;iter!=begin;iter--){
+        ptr=(*iter);
+        if(ptr->result==opn && ptr->op!=IR::_ALLOC) break; 
+    }
+    if(ptr->result==opn){
+        iter--;
+        end=iter;
+    }
+    else {
+        iter=begin;
+        end=begin;
+        ptr=*begin;
+    }
+
+    //这时ptr->result已经就是opn了
+    //ptr指向opn被最后赋值的一条语句
+    switch (ptr->op)
+    {
+    case IR::_ASSIGN:
+        if(ptr->opn1.kind==Opn::Imm){
+            if(ptr->opn1.is_int)
+                ptr->opn1.int_float_convert();
+            out=(ptr->opn1.is_int)?ptr->opn1.imm_int:ptr->opn1.imm_float;
+            res.push_back(out);
+            return res;
+        }
+        else if(ptr->opn1.kind==Opn::Var){
+            if(ptr->opn1.is_int)
+                ptr->opn1.int_float_convert();
+            return PreCal_opn_float(begin,end,ptr->opn1);
+        }
+        else if(ptr->opn1.kind==Opn::Block){
+            for(int i=0;i<ptr->opn1.Block_args.size();i++){
+                if(ptr->opn1.Block_args[i]->is_int)
+                    ptr->opn1.Block_args[i]->int_float_convert();
+                auto block_res=PreCal_opn_float(begin,end,*ptr->opn1.Block_args[i]);
+                for(auto x:block_res) res.push_back(x);
+            }
+            while(res.size()*4<ptr->opn1.bytes_occupied){
+                res.push_back(0);
+            }
+            while(res.size()*4>ptr->opn1.bytes_occupied){
+                res.pop_back();
+            }
+            return res;
+        }
+        break;
+    case IR::_ADD:
+        if(ptr->opn1.is_int) ptr->opn1.int_float_convert();
+        if(ptr->opn2.is_int) ptr->opn2.int_float_convert();
+        out=PreCal_opn_float(begin,end,ptr->opn1)[0]+PreCal_opn_float(begin,end,ptr->opn2)[0];
+        res.push_back(out);
+        return res;
+        break;
+    case IR::_SUB:
+        if(ptr->opn1.is_int) ptr->opn1.int_float_convert();
+        if(ptr->opn2.is_int) ptr->opn2.int_float_convert();
+        out=PreCal_opn_float(begin,end,ptr->opn1)[0]-PreCal_opn_float(begin,end,ptr->opn2)[0];
+        res.push_back(out);
+        return res;
+        break;
+    case IR::_MUL:
+        if(ptr->opn1.is_int) ptr->opn1.int_float_convert();
+        if(ptr->opn2.is_int) ptr->opn2.int_float_convert();
+        out=PreCal_opn_float(begin,end,ptr->opn1)[0]*PreCal_opn_float(begin,end,ptr->opn2)[0];
+        res.push_back(out);
+        return res;
+        break;
+    case IR::_DIV:
+        if(ptr->opn1.is_int) ptr->opn1.int_float_convert();
+        if(ptr->opn2.is_int) ptr->opn2.int_float_convert();
+        out=PreCal_opn_float(begin,end,ptr->opn1)[0]/PreCal_opn_float(begin,end,ptr->opn2)[0];
+        res.push_back(out);
+        return res;
+        break;
+    case IR::_NOT:
+        if(ptr->opn1.is_int) ptr->opn1.int_float_convert();
+        if(ptr->opn2.is_int) ptr->opn2.int_float_convert();
+        out=PreCal_opn_float(begin,end,ptr->opn1)[0]==0?1:0;
+        res.push_back(out);
+        return res;
+        break;
+    case IR::_POSI:
+        if(ptr->opn1.is_int) ptr->opn1.int_float_convert();
+        if(ptr->opn2.is_int) ptr->opn2.int_float_convert();
+        out=+PreCal_opn_float(begin,end,ptr->opn1)[0];
+        res.push_back(out);
+        return res;
+        break;
+    case IR::_NEGA:
+        if(ptr->opn1.is_int) ptr->opn1.int_float_convert();
+        if(ptr->opn2.is_int) ptr->opn2.int_float_convert();
+        out=-PreCal_opn_float(begin,end,ptr->opn1)[0];
+        res.push_back(out);
+        return res;
+    case IR::_ASSIGN_Arr:
+        index=PreCal_opn_int(begin,end,ptr->opn2)[0]/4;
+        out=PreCal_opn_float(begin,end,ptr->opn1)[index];
+        res.push_back(out);
+        return res;
+        break;
+    case IR::_ADDR:
+        return PreCal_opn_float(begin,end,ptr->opn1);
+    default:
+        return res;
+        break;
+    }
+    return res;
+}
+
+
 
 void IRBuilder::MIRprint()
 {

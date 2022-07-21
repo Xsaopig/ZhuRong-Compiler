@@ -23,14 +23,14 @@ public:
     enum opn_kind kind;
     std::string name;
 
-    bool is_int=0;
+    bool is_int=1;
     int imm_int=-1;
     float imm_float=-2;
 
     Opn *array_offset;          //当操作数为Array类型时，指向表示偏移量的操作数
 
     vector<Opn*> Block_args;    //当操作数为Block类型时，指向{}内的各操作数
-    int zero_nums;              //当操作数为空的Block类型时，即为{}时，Block中应包含的0个数
+    int bytes_occupied;              //当操作数为Block类型时，该占用的字节数
 
     int level;                  //变量的层号，0表示是全局变量，数据保存在静态数据区
     int offset;                 //变量单元偏移量，目标代码生成时用
@@ -43,6 +43,20 @@ public:
     Opn(enum opn_kind k,vector<Opn*> m):kind(k),Block_args(m) {}
 
     Opn(enum opn_kind k,string n,int l,int o,int p):kind(k),name(n),level(l),offset(o),place(p){}
+    bool int_float_convert()
+    {
+        if(kind==Imm){
+            if(is_int) imm_float=imm_int;
+            else imm_int=imm_float;
+            is_int=!is_int;
+            return true;
+        }
+        else if(kind==Var){
+            is_int=!is_int;
+            return true;
+        }else
+            return false;
+    }
     bool operator==(const Opn& a)
     {
         // if(a.kind!=kind) return false;
@@ -118,6 +132,6 @@ public:
     string& newLabel();
     void MIRprint();
 };
-vector<int> PreCal_opn_int(vector<IR*>::iterator begin,vector<IR*>::iterator end,Opn& opn);
+vector<int> PreCal_opn_int(vector<IR*>::iterator begin,vector<IR*>::iterator end,Opn& opn);//在begin和end之间提前计算opn的值
 
 #endif   
