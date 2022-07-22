@@ -3,7 +3,8 @@ int b[3]={1,2,3};
 int get(int x){
     return x+1;
 }
+int c=1;
+float d[3]={1,2,3};
 int main(){
-    int a=get(3);
-    return a;
+    return a+c+b[0]+d[0];
 }

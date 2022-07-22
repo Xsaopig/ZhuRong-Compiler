@@ -266,7 +266,7 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
                 opn1=new Opn(Opn::Array,symbol->name);
                 //IR_kind=Opn::Array;
             }
-            
+            opn1->is_int=T->pretype->is_int();
             opn1->level=symbol->level;
             opn1->offset=symbol->offset;
             i=offset-symbol->offset;

@@ -64,11 +64,14 @@ public:
         else if(kind==Imm) return (is_int!=a.is_int)?false:((is_int)?imm_int==a.imm_int:imm_float==a.imm_float);
         else return false;
     };
-    bool is_Int() {return is_int;}
+
     bool is_Var() {return kind==Var;}
-    bool is_Label() {return kind==Label;}
-    bool is_Block() {return kind==Block;}
     bool is_Imm() {return kind==Imm;}
+    bool is_Array() {return kind==Array;}
+    bool is_Block() {return kind==Block;}
+    bool is_Func()  {return kind==Func;}
+    bool is_Null()  {return kind==Null;}
+    bool is_Label() {return kind==Label;}
 };
 
 

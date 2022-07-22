@@ -28,17 +28,42 @@ void generate_function_arm(vector<IR*> IRList,vector<IR*>::iterator function_beg
     //初始化每条指令对应的时间，从begin到end依次是1,2,3......
     //即给每条指令编号
     for (auto it = function_begin; it != function_end; it++) {
-        auto& ir = *it;
-        ctx.init_ir_to_time(ir);
+        ctx.init_ir_to_time(*it);
+    }
+
+    //初始化每个变量定义的时间
+    for (auto it = function_begin; it != function_end; it++) {
+        ctx.init_var_define_to_time(*it);
+    }
+
+    //初始化每个变量最后使用的时间
+    for (auto it = function_begin; it != function_end; it++) {
+        ctx.init_var_lastused_to_time(*it);
+    }
+
+    //在栈中分配空间
+    // for (auto it = function_begin; it != function_end; it++) {
+    //     auto &ir=*it;
+    //     if(ir->op==IR::_ALLOC){
+
+    //     }
+    // }
+
+    //寄存器分配
+    for(const auto & i :ctx.time_to_var_define){
+        int cur_time=i.first;
+        auto var_name=i.second;
     }
 
 
+
+    string funcname;//函数名
 //开始逐条翻译指令
 for (auto it = function_begin; it != function_end; it++) {
     auto& ir = *it;
 
     if(ir->op==IR::_FUNC){// define function opn1
-        string funcname=(*function_begin)->opn1.name;
+        funcname=(*function_begin)->opn1.name;
         out<<"\t.text"<<endl;
         out<<"\t.align 1"<<endl;
         out<<"\t.global "<<funcname<<endl;
@@ -105,6 +130,7 @@ for (auto it = function_begin; it != function_end; it++) {
     }
         
 }
+    out<<"\t.size "<<funcname<<", .-"<<funcname<<endl;
 }
 
 
