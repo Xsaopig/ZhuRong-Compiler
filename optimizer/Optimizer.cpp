@@ -399,7 +399,7 @@ void OptimizerBuilder::MIRprint()
                         cout<<"\t"<<ir->result.name<<" = "<<ir->opn1.imm_float<<endl;
                     }
                 }
-                else if(ir->opn1.kind==Opn::Var){
+                else if(ir->opn1.kind==Opn::Var  || ir->opn1.kind==Opn::Array){
                         cout<<"\t"<<ir->result.name<<" = "<<ir->opn1.name<<endl;
                 }
                 else if(ir->opn1.kind==Opn::Block){

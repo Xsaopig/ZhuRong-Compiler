@@ -121,3 +121,73 @@ void Context::init_var_lastused_to_time(IR* ir)
             break;
     }
 }
+
+void Context::clear_inactive_intervals(int cur_time){
+    for(int i=0;i<reg_count;i++){
+        if(!used_reg[i]) continue;
+        //寄存器i正在被使用
+        if( reg_to_var.find(i) == reg_to_var.end() 
+            || var_lastused_to_time.find(reg_to_var[i]) == var_lastused_to_time.end()
+            || cur_time >= var_lastused_to_time[reg_to_var[i]])//当前时间大于变量最后一次使用的时间
+        {
+            used_reg[i]=0;
+            reg_to_var.erase(i);
+        }
+    }
+}
+
+int Context::find_free_reg(int begin)
+{
+    // 检测空闲寄存器
+    for (int i = begin; i < reg_count; i++){
+        if (used_reg[i] == 0)  return i;
+    }
+    return -1;
+}
+
+int Context::get_new_reg(int begin)
+{
+    // 检测空闲寄存器
+    for (int i = begin; i < reg_count; i++){
+        if (used_reg[i] == 0)  return i;
+    }
+    //没有检测到空闲寄存器，选择一个寄存器溢出
+    //选择的是当前寄存器中所有变量最后一次使用时间最晚的那个
+    int id=begin;
+    for(int i=begin;i<reg_count;i++){
+        if( var_lastused_to_time[reg_to_var[i]] >
+            var_lastused_to_time[reg_to_var[id]])
+        id=i;
+    }
+    overflow_reg(id);
+    used_reg[id]=1;
+    return id;
+}
+
+void Context::overflow_reg(int id)
+{
+    if(!used_reg[id])//寄存器id不在使用
+        return;
+    overflow_var(reg_to_var[id],4);
+}
+
+void Context::overflow_var(string name,int bytes)
+{
+    if(var_to_reg.count(name)){//变量在寄存器中
+        int reg_id=var_to_reg[name];
+        used_reg[reg_id]=0;
+        var_to_reg.erase(name);
+        reg_to_var.erase(reg_id);
+    }
+    stack_offset[name]=stack_occupied[2];
+    stack_occupied[2]+=bytes;
+}
+
+void Context::load_imm_int(string reg, int value, ostream& out)
+{
+    if (value >= 0 && value < 65536)
+        out << "\tMOV " << reg << ", #" << value << endl;
+    else
+        out << "\tMOV32 " << reg << ", " << value << endl;
+}
+

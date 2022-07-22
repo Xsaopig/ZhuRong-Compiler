@@ -41,19 +41,34 @@ void generate_function_arm(vector<IR*> IRList,vector<IR*>::iterator function_beg
         ctx.init_var_lastused_to_time(*it);
     }
 
-    //在栈中分配空间
-    // for (auto it = function_begin; it != function_end; it++) {
-    //     auto &ir=*it;
-    //     if(ir->op==IR::_ALLOC){
-
-    //     }
-    // }
+    //在栈中分配空间,专门给数组分配空间
+    for (auto it = function_begin; it != function_end; it++) {
+        auto &ir=*it;
+        if(ir->op==IR::_ALLOC && ir->result.is_Imm() && ir->result.imm_int>4){
+            ctx.stack_offset[ir->opn1.name]=ctx.stack_occupied[2];
+            ctx.stack_occupied[2] += ir->result.imm_int;
+        }
+    }
 
     //寄存器分配
-    for(const auto & i :ctx.time_to_var_define){
-        int cur_time=i.first;
-        auto var_name=i.second;
-    }
+    // for(const auto & i :ctx.time_to_var_define)//按Var定义的时间从小到大遍历
+    // {
+    //     int cur_time=i.first;
+    //     auto var_name=i.second;
+    //     ctx.clear_inactive_intervals(cur_time);//清楚非活跃区间
+
+    //     if(ctx.var_in_reg(var_name)){//变量如果已经在寄存器中了？？
+    //         continue;
+    //     } else {
+    //         bool conflict = false;
+    //         int latest=ctx.var_lastused_to_time[var_name];//当前变量的最后一次使用时间
+    //         for(auto &j :ctx.time_to_var_define){//需要遍历的是：定义时间<=当前时间 且>latest 之间的变量
+    //             if(j.first<=cur_time) continue;
+    //             if(j.first>latest) break;
+    //         }
+    //     }
+
+    // }
 
 
 
@@ -61,6 +76,7 @@ void generate_function_arm(vector<IR*> IRList,vector<IR*>::iterator function_beg
 //开始逐条翻译指令
 for (auto it = function_begin; it != function_end; it++) {
     auto& ir = *it;
+    auto& stack_size=ctx.stack_occupied;
 
     if(ir->op==IR::_FUNC){// define function opn1
         funcname=(*function_begin)->opn1.name;
@@ -74,11 +90,16 @@ for (auto it = function_begin; it != function_end; it++) {
         out<<"\t.fpu vfp"<<endl;
         out<<"\t.type "<<funcname<<", %function"<<endl;
         out<<funcname<<":"<<endl;
-
+        if(stack_size[0]+stack_size[1]+stack_size[2]+stack_size[3]>256){
+            ctx.load_imm_int("r12",stack_size[0]+stack_size[1]+stack_size[2]+stack_size[3],out);
+            out<<"\tSUB sp, sp, r12"<<endl;
+        }else {
+            out<<"\tSUB sp, sp, #"<<stack_size[0]+stack_size[1]+stack_size[2]+stack_size[3]<<endl;
+        }
     }else if(ir->op==IR::_VOID){// 无用指令
-        
+        //do nothing
     }else if(ir->op==IR::_ALLOC){// alloc opn1(变量名) : result(字节数)
-    
+        //
     }else if(ir->op==IR::_LABEL){// opn1 :
         
     }else if(ir->op==IR::_ADDR){// result = &opn1

@@ -24,7 +24,7 @@ vector<BasicBlock> buildBlocks(vector<IR*> IRList)
                 break;
             case IR::_RET:
                 flag[index]=2;
-            //     if(index+1<n) flag[index+1]=1;
+                if(index+1<n) flag[index+1]=1;
                 break;
             case IR::_FUNC_END:
                 flag[index]=2;

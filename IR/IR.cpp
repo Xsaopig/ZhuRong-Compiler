@@ -376,7 +376,10 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
             if(T->ptr[1])//变量赋初值了
             {
                 symbo2=symboltable.getSymbol(T->ptr[1]->place);
-                opn3=new Opn(Opn::Var,symbo2->name);
+                if(T->ptr[1]->pretype->is_Array_Type())
+                    opn3=new Opn(Opn::Array,symbo2->name);
+                else 
+                    opn3=new Opn(Opn::Var,symbo2->name);
                 ir=new IR(IR::_ASSIGN,*opn3,*opn1);
                 IRList.push_back(ir);
 
@@ -491,7 +494,7 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
             symbol=symboltable.getSymbol(T->place);
             if(places.size()==1){
 
-                opn1=new Opn(Opn::Var,symbol->name);
+                opn1=new Opn(Opn::Array,symbol->name);
                 opn1->level=symbol->level;
                 opn1->offset=symbol->offset;
                 opn1->is_int=T->pretype->is_int();
@@ -569,10 +572,12 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
             {
                 symbol=symboltable.getSymbol(T->ptr[0]->place);
                 opn1=new Opn(Opn::Var,symbol->name);
+                opn1->is_int=symbol->pretype->is_int();
                 opn1->level=symbol->level;
                 opn1->offset=symbol->offset;
                 symbo2=symboltable.getSymbol(T->ptr[1]->place);
                 opn2=new Opn(Opn::Var,symbo2->name);
+                opn2->is_int=symbo2->pretype->is_int();
                 opn2->level=symbo2->level;
                 opn2->offset=symbo2->offset;
                 ir=new IR(IR::_ASSIGN,*opn2,*opn1);
@@ -583,13 +588,16 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
             else{
                 symbol=symboltable.getSymbol(T->ptr[0]->base_addr);
                 opn1=new Opn(Opn::Array,symbol->name);
+                opn1->is_int=true;
                 opn1->level=symbol->level;
                 opn1->offset=symbol->offset;
                 symbo2=symboltable.getSymbol(T->ptr[0]->offset);
                 opn2=new Opn(Opn::Var,symbo2->name);
+                opn2->is_int=true;
 
                 symbo3=symboltable.getSymbol(T->ptr[1]->place);
                 opn3=new Opn(Opn::Var,symbo3->name);
+                opn3->is_int=symbo3->pretype->is_int();
                 opn3->level=symbo3->level;
                 opn3->offset=symbo3->offset;
 
@@ -954,6 +962,7 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
             opn2=new Opn(Opn::Var,symbo2->name);
             opn2->level=symbo2->level;
             opn2->offset=symbo2->offset;
+            opn1->is_int=T->ptr[1]->pretype->is_int();
 
             symbo3=symboltable.getSymbol(T->place);
             opn3=new Opn(Opn::Var,symbo3->name);
@@ -980,17 +989,19 @@ void IRBuilder::genIR(struct node *T,Symboltable &symboltable)
             opn1=new Opn(Opn::Var,symbol->name);
             opn1->level=symbol->level;
             opn1->offset=symbol->offset;
-            if(T->pretype->getvalue().compare("int")==0)
-                opn1->is_int=true;
+            opn1->is_int=symbol->pretype->is_int();
+            
             symbo2=symboltable.getSymbol(T->ptr[1]->place);
             opn2=new Opn(Opn::Var,symbo2->name);
             opn2->level=symbo2->level;
             opn2->offset=symbo2->offset;
+            opn2->is_int=symbo2->pretype->is_int();
+
             symbo3=symboltable.getSymbol(T->place);
             opn3=new Opn(Opn::Var,symbo3->name);
             opn3->level=symbo3->level;
             opn3->offset=symbo3->offset;
-
+            opn3->is_int=T->pretype->is_int();
             temp_str=string(T->op);
             if(!temp_str.compare("*")) ir=new IR(IR::_MUL,*opn1,*opn2,*opn3);
             if(!temp_str.compare("/")) ir=new IR(IR::_DIV,*opn1,*opn2,*opn3);
@@ -1519,7 +1530,7 @@ void IRBuilder::MIRprint()
                         cout<<"\t"<<ir->result.name<<" = "<<ir->opn1.imm_float<<endl;
                     }
                 }
-                else if(ir->opn1.kind==Opn::Var){
+                else if(ir->opn1.kind==Opn::Var  || ir->opn1.kind==Opn::Array){
                         cout<<"\t"<<ir->result.name<<" = "<<ir->opn1.name<<endl;
                 }
                 else if(ir->opn1.kind==Opn::Block){
