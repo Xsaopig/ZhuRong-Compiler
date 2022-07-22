@@ -2,7 +2,8 @@
 void generate_arm(vector<IR*> IRList,std::ostream& out)
 {
     out<<"\t.arch armv7"<<endl;
-    out<<"\t.file	\""<<filename<<"\""<<endl;
+    out<<"\t.file \""<<filename<<"\""<<endl;
+    out<<"\t.text"<<endl;
     vector<IR*>::iterator func_begin,data_begin;
     for(auto iter=IRList.begin();iter!=IRList.end();iter++){
         auto &ir=*iter;
@@ -18,6 +19,94 @@ void generate_arm(vector<IR*> IRList,std::ostream& out)
 
     }
 }
+
+
+void generate_function_arm(vector<IR*> IRList,vector<IR*>::iterator function_begin,vector<IR*>::iterator function_end,std::ostream& out)
+{
+    Context ctx(IRList,function_begin,function_end);
+
+    //初始化每条指令对应的时间，从begin到end依次是1,2,3......
+    //即给每条指令编号
+    for (auto it = function_begin; it != function_end; it++) {
+        auto& ir = *it;
+        ctx.init_ir_to_time(ir);
+    }
+
+
+//开始逐条翻译指令
+for (auto it = function_begin; it != function_end; it++) {
+    auto& ir = *it;
+
+    if(ir->op==IR::_FUNC){// define function opn1
+        string funcname=(*function_begin)->opn1.name;
+        out<<"\t.text"<<endl;
+        out<<"\t.align 1"<<endl;
+        out<<"\t.global "<<funcname<<endl;
+        out<<"\t.arch armv7"<<endl;
+        out<<"\t.syntax unified"<<endl;
+        out<<"\t.thumb"<<endl;
+        out<<"\t.thumb_func"<<endl;
+        out<<"\t.fpu vfp"<<endl;
+        out<<"\t.type "<<funcname<<", %function"<<endl;
+        out<<funcname<<":"<<endl;
+
+    }else if(ir->op==IR::_VOID){// 无用指令
+        
+    }else if(ir->op==IR::_ALLOC){// alloc opn1(变量名) : result(字节数)
+    
+    }else if(ir->op==IR::_LABEL){// opn1 :
+        
+    }else if(ir->op==IR::_ADDR){// result = &opn1
+        
+    }else if(ir->op==IR::_ADD){// result = opn1 + opn2
+        
+    }else if(ir->op==IR::_SUB){// result = opn1 - opn2
+        
+    }else if(ir->op==IR::_MUL){// result = opn1 * opn2
+        
+    }else if(ir->op==IR::_DIV){// result = opn1 / opn2
+        
+    }else if(ir->op==IR::_MOD){// result = opn1 % opn2
+        
+    }else if(ir->op==IR::_ASSIGN){// result = opn1
+        
+    }else if(ir->op==IR::_Arr_ASSIGN){//opn1[opn2]=result
+        
+    }else if(ir->op==IR::_ASSIGN_Arr){//result=opn1[opn2]
+        
+    }else if(ir->op==IR::_NOT){// result = ! opn1
+        
+    }else if(ir->op==IR::_POSI){// result = + opn1
+        
+    }else if(ir->op==IR::_NEGA){// result = - opn1
+        
+    }else if(ir->op==IR::_GOTO){// goto opn1
+        
+    }else if(ir->op==IR::_JEQ){// if opn1 == opn2 goto result
+        
+    }else if(ir->op==IR::_JNE){// if opn1 != opn2 goto result
+        
+    }else if(ir->op==IR::_JLT){// if opn1 < opn2 goto result
+        
+    }else if(ir->op==IR::_JGT){// if opn1 > opn2 goto result
+        
+    }else if(ir->op==IR::_JLE){// if opn1 <= opn2 goto result
+        
+    }else if(ir->op==IR::_JGE){// if opn1 >= opn2 goto result
+        
+    }else if(ir->op==IR:: _FUNC_END){//函数结束后的一条指令，没有其他含义
+        
+    }else if(ir->op==IR::_PARAM){// param opn1
+        
+    }else if(ir->op==IR::_CALL){// [result =] call opn1(函数) , opn2(参数个数)
+        
+    }else if(ir->op==IR::_RET){// return [opn1]
+        
+    }
+        
+}
+}
+
 
 IR* find_opn_ASSIGN(vector<IR*>::iterator data_begin,vector<IR*>::iterator data_end,Opn& opn)
 {
@@ -40,6 +129,62 @@ string floattostring(float x){
     }
     out=to_string(stoi(hex_float,0,16));
     return out;
+}
+
+void generate_data_arm(vector<IR*> IRList,vector<IR*>::iterator data_begin,vector<IR*>::iterator data_end,std::ostream& out)
+{
+    if(data_begin+1==data_end)
+        return;
+    out<<endl;
+    int size;//符号的字节数
+    string name;//符号名
+    bool is_int;//是否为int类型
+    auto iter=data_begin;
+    for(;iter!=data_end;iter++)//找到ALLOC语句
+        if((*iter)->op==IR::_ALLOC) break;
+    name=(*iter)->opn1.name;
+    if((*iter)->result.kind==Opn::Imm)
+        size=(*iter)->result.imm_int;
+    else{
+        string buffer=out_opn(IRList,IRList.begin(),data_end,(*iter)->result);
+        int j=buffer.find("\n");
+        buffer=buffer.substr(j+1,buffer.size()-j-1);
+        j=buffer.find("\n");
+        buffer=buffer.substr(0,j+1);
+    }
+    is_int=(*iter)->opn1.is_int;
+    out<<"\t.global "<<name<<endl;
+    out<<"\t.align 2"<<endl;
+    out<<"\t.type "<<name<<",\%object"<<endl;
+    out<<"\t.data"<<endl;//好像sysy要求没有显示初始化的全局变量，要初始化为0，所以放在.data区
+    out<<"\t.size "<<name<<", "<<size<<endl;
+    //接下来是赋值,下例中word就是字(32位，4个字节),“.word”代表这个字的值,.space代表未被赋值的字节数()
+    // not:
+	// .word	0
+	// .word	1073741824
+	// .word	1077936128
+	// .space	4
+    out<<name<<":"<<endl;
+    // out<<out_opn(IRList,data_begin,data_end,(*iter)->opn1)<<endl;
+    auto ptr=find_opn_ASSIGN(data_begin,data_end,(*iter)->opn1);
+    if (ptr==nullptr || (ptr->opn1.kind==Opn::Block && ptr->opn1.Block_args.size()==0) ){//没有初始化的全局变量
+        out<<"\t.space "<<size<<endl;
+    }else{
+        string buffer=out_opn(IRList,data_begin,data_end,ptr->opn1);
+        int n=count(buffer.begin(),buffer.end(),'\n');
+        if(n>size/4){
+            while(n*4>size){
+                int j=buffer.find_last_of("\t");
+                buffer=buffer.substr(0,j);
+                n--;
+            }
+        }
+        else if(n<size/4){
+            buffer+="\t.space "+to_string(size-4*n)+"\n";
+        }
+        out<<buffer<<endl;
+    }
+    
 }
 
 string out_opn(vector<IR*> IRList,vector<IR*>::iterator begin,vector<IR*>::iterator end,Opn& opn){
@@ -113,63 +258,4 @@ string out_opn(vector<IR*> IRList,vector<IR*>::iterator begin,vector<IR*>::itera
         break;
     }
     return out;
-}
-void generate_data_arm(vector<IR*> IRList,vector<IR*>::iterator data_begin,vector<IR*>::iterator data_end,std::ostream& out)
-{
-    if(data_begin+1==data_end)
-        return;
-    out<<endl;
-    int size;//符号的字节数
-    string name;//符号名
-    bool is_int;//是否为int类型
-    auto iter=data_begin;
-    for(;iter!=data_end;iter++)//找到ALLOC语句
-        if((*iter)->op==IR::_ALLOC) break;
-    name=(*iter)->opn1.name;
-    if((*iter)->result.kind==Opn::Imm)
-        size=(*iter)->result.imm_int;
-    else{
-        string buffer=out_opn(IRList,IRList.begin(),data_end,(*iter)->result);
-        int j=buffer.find("\n");
-        buffer=buffer.substr(j+1,buffer.size()-j-1);
-        j=buffer.find("\n");
-        buffer=buffer.substr(0,j+1);
-    }
-    is_int=(*iter)->opn1.is_int;
-    out<<"\t.global "<<name<<endl;
-    out<<"\t.type "<<name<<",\%object"<<endl;
-    out<<"\t.data"<<endl;//好像sysy要求没有显示初始化的全局变量，要初始化为0，所以放在.data区
-    out<<"\t.size "<<name<<", "<<size<<endl;
-    //接下来是赋值,下例中word就是字(32位，4个字节),“.word”代表这个字的值,.space代表未被赋值的字节数()
-    // not:
-	// .word	0
-	// .word	1073741824
-	// .word	1077936128
-	// .space	4
-    out<<name<<":"<<endl;
-    // out<<out_opn(IRList,data_begin,data_end,(*iter)->opn1)<<endl;
-    auto ptr=find_opn_ASSIGN(data_begin,data_end,(*iter)->opn1);
-    if (ptr==nullptr || (ptr->opn1.kind==Opn::Block && ptr->opn1.Block_args.size()==0) ){//没有初始化的全局变量
-        out<<"\t.space "<<size<<endl;
-    }else{
-        string buffer=out_opn(IRList,data_begin,data_end,ptr->opn1);
-        int n=count(buffer.begin(),buffer.end(),'\n');
-        if(n>size/4){
-            while(n*4>size){
-                int j=buffer.find_last_of("\t");
-                buffer=buffer.substr(0,j);
-                n--;
-            }
-        }
-        else if(n<size/4){
-            buffer+="\t.space "+to_string(size-4*n)+"\n";
-        }
-        out<<buffer<<endl;
-    }
-    
-}
-
-void generate_function_arm(vector<IR*> IRList,vector<IR*>::iterator function_begin,vector<IR*>::iterator function_end,std::ostream& out)
-{
-
 }

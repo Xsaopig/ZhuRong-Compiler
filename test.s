@@ -10,3 +10,76 @@
 	.eabi_attribute 34, 1
 	.eabi_attribute 18, 4
 	.file	"test.c"
+	
+	.text
+
+	.global	a
+	.data
+	.align	2
+	.type	a, %object
+	.size	a, 4
+a:
+	.word	1
+	.global	b
+	.align	2
+	.type	b, %object
+	.size	b, 12
+b:
+	.word	1
+	.word	2
+	.word	3
+
+	
+	.text
+
+	.align	1
+	.global	get
+	.arch armv7
+	.syntax unified
+	.thumb
+	.thumb_func
+	.fpu vfp
+	.type	get, %function
+get:
+	@ args = 0, pretend = 0, frame = 8
+	@ frame_needed = 1, uses_anonymous_args = 0
+	@ link register save eliminated.
+	push	{r7}
+	sub	sp, sp, #12
+	add	r7, sp, #0
+	str	r0, [r7, #4]
+	ldr	r3, [r7, #4]
+	adds	r3, r3, #1
+	mov	r0, r3
+	adds	r7, r7, #12
+	mov	sp, r7
+	@ sp needed
+	ldr	r7, [sp], #4
+	bx	lr
+	.size	get, .-get
+
+
+
+	.align	1
+	.global	main
+	.syntax unified
+	.thumb
+	.thumb_func
+	.fpu vfp
+	.type	main, %function
+main:
+	@ args = 0, pretend = 0, frame = 8
+	@ frame_needed = 1, uses_anonymous_args = 0
+	push	{r7, lr}
+	sub	sp, sp, #8
+	add	r7, sp, #0
+	movs	r0, #3
+	bl	get
+	str	r0, [r7, #4]
+	ldr	r3, [r7, #4]
+	mov	r0, r3
+	adds	r7, r7, #8
+	mov	sp, r7
+	@ sp needed
+	pop	{r7, pc}
+	.size	main, .-main

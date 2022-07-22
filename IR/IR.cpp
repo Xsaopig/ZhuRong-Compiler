@@ -12,7 +12,7 @@ void IRBuilder::Build(struct node *T)
 int IRBuilder::newtemp(Type *pretype,int level,int offset)//不知道就填0
 {
     Symbol x;
-    x.name="t"+to_string(no++);
+    x.name="%"+to_string(no++);
     x.flag='T';
     x.level=level;
     x.offset=offset;
