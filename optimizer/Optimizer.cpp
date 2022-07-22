@@ -5,7 +5,13 @@ void OptimizerBuilder::build(vector<IR*>& IRList)
     cout<<"开始优化"<<endl;
     this->IRList=IRList;
     uniqueLable(this->IRList);
-    Constant(this->IRList);
+    auto blocks=buildBlocks(this->IRList);
+    for(auto& block:blocks)
+    {
+        Constant(block.irlist);
+    }
+    this->IRList=blocksToIRList(blocks);
+    // Constant(this->IRList);
     while(Del_DeadCode(this->IRList));
     MIRprint();
 
@@ -200,9 +206,12 @@ bool OptimizerBuilder::Constant_Propagation(vector<IR*>& irlist)//常量传播
             for(int j=i+1;j<irlist.size();j++){//查找下一条使用了操作数ptr->result语句来进行替换
                 auto ptr1=irlist[j];
                 if(exit) break;
-                else if(ptr1->op==IR::_LABEL    ||
-                    ptr1->op==IR::_VOID     ||  ptr1->op==IR::_ADDR     ) continue;
-                else if(ptr1->result==ptr->result) exit=true;
+                else if(ptr1->op==IR::_VOID || ptr1->op==IR::_ADDR) continue;
+                else if(ptr1->op==IR::_JEQ || ptr1->op==IR::_JGE || ptr1->op==IR::_JGT || ptr1->op==IR::_JLE 
+                || ptr1->op==IR::_JLT || ptr1->op==IR::_JNE) break;
+                else if(ptr1->result==ptr->result || ptr1->op==IR::_GOTO || 
+                ptr1->op==IR::_FUNC || ptr1->op==IR::_CALL || ptr1->op==IR::_FUNC_END 
+                || ptr1->op==IR::_RET) exit=true;
                 if(ptr1->op!=IR::_ASSIGN_Arr && ptr1->op!=IR::_Arr_ASSIGN && ptr1->op!=IR::_ALLOC)
                 {
                     if(ptr1->opn1.kind==Opn::Var && ptr1->opn1.name.compare(ptr->result.name)==0 ){

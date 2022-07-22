@@ -6,6 +6,7 @@ void IRBuilder::Build(struct node *T)
     cout<<"开始中间代码生成"<<endl;
     genIR(T,symboltable);
     MIRprint();
+   
 }
 
 int IRBuilder::newtemp(Type *pretype,int level,int offset)//不知道就填0
@@ -1417,8 +1418,6 @@ vector<float> PreCal_opn_float(vector<IR*>::iterator begin,vector<IR*>::iterator
     }
     return res;
 }
-
-
 
 void IRBuilder::MIRprint()
 {

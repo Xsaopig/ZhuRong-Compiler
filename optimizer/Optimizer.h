@@ -7,6 +7,7 @@
 #include <iostream>
 #include <string>
 #include "../IR/IR.hpp"
+#include "../IR/BasicBlock.h"
 class OptimizerBuilder
 {
 private:
