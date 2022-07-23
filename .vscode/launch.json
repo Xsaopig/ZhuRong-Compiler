@@ -8,9 +8,12 @@
             "name": "(gdb) 启动",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/complier",
+            "program": "${workspaceFolder}/compiler",
             "args": [
-                "./test.c"
+                "-S"
+                "-o"
+                "testcase.s"
+                "testcast.sy"
             ],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",

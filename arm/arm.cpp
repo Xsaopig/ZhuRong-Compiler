@@ -41,34 +41,46 @@ void generate_function_arm(vector<IR*> IRList,vector<IR*>::iterator function_beg
         ctx.init_var_lastused_to_time(*it);
     }
 
-    //在栈中分配空间,专门给数组分配空间
+    //在栈中分配空间
     for (auto it = function_begin; it != function_end; it++) {
         auto &ir=*it;
-        if(ir->op==IR::_ALLOC && ir->result.is_Imm() && ir->result.imm_int>4){
+        if(ir->op==IR::_ALLOC && ir->result.is_Imm() /* && ir->result.imm_int>4 */){
             ctx.stack_offset[ir->opn1.name]=ctx.stack_occupied[2];
             ctx.stack_occupied[2] += ir->result.imm_int;
         }
     }
 
     //寄存器分配
-    // for(const auto & i :ctx.time_to_var_define)//按Var定义的时间从小到大遍历
-    // {
-    //     int cur_time=i.first;
-    //     auto var_name=i.second;
-    //     ctx.clear_inactive_intervals(cur_time);//清楚非活跃区间
+    for(const auto & i :ctx.time_to_var_define)//按Var定义的时间从小到大遍历
+    {
+        int cur_time=i.first;
+        auto var_name=i.second;
+        ctx.clear_inactive_intervals(cur_time);//清楚非活跃区间
 
-    //     if(ctx.var_in_reg(var_name)){//变量如果已经在寄存器中了？？
-    //         continue;
-    //     } else {
-    //         bool conflict = false;
-    //         int latest=ctx.var_lastused_to_time[var_name];//当前变量的最后一次使用时间
-    //         for(auto &j :ctx.time_to_var_define){//需要遍历的是：定义时间<=当前时间 且>latest 之间的变量
-    //             if(j.first<=cur_time) continue;
-    //             if(j.first>latest) break;
-    //         }
-    //     }
+        if(ctx.var_in_reg(var_name)){//变量如果已经在寄存器中了？？
+            continue;
+        } else {
+            bool conflict = false;
+            int latest=ctx.var_lastused_to_time[var_name];//当前变量的最后一次使用时间
+            // for(auto &j :ctx.time_to_var_define){//需要遍历的是：定义时间<=当前时间 且>latest 之间的变量
+            //     if(j.first<=cur_time) continue;
+            //     if(j.first>latest) break;
+            // }
+            if (ctx.find_free_reg(0) != -1) {
+                ctx.get_specified_reg_for(var_name,
+                                            ctx.find_free_reg(0));
+            } else {
+                string cur_max = ctx.select_var_to_overflow(0);
+            if (ctx.var_lastused_to_time[var_name] <
+                ctx.var_lastused_to_time[cur_max]) {
+                ctx.get_specified_reg_for(var_name, ctx.var_to_reg[cur_max]);
+            } else {
+                ctx.overflow_var(var_name,4);
+            }
+            }
+        }
 
-    // }
+    }
 
 
 
@@ -81,7 +93,6 @@ for (auto it = function_begin; it != function_end; it++) {
     if(ir->op==IR::_FUNC){// define function opn1
         funcname=(*function_begin)->opn1.name;
         out<<"\t.text"<<endl;
-        out<<"\t.align 1"<<endl;
         out<<"\t.global "<<funcname<<endl;
         out<<"\t.arch armv7"<<endl;
         out<<"\t.syntax unified"<<endl;
@@ -90,22 +101,47 @@ for (auto it = function_begin; it != function_end; it++) {
         out<<"\t.fpu vfp"<<endl;
         out<<"\t.type "<<funcname<<", %function"<<endl;
         out<<funcname<<":"<<endl;
+
+        //保护现场,目前不考虑函数调用，就保存这两个
+        out<<"\tPUSH { r12, lr }"<<endl;
         if(stack_size[0]+stack_size[1]+stack_size[2]+stack_size[3]>256){
             ctx.load_imm_int("r12",stack_size[0]+stack_size[1]+stack_size[2]+stack_size[3],out);
             out<<"\tSUB sp, sp, r12"<<endl;
         }else {
             out<<"\tSUB sp, sp, #"<<stack_size[0]+stack_size[1]+stack_size[2]+stack_size[3]<<endl;
         }
+        out<<"\tADD r12, sp, #0"<<endl;
+        
     }else if(ir->op==IR::_VOID){// 无用指令
         //do nothing
     }else if(ir->op==IR::_ALLOC){// alloc opn1(变量名) : result(字节数)
-        //
+        if(ir->opn1.is_Var() && ctx.var_in_reg(ir->opn1.name)){
+            ctx.load("r"+to_string(ctx.var_to_reg[ir->opn1.name]),ir->opn1,out);
+        }
+        //do nothing
     }else if(ir->op==IR::_LABEL){// opn1 :
-        
+        out<<"\t"<<ir->opn1.name<<":"<<endl;
     }else if(ir->op==IR::_ADDR){// result = &opn1
         
     }else if(ir->op==IR::_ADD){// result = opn1 + opn2
-        
+        bool result_in_reg = ctx.var_in_reg(ir->result.name);
+        bool op1_in_reg = ir->opn1.is_Var() && ctx.var_in_reg(ir->opn1.name);
+        bool op2_in_reg = ir->opn2.is_Var() && ctx.var_in_reg(ir->opn2.name);
+        int reg1 = op1_in_reg ? ctx.var_to_reg[ir->opn1.name] : 11;
+        int reg2 = op2_in_reg ? ctx.var_to_reg[ir->opn2.name] : 14;
+        int reg3 = result_in_reg ? ctx.var_to_reg[ir->result.name] : 11;
+        if(!op1_in_reg){
+            ctx.load("r"+to_string(reg1),ir->opn1,out);
+        }
+        if(!op2_in_reg){
+            ctx.load("r"+to_string(reg2),ir->opn2,out);
+        }
+        out<<"\tADD "<<"r"+to_string(reg3)<<", "
+                        <<"r"+to_string(reg1)<<", "<<"r"+to_string(reg2)<<endl;
+        if(!result_in_reg){
+            //存回栈中
+        }
+
     }else if(ir->op==IR::_SUB){// result = opn1 - opn2
         
     }else if(ir->op==IR::_MUL){// result = opn1 * opn2
@@ -115,6 +151,18 @@ for (auto it = function_begin; it != function_end; it++) {
     }else if(ir->op==IR::_MOD){// result = opn1 % opn2
         
     }else if(ir->op==IR::_ASSIGN){// result = opn1
+        bool result_in_reg = ctx.var_in_reg(ir->result.name);
+        bool op1_in_reg = ir->opn1.is_Var() && ctx.var_in_reg(ir->opn1.name);
+        int reg1 = op1_in_reg ? ctx.var_to_reg[ir->opn1.name] : 11;
+        int reg3 = result_in_reg ? ctx.var_to_reg[ir->result.name] : 11;
+        if(!op1_in_reg){
+            ctx.load("r"+to_string(reg1),ir->opn1,out);
+        }
+        out<<"\tMOV "<<"r"+to_string(reg3)<<", "
+                        <<"r"+to_string(reg1)<<endl;
+        if(!result_in_reg){
+            //存回栈中
+        }
         
     }else if(ir->op==IR::_Arr_ASSIGN){//opn1[opn2]=result
         
@@ -147,11 +195,23 @@ for (auto it = function_begin; it != function_end; it++) {
     }else if(ir->op==IR::_CALL){// [result =] call opn1(函数) , opn2(参数个数)
         
     }else if(ir->op==IR::_RET){// return [opn1]
-        
+        if(ir->opn1.is_Imm()){
+            if(ir->opn1.is_int)
+                out<<"\t"<<"MOV r0, #"<<ir->opn1.imm_int<<endl;
+        }
+        else if(ir->opn1.is_Var()){
+            if(ctx.var_in_reg(ir->opn1.name) && ctx.var_to_reg[ir->opn1.name]!=0)
+                out<<"\t"<<"MOV r0, r"<<ctx.var_to_reg[ir->opn1.name]<<endl;
+        }
+        out<<"\tADDS r12, r12, #"<<stack_size[0]+stack_size[1]+stack_size[2]+stack_size[3]<<endl;
+        out<<"\tMOV sp, r12"<<endl;
+        out<<"\tPOP { r12, lr }"<<endl;
+        out<<"\tBX lr"<<endl;  
     }
         
 }
     out<<"\t.size "<<funcname<<", .-"<<funcname<<endl;
+    out<<endl;
 }
 
 

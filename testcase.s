@@ -1,5 +1,5 @@
 	.arch armv7
-	.file "test.c"
+	.file "testcase.sy"
 	.text
 	.text
 	.global main

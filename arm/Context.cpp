@@ -128,7 +128,7 @@ void Context::clear_inactive_intervals(int cur_time){
         //寄存器i正在被使用
         if( reg_to_var.find(i) == reg_to_var.end() 
             || var_lastused_to_time.find(reg_to_var[i]) == var_lastused_to_time.end()
-            || cur_time >= var_lastused_to_time[reg_to_var[i]])//当前时间大于变量最后一次使用的时间
+            || cur_time > var_lastused_to_time[reg_to_var[i]])//当前时间大于变量最后一次使用的时间
         {
             used_reg[i]=0;
             reg_to_var.erase(i);
@@ -164,6 +164,13 @@ int Context::get_new_reg(int begin)
     return id;
 }
 
+void Context::get_specified_reg(int reg_id) 
+{
+    assert(used_reg[reg_id]==0);
+    used_reg[reg_id]=1;
+}
+
+
 void Context::overflow_reg(int id)
 {
     if(!used_reg[id])//寄存器id不在使用
@@ -183,6 +190,53 @@ void Context::overflow_var(string name,int bytes)
     stack_occupied[2]+=bytes;
 }
 
+int Context::get_specified_reg_for(string name, int reg_id) {
+    if (var_to_reg.find(name) != var_to_reg.end()) {
+        if (var_to_reg[name] == reg_id) {
+        return var_to_reg[name];
+        }
+    }
+    if (used_reg[reg_id] == 1) {
+        overflow_reg(reg_id);
+    }
+    get_specified_reg(reg_id);
+    bind_var_to_reg(name, reg_id);
+    return reg_id;
+}
+
+int Context::get_new_reg_for(string name) {
+    if (var_to_reg.find(name) != var_to_reg.end()) {
+        return var_to_reg[name];
+    }
+    int reg_id = get_new_reg(0);
+    bind_var_to_reg(name, reg_id);
+    return reg_id;
+}
+
+void Context::bind_var_to_reg(string name, int reg_id) {
+    if (name.empty()) {
+        throw runtime_error("Var name is empty.");
+    }
+    assert(used_reg[reg_id] == 1);
+    if (reg_to_var.find(reg_id) != reg_to_var.end())
+        var_to_reg.erase(reg_to_var[reg_id]);
+    reg_to_var.insert({reg_id, name});
+    var_to_reg.insert({name, reg_id});
+}
+
+string Context::select_var_to_overflow(int begin) {
+    string var = "";
+    int end = -1;
+    for (const auto& i : reg_to_var) {
+        if (i.first < begin) continue;
+        if (var_lastused_to_time[i.second] > end) {
+        var = i.second;
+        end = var_lastused_to_time[i.second];
+        }
+    }
+    return var;
+}
+
 void Context::load_imm_int(string reg, int value, ostream& out)
 {
     if (value >= 0 && value < 65536)
@@ -191,3 +245,42 @@ void Context::load_imm_int(string reg, int value, ostream& out)
         out << "\tMOV32 " << reg << ", " << value << endl;
 }
 
+void Context::load(string reg, Opn& op, ostream& out)
+{
+    if(op.is_Imm()){
+        if(op.is_int){
+            load_imm_int(reg,op.imm_int,out);
+        }
+        else{
+
+        }
+    }
+    else if(op.is_Var()){
+        if(var_in_reg(op.name)){
+            if(reg.compare("r"+var_to_reg[op.name])==0) return;//变量已经在该寄存器中了
+            if(stack_offset.find(op.name)!=stack_offset.end()){//变量正在栈中
+                int offset=stack_offset[op.name];
+                out<<"\tLDR "<<reg<<", "<<"[ r13, #"+to_string(offset)+" ]"<<endl;
+            }
+            else{//不知道变量在哪
+                throw runtime_error("where is "+op.name);
+            }
+
+        }
+    }
+}
+
+// void Context::store_to_stack(string reg, Opn& op, ostream& out,string op_code = "STR")
+// {
+//     if(op.level==0){//全局变量
+
+//     }
+//     else if(op.is_Var()){
+
+//     }
+// }
+
+// void Context::store_to_stack_offset(string reg, int offset, ostream& out,string op = "STR")
+// {
+
+// }
