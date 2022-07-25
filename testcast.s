@@ -1,5 +1,5 @@
 	.arch armv7
-	.file "test.c"
+	.file "testcase.sy"
 	.text
 	.text
 	.global main
@@ -13,7 +13,7 @@ main:
 	PUSH { r12, lr }
 	SUB sp, sp, #8
 	ADD r12, sp, #0
-	MOV r0, #3
+	MOV r0, #9
 	ADDS r12, r12, #8
 	MOV sp, r12
 	POP { r12, lr }

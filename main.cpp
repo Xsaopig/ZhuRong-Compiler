@@ -22,9 +22,9 @@ yyFlexLexer *yyflexlexer;	//yyFlexLexer对象，yylex、yylineno都在里面,具
 
 int main(int argc, char *argv[]) {
 	
-	filename=string("test.c");
+	filename=string("testcase.sy");
 	filename=argv[4];
-	outfilename="arm.s";
+	outfilename="testcast.s";
 	outfilename=argv[3];
 
 	in.open(filename);//输入定向

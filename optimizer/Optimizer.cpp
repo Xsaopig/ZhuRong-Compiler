@@ -82,21 +82,21 @@ bool OptimizerBuilder::Constant_Folding(vector<IR*>& irlist)//常量折叠
         switch (ptr->op)
         {
         case IR::_NOT:
-            if(ptr->opn1.kind!=Opn::Imm || ptr->opn2.kind!=Opn::Imm) break;
+            if(ptr->opn1.kind!=Opn::Imm) break;
             res=true;
             ptr->op=IR::_ASSIGN;
             ptr->opn1.imm_int=(ptr->opn1.imm_int==0)?1:0;
             ptr->opn1.imm_float=(ptr->opn1.imm_int==0)?1:0;
             break;
         case IR::_POSI:
-            if(ptr->opn1.kind!=Opn::Imm || ptr->opn2.kind!=Opn::Imm) break;
+            if(ptr->opn1.kind!=Opn::Imm) break;
             res=true;
             ptr->op=IR::_ASSIGN;
             ptr->opn1.imm_int=(+ptr->opn1.imm_int);
             ptr->opn1.imm_float=(+ptr->opn1.imm_int);
             break;
         case IR::_NEGA:
-            if(ptr->opn1.kind!=Opn::Imm || ptr->opn2.kind!=Opn::Imm) break;
+            if(ptr->opn1.kind!=Opn::Imm) break;
             res=true;
             ptr->op=IR::_ASSIGN;
             ptr->opn1.imm_int=(-ptr->opn1.imm_int);
@@ -197,7 +197,7 @@ bool OptimizerBuilder::Constant_Propagation(vector<IR*>& irlist)//常量传播
     bool res=false;
     for(int i=0;i<irlist.size();i++){
         auto ptr=irlist[i];
-        if(ptr->op!=IR::_ASSIGN && ptr->op!=IR::_Arr_ASSIGN && ptr->op!=IR::_ASSIGN_Arr && ptr->op!=IR::_NOT && ptr->op!=IR::_POSI && ptr->op!=IR::_NEGA)
+        if(ptr->op!=IR::_ASSIGN && ptr->op!=IR::_Arr_ASSIGN && ptr->op!=IR::_ASSIGN_Arr )
             continue;
         else if(ptr->opn1.kind!=Opn::Imm)
             continue;

@@ -1,6 +1,15 @@
 	.arch armv7
 	.file "testcase.sy"
 	.text
+
+	.global a
+	.align 2
+	.type a,%object
+	.data
+	.size a, 4
+a:
+	.word 10
+
 	.text
 	.global main
 	.arch armv7
@@ -13,7 +22,8 @@ main:
 	PUSH { r12, lr }
 	SUB sp, sp, #8
 	ADD r12, sp, #0
-	MOV r0, #3
+	MOV r14, #5
+	ADD r0, r11, r14
 	ADDS r12, r12, #8
 	MOV sp, r12
 	POP { r12, lr }
