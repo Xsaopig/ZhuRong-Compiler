@@ -162,8 +162,42 @@ for (auto it = function_begin; it != function_end; it++) {
         }
         
     }else if(ir->op==IR::_MUL){// result = opn1 * opn2
+        bool result_in_reg = ctx.var_in_reg(ir->result.name);
+        bool op1_in_reg = ir->opn1.is_Var() && ctx.var_in_reg(ir->opn1.name);
+        bool op2_in_reg = ir->opn2.is_Var() && ctx.var_in_reg(ir->opn2.name);
+        int reg1 = op1_in_reg ? ctx.var_to_reg[ir->opn1.name] : 11;
+        int reg2 = op2_in_reg ? ctx.var_to_reg[ir->opn2.name] : 14;
+        int reg3 = result_in_reg ? ctx.var_to_reg[ir->result.name] : 11;
+        if(!op1_in_reg){
+            ctx.load("r"+to_string(reg1),ir->opn1,out);
+        }
+        if(!op2_in_reg){
+            ctx.load("r"+to_string(reg2),ir->opn2,out);
+        }
+        out<<"\tMUL "<<"r"+to_string(reg3)<<", "
+                        <<"r"+to_string(reg1)<<", "<<"r"+to_string(reg2)<<endl;
+        if(!result_in_reg){
+            //存回栈中
+        }
         
     }else if(ir->op==IR::_DIV){// result = opn1 / opn2
+        bool result_in_reg = ctx.var_in_reg(ir->result.name);
+        bool op1_in_reg = ir->opn1.is_Var() && ctx.var_in_reg(ir->opn1.name);
+        bool op2_in_reg = ir->opn2.is_Var() && ctx.var_in_reg(ir->opn2.name);
+        int reg1 = op1_in_reg ? ctx.var_to_reg[ir->opn1.name] : 11;
+        int reg2 = op2_in_reg ? ctx.var_to_reg[ir->opn2.name] : 14;
+        int reg3 = result_in_reg ? ctx.var_to_reg[ir->result.name] : 11;
+        if(!op1_in_reg){
+            ctx.load("r"+to_string(reg1),ir->opn1,out);
+        }
+        if(!op2_in_reg){
+            ctx.load("r"+to_string(reg2),ir->opn2,out);
+        }
+        out<<"\tSDIV "<<"r"+to_string(reg3)<<", "
+                        <<"r"+to_string(reg1)<<", "<<"r"+to_string(reg2)<<endl;
+        if(!result_in_reg){
+            //存回栈中
+        }
         
     }else if(ir->op==IR::_MOD){// result = opn1 % opn2
         

@@ -1,5 +1,7 @@
+int a = 3;
+int b = 5;
 
-const int a = 10;
 int main(){
-    return a + 5;
+    int a = 5;
+    return a + b;
 }

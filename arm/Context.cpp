@@ -269,10 +269,10 @@ void Context::load(string reg, Opn& op, ostream& out)
 
             }
         }else{//全局变量
-            out<<"\tMOVW r11, #:lower16:"<<op.name<<endl;
-            out<<"\tMOVT r11, #:upper16:"<<op.name<<endl;
+            out<<"\tMOVW "<<reg<<", #:lower16:"<<op.name<<endl;
+            out<<"\tMOVT "<<reg<<", #:upper16:"<<op.name<<endl;
             // out<<"\tMOV32 r11, "<<op.name<<endl;
-            out<<"\tLDR r11, [r11, #0]"<<endl;
+            out<<"\tLDR "<<reg<<", ["<<reg<<", #0]"<<endl;
         }
     }
 }
