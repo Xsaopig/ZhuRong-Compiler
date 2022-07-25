@@ -256,16 +256,23 @@ void Context::load(string reg, Opn& op, ostream& out)
         }
     }
     else if(op.is_Var()){
-        if(var_in_reg(op.name)){
-            if(reg.compare("r"+var_to_reg[op.name])==0) return;//变量已经在该寄存器中了
-            if(stack_offset.find(op.name)!=stack_offset.end()){//变量正在栈中
-                int offset=stack_offset[op.name];
-                out<<"\tLDR "<<reg<<", "<<"[ r13, #"+to_string(offset)+" ]"<<endl;
-            }
-            else{//不知道变量在哪
-                throw runtime_error("where is "+op.name);
-            }
+        if(op.level!=0){//局部变量
+            if(var_in_reg(op.name)){
+                if(reg.compare("r"+var_to_reg[op.name])==0) return;//变量已经在该寄存器中了
+                if(stack_offset.find(op.name)!=stack_offset.end()){//变量正在栈中
+                    int offset=stack_offset[op.name];
+                    out<<"\tLDR "<<reg<<", "<<"[ r13, #"+to_string(offset)+" ]"<<endl;
+                }
+                else{//不知道变量在哪
+                    throw runtime_error("where is "+op.name);
+                }
 
+            }
+        }else{//全局变量
+            out<<"\tMOVW r11, #:lower16:"<<op.name<<endl;
+            out<<"\tMOVT r11, #:upper16:"<<op.name<<endl;
+            // out<<"\tMOV32 r11, "<<op.name<<endl;
+            out<<"\tLDR r11, [r11, #0]"<<endl;
         }
     }
 }

@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
 	
 	filename=string("testcase.sy");
 	filename=argv[4];
-	outfilename="testcast.s";
+	outfilename="testcase.s";
 	outfilename=argv[3];
 
 	in.open(filename);//输入定向

@@ -12,8 +12,8 @@
             "args": [
                 "-S"
                 "-o"
-                "testcase.s"
                 "testcast.sy"
+                "testcase.s"
             ],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",

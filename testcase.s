@@ -22,6 +22,9 @@ main:
 	PUSH { r12, lr }
 	SUB sp, sp, #8
 	ADD r12, sp, #0
+	MOVW r11, #:lower16:a
+	MOVT r11, #:upper16:a
+	LDR r11, [r11, #0]
 	MOV r14, #5
 	ADD r0, r11, r14
 	ADDS r12, r12, #8
